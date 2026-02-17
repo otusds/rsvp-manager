@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-row">
+    <h1>Events</h1>
+    <div class="btn-group">
+        <a href="{{ url_for('export_events') }}" class="btn btn-secondary">Export Excel</a>
+        <a href="{{ url_for('add_event') }}" class="btn">+ Add Event</a>
+    </div>
+</div>
+
+{% if events %}
+<div class="table-controls">
+    <input type="text" class="search-input" id="event-search" placeholder="Search events...">
+    <select class="filter-select" id="event-type-filter">
+        <option value="">All Types</option>
+        {% for t in event_types %}
+        <option value="{{ t }}">{{ t }}</option>
+        {% endfor %}
+    </select>
+    <select class="filter-select" id="event-sort">
+        <option value="date-asc">Date (earliest first)</option>
+        <option value="date-desc">Date (latest first)</option>
+        <option value="name-asc">Name (A-Z)</option>
+        <option value="name-desc">Name (Z-A)</option>
+        <option value="guests-desc">Most guests</option>
+        <option value="guests-asc">Fewest guests</option>
+    </select>
+</div>
+
+<div class="event-grid" id="event-grid">
+    {% for event in events %}
+    {% set attending = event.invitations|selectattr('status', 'equalto', 'Attending')|list|length %}
+    {% set total = event.invitations|length %}
+    <a href="{{ url_for('event_detail', event_id=event.id) }}" class="event-card"
+       data-name="{{ event.name|lower }}"
+       data-type="{{ event.event_type }}"
+       data-date="{{ event.date.isoformat() }}"
+       data-location="{{ event.location|lower }}"
+       data-guests="{{ total }}">
+        <div class="event-card-header">
+            <span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span>
+            <span class="event-card-date">{{ event.date.strftime('%b %d, %Y') }}</span>
+        </div>
+        <h3 class="event-card-title">{{ event.name }}</h3>
+        <p class="event-card-location">{{ event.location }}</p>
+        <div class="event-card-stats">
+            <span class="stat">👥 {{ total }} invited</span>
+            <span class="stat stat-attending">✅ {{ attending }} attending</span>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+<p class="empty" id="no-results" style="display:none;">No events match your filters.</p>
+{% else %}
+<p class="empty">No events yet. Create your first event!</p>
+{% endif %}
+{% endblock %}

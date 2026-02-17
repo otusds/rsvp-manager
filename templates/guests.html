@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-row">
+    <h1>Guests</h1>
+    <div class="btn-group">
+        <a href="{{ url_for('export_guests') }}" class="btn btn-secondary">Export Excel</a>
+        <a href="{{ url_for('add_guest') }}" class="btn">+ Add Guest</a>
+    </div>
+</div>
+
+{% if guests %}
+<div class="table-controls">
+    <input type="text" class="search-input" data-table="guests-table" placeholder="Search guests...">
+    <select class="filter-select" data-table="guests-table" data-col="2">
+        <option value="">All Genders</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+    </select>
+</div>
+<table id="guests-table" class="sortable">
+    <thead>
+        <tr>
+            <th data-sort="text">Last Name</th>
+            <th data-sort="text">First Name</th>
+            <th data-sort="text">Gender</th>
+            <th data-sort="text">Notes</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for guest in guests %}
+        <tr>
+            <td>{{ guest.last_name }}</td>
+            <td>{{ guest.first_name }}</td>
+            <td>{{ guest.gender }}</td>
+            <td>{{ guest.notes or '—' }}</td>
+            <td>
+                <div class="btn-group">
+                    <a href="{{ url_for('edit_guest', guest_id=guest.id) }}" class="btn btn-small">Edit</a>
+                    <form method="POST" action="{{ url_for('delete_guest', guest_id=guest.id) }}" class="inline"
+                          onsubmit="return confirm('Delete this guest? They will also be removed from all events.');">
+                        <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="empty">No guests yet. Add your first guest!</p>
+{% endif %}
+{% endblock %}

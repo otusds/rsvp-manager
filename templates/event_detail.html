@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-row">
+    <h1>{{ event.name }}</h1>
+    <div class="btn-group">
+        <a href="{{ url_for('export_event_guests', event_id=event.id) }}" class="btn btn-secondary">Export Excel</a>
+        <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn">Edit</a>
+        <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" class="inline"
+              onsubmit="return confirm('Delete this event and all its invitations?');">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+    </div>
+</div>
+
+<div class="event-info">
+    <p><span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span></p>
+    <p><strong>Date:</strong> {{ event.date.strftime('%B %d, %Y') }}</p>
+    <p><strong>Location:</strong> {{ event.location }}</p>
+    {% if event.notes %}
+    <p><strong>Notes:</strong> {{ event.notes }}</p>
+    {% endif %}
+</div>
+
+{% if event.invitations %}
+{% set all_inv = event.invitations %}
+{% set male_inv = all_inv|selectattr('guest.gender', 'equalto', 'Male')|list %}
+{% set female_inv = all_inv|selectattr('guest.gender', 'equalto', 'Female')|list %}
+<div class="summary-header">
+    <span class="summary-label">Summary</span>
+    <button type="button" class="btn btn-small btn-secondary" onclick="location.reload()" title="Refresh summary after changes">↻ Refresh</button>
+</div>
+<table class="summary-table">
+    <thead>
+        <tr>
+            <th></th>
+            <th>✅ Attending</th>
+            <th>⏳ Pending</th>
+            <th>❌ Declined</th>
+            <th>📭 Not Sent</th>
+            <th>👥 Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="row-label">👨 Male</td>
+            <td>{{ male_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</td>
+            <td>{{ male_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</td>
+            <td>{{ male_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</td>
+            <td>{{ male_inv|selectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
+            <td><strong>{{ male_inv|length }}</strong></td>
+        </tr>
+        <tr>
+            <td class="row-label">👩 Female</td>
+            <td>{{ female_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</td>
+            <td>{{ female_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</td>
+            <td>{{ female_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</td>
+            <td>{{ female_inv|selectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
+            <td><strong>{{ female_inv|length }}</strong></td>
+        </tr>
+        <tr class="total-row">
+            <td class="row-label">Total</td>
+            <td><strong>{{ all_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</strong></td>
+            <td><strong>{{ all_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</strong></td>
+            <td><strong>{{ all_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</strong></td>
+            <td><strong>{{ all_inv|selectattr('status', 'equalto', 'Not Sent')|list|length }}</strong></td>
+            <td><strong>{{ all_inv|length }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+{% endif %}
+
+<div class="section">
+    <h2>Guest List</h2>
+
+    {% if event.invitations %}
+    <div class="table-controls">
+        <input type="text" class="search-input" data-table="invitations-table" placeholder="Search guests...">
+        <select class="filter-select" data-table="invitations-table" data-col="4">
+            <option value="">All Statuses</option>
+            <option value="Not Sent">Not Sent</option>
+            <option value="Pending">Pending</option>
+            <option value="Attending">Attending</option>
+            <option value="Declined">Declined</option>
+        </select>
+        <select class="filter-select" data-table="invitations-table" data-col="1">
+            <option value="">All Genders</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+    </div>
+    {% endif %}
+
+    <table id="invitations-table" class="sortable">
+        <thead>
+            <tr>
+                <th data-sort="text">Guest</th>
+                <th data-sort="text">Gender</th>
+                <th>Invitation Sent</th>
+                <th data-sort="date">Invited On</th>
+                <th data-sort="text">Response Status</th>
+                <th data-sort="date">Responded On</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inv in event.invitations %}
+            <tr>
+                <td>{{ inv.guest.first_name }} {{ inv.guest.last_name }}</td>
+                <td>{{ inv.guest.gender }}</td>
+                <td class="center">
+                    <input type="checkbox" class="sent-checkbox" data-inv-id="{{ inv.id }}"
+                           {{ 'checked' if inv.status != 'Not Sent' }}>
+                </td>
+                <td data-value="{{ inv.date_invited.isoformat() if inv.date_invited else '' }}">
+                    {{ inv.date_invited.strftime('%b %d, %Y') if inv.date_invited else '—' }}
+                </td>
+                <td>
+                    {% if inv.status == 'Not Sent' %}
+                    <span class="status-not-sent">Not Sent</span>
+                    {% else %}
+                    <select class="status-select" data-inv-id="{{ inv.id }}">
+                        <option value="Pending" {{ 'selected' if inv.status == 'Pending' }}>Pending</option>
+                        <option value="Attending" {{ 'selected' if inv.status == 'Attending' }}>Attending</option>
+                        <option value="Declined" {{ 'selected' if inv.status == 'Declined' }}>Declined</option>
+                    </select>
+                    {% endif %}
+                </td>
+                <td data-value="{{ inv.date_responded.isoformat() if inv.date_responded else '' }}">{{ inv.date_responded.strftime('%b %d, %Y') if inv.date_responded else '—' }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('remove_invitation', invitation_id=inv.id) }}" class="inline"
+                          onsubmit="return confirm('Remove this guest from the event?');">
+                        <button type="submit" class="btn btn-small btn-danger">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            <tr class="add-guest-row" data-event-id="{{ event.id }}">
+                <td>
+                    <div class="autocomplete-wrapper">
+                        <div class="inline-name-inputs">
+                            <input type="text" class="inline-input" id="add-first-name" placeholder="First name">
+                            <input type="text" class="inline-input" id="add-last-name" placeholder="Last name">
+                        </div>
+                        <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
+                    </div>
+                </td>
+                <td>
+                    <select class="inline-select" id="add-gender">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </td>
+                <td class="center">—</td>
+                <td>—</td>
+                <td><span class="status-not-sent">Not Sent</span></td>
+                <td>—</td>
+                <td>
+                    <button type="button" class="btn btn-small" id="add-guest-btn">+ Add</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
