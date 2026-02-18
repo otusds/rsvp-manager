@@ -368,7 +368,7 @@ def api_guest_search():
         db.or_(
             Guest.first_name.ilike(pattern),
             Guest.last_name.ilike(pattern),
-            (Guest.first_name + " " + Guest.last_name).ilike(pattern),
+            db.func.concat(Guest.first_name, " ", db.func.coalesce(Guest.last_name, "")).ilike(pattern),
         )
     )
     results = []
