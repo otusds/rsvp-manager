@@ -668,6 +668,7 @@ def seed(user_id):
 with app.app_context():
     db.create_all()
     # Migrate existing databases: add new columns if missing
+    # Each statement runs in its own SAVEPOINT so a failure doesn't abort the transaction (PostgreSQL)
     with db.engine.connect() as conn:
         for stmt in [
             "ALTER TABLE invitation ADD COLUMN channel VARCHAR(50) DEFAULT ''",
@@ -680,9 +681,11 @@ with app.app_context():
             "ALTER TABLE guest ADD COLUMN date_edited TIMESTAMP",
         ]:
             try:
+                conn.execute(db.text("SAVEPOINT sp"))
                 conn.execute(db.text(stmt))
+                conn.execute(db.text("RELEASE SAVEPOINT sp"))
             except Exception:
-                pass
+                conn.execute(db.text("ROLLBACK TO SAVEPOINT sp"))
         conn.commit()
 if __name__ == "__main__":
     app.run(debug=True)
