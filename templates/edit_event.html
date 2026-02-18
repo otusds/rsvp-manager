@@ -15,13 +15,20 @@
     </select>
 
     <label for="location">Location</label>
-    <input type="text" id="location" name="location" value="{{ event.location if event else '' }}" required>
+    <input type="text" id="location" name="location" value="{{ event.location if event else '' }}" placeholder="Optional">
 
     <label for="date">Date</label>
     <input type="date" id="date" name="date" value="{{ event.date.isoformat() if event else '' }}" required>
 
     <label for="notes">Notes</label>
     <textarea id="notes" name="notes" rows="3">{{ event.notes if event else '' }}</textarea>
+
+    {% if not event and me_exists %}
+    <div class="checkbox-row">
+        <input type="checkbox" id="include_me" name="include_me" checked>
+        <label for="include_me">Include me as a guest</label>
+    </div>
+    {% endif %}
 
     <div class="form-actions">
         <button type="submit" class="btn">{{ "Save" if event else "Create Event" }}</button>

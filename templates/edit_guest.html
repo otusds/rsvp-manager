@@ -8,7 +8,7 @@
     <input type="text" id="first_name" name="first_name" value="{{ guest.first_name if guest else '' }}" required>
 
     <label for="last_name">Last Name</label>
-    <input type="text" id="last_name" name="last_name" value="{{ guest.last_name if guest else '' }}" required>
+    <input type="text" id="last_name" name="last_name" value="{{ guest.last_name if guest else '' }}" placeholder="Optional">
 
     <label for="gender">Gender</label>
     <select id="gender" name="gender" required>
@@ -16,6 +16,11 @@
         <option value="Male" {{ 'selected' if guest and guest.gender == 'Male' }}>Male</option>
         <option value="Female" {{ 'selected' if guest and guest.gender == 'Female' }}>Female</option>
     </select>
+
+    <div class="checkbox-row">
+        <input type="checkbox" id="is_me" name="is_me" {{ 'checked' if guest and guest.is_me }}>
+        <label for="is_me">This is me</label>
+    </div>
 
     <label for="notes">Notes</label>
     <textarea id="notes" name="notes" rows="3">{{ guest.notes if guest else '' }}</textarea>

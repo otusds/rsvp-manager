@@ -10,8 +10,11 @@
     <nav>
         <a href="{{ url_for('home') }}" class="logo">RSVP Manager</a>
         <div class="nav-links">
+            {% if current_user.is_authenticated %}
             <a href="{{ url_for('home') }}">Events</a>
             <a href="{{ url_for('guests') }}">Guests</a>
+            <a href="{{ url_for('logout') }}" class="nav-logout">Logout</a>
+            {% endif %}
         </div>
     </nav>
     <main>

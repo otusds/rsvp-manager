@@ -4,7 +4,7 @@
 <div class="header-row">
     <h1>Events</h1>
     <div class="btn-group">
-        <a href="{{ url_for('export_events') }}" class="btn btn-secondary">Export Excel</a>
+        <a href="{{ url_for('export_events') }}" class="btn btn-secondary">Export</a>
         <a href="{{ url_for('add_event') }}" class="btn">+ Add Event</a>
     </div>
 </div>
@@ -28,25 +28,29 @@
     </select>
 </div>
 
-<div class="event-grid" id="event-grid">
+<div class="event-list" id="event-grid">
     {% for event in events %}
     {% set attending = event.invitations|selectattr('status', 'equalto', 'Attending')|list|length %}
     {% set total = event.invitations|length %}
-    <a href="{{ url_for('event_detail', event_id=event.id) }}" class="event-card"
+    <a href="{{ url_for('event_detail', event_id=event.id) }}" class="event-row-card"
        data-name="{{ event.name|lower }}"
        data-type="{{ event.event_type }}"
        data-date="{{ event.date.isoformat() }}"
-       data-location="{{ event.location|lower }}"
+       data-location="{{ (event.location or '')|lower }}"
        data-guests="{{ total }}">
-        <div class="event-card-header">
-            <span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span>
-            <span class="event-card-date">{{ event.date.strftime('%b %d, %Y') }}</span>
+        <div class="event-row-left">
+            <span class="event-row-name">{{ event.name }}</span>
+            {% if event.location %}
+            <span class="event-row-location">{{ event.location }}</span>
+            {% endif %}
         </div>
-        <h3 class="event-card-title">{{ event.name }}</h3>
-        <p class="event-card-location">{{ event.location }}</p>
-        <div class="event-card-stats">
-            <span class="stat">👥 {{ total }} invited</span>
-            <span class="stat stat-attending">✅ {{ attending }} attending</span>
+        <div class="event-row-right">
+            <span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span>
+            <span class="event-row-date">{{ event.date.strftime('%b %d, %Y') }}</span>
+        </div>
+        <div class="event-row-stats">
+            <span class="stat">{{ total }} invited</span>
+            <span class="stat stat-attending">{{ attending }} attending</span>
         </div>
     </a>
     {% endfor %}
