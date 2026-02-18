@@ -3,32 +3,54 @@
 {% block content %}
 <div class="header-row">
     <h1>{{ event.name }}</h1>
-    <div class="btn-group">
-        <a href="{{ url_for('export_event_guests', event_id=event.id) }}" class="btn btn-secondary">Export</a>
-        <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn">Edit Event</a>
-        <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" class="inline"
-              onsubmit="return confirm('Delete this event and all its invitations?');">
-            <button type="submit" class="btn btn-danger">Delete</button>
-        </form>
+</div>
+
+<!-- Event info card -->
+<div class="event-info-card">
+    <div class="event-info-card-top">
+        <div class="event-info-left">
+            <span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span>
+        </div>
+        <div class="kebab-wrapper">
+            <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>
+            <div class="kebab-menu kebab-menu-right">
+                <a href="{{ url_for('edit_event', event_id=event.id) }}">Edit Event</a>
+                <a href="{{ url_for('export_event_guests', event_id=event.id) }}">Export Excel</a>
+                <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" class="inline"
+                      onsubmit="return confirm('Delete this event and all its invitations?');">
+                    <button type="submit" class="kebab-danger">Delete Event</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="event-info-details">
+        <div class="event-info-row">
+            <span class="event-info-label">Event Date</span>
+            <span class="event-info-value">{{ event.date.strftime('%B %d, %Y') }}</span>
+        </div>
+        {% if event.location %}
+        <div class="event-info-row">
+            <span class="event-info-label">Location</span>
+            <span class="event-info-value">{{ event.location }}</span>
+        </div>
+        {% endif %}
+        {% if event.date_created %}
+        <div class="event-info-row">
+            <span class="event-info-label">Date Created</span>
+            <span class="event-info-value">{{ event.date_created.strftime('%B %d, %Y') }}</span>
+        </div>
+        {% endif %}
     </div>
 </div>
 
-<div class="event-info">
-    <p><span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span></p>
-    <p><strong>Date:</strong> {{ event.date.strftime('%B %d, %Y') }}</p>
-    {% if event.location %}
-    <p><strong>Location:</strong> {{ event.location }}</p>
-    {% endif %}
-</div>
-
-{% if event.invitations %}
+<!-- Attendance Summary (always shown) -->
 {% set all_inv = event.invitations %}
 {% set male_inv = all_inv|selectattr('guest.gender', 'equalto', 'Male')|list %}
 {% set female_inv = all_inv|selectattr('guest.gender', 'equalto', 'Female')|list %}
 <div class="collapsible">
     <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
         <span class="collapse-icon">▼</span>
-        <span class="summary-label">Summary</span>
+        <span class="summary-label">Attendance Summary</span>
     </div>
     <div class="collapsible-body">
         <table class="summary-table" id="summary-table">
@@ -38,8 +60,8 @@
                     <th>Attending</th>
                     <th>Pending</th>
                     <th>Declined</th>
-                    <th>Invited</th>
-                    <th>Not Sent</th>
+                    <th class="summary-highlight">Total Invited</th>
+                    <th>Not Yet Invited</th>
                 </tr>
             </thead>
             <tbody>
@@ -48,7 +70,7 @@
                     <td data-stat="attending">{{ male_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</td>
                     <td data-stat="pending">{{ male_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</td>
                     <td data-stat="declined">{{ male_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</td>
-                    <td data-stat="invited">{{ male_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
+                    <td data-stat="invited" class="summary-highlight">{{ male_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
                     <td data-stat="notsent">{{ male_inv|selectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
                 </tr>
                 <tr data-gender="female">
@@ -56,7 +78,7 @@
                     <td data-stat="attending">{{ female_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</td>
                     <td data-stat="pending">{{ female_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</td>
                     <td data-stat="declined">{{ female_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</td>
-                    <td data-stat="invited">{{ female_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
+                    <td data-stat="invited" class="summary-highlight">{{ female_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
                     <td data-stat="notsent">{{ female_inv|selectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
                 </tr>
                 <tr class="total-row" data-gender="total">
@@ -64,24 +86,38 @@
                     <td data-stat="attending"><strong>{{ all_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</strong></td>
                     <td data-stat="pending"><strong>{{ all_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</strong></td>
                     <td data-stat="declined"><strong>{{ all_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</strong></td>
-                    <td data-stat="invited"><strong>{{ all_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</strong></td>
+                    <td data-stat="invited" class="summary-highlight"><strong>{{ all_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</strong></td>
                     <td data-stat="notsent"><strong>{{ all_inv|selectattr('status', 'equalto', 'Not Sent')|list|length }}</strong></td>
                 </tr>
             </tbody>
         </table>
     </div>
 </div>
-{% endif %}
 
+<!-- Guest List -->
 <div class="collapsible section">
     <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
         <span class="collapse-icon">▼</span>
         <h2 style="margin-bottom:0">Guest List</h2>
     </div>
     <div class="collapsible-body">
-        {% if event.invitations %}
-        <div class="table-controls">
+        <div class="guest-list-controls">
             <input type="text" class="search-input" data-table="invitations-table" placeholder="Search guests...">
+            <button type="button" class="icon-btn" id="gl-toggle-filters-btn" title="Filters">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+            </button>
+            <div class="kebab-wrapper">
+                <button type="button" class="icon-btn gl-menu-btn" aria-label="More">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                </button>
+                <div class="kebab-menu kebab-menu-right">
+                    <a href="{{ url_for('export_event_guests', event_id=event.id) }}">Export Excel</a>
+                    <button type="button" id="toggle-multiselect-btn">Multi-Select</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-controls" id="gl-filters" style="display:none">
             <select class="filter-select" data-table="invitations-table" data-col="4">
                 <option value="">All Statuses</option>
                 <option value="Not Sent">Not Sent</option>
@@ -109,13 +145,16 @@
             <button type="button" class="btn btn-small" id="batch-apply">Apply</button>
             <button type="button" class="btn btn-small btn-secondary" id="batch-clear">Clear</button>
         </div>
-        {% endif %}
+
+        <div class="guest-list-actions">
+            <button type="button" class="btn btn-secondary" id="add-from-db-btn">+ Add from Guest Database</button>
+        </div>
 
         <div class="table-scroll">
         <table id="invitations-table" class="sortable">
             <thead>
                 <tr>
-                    <th class="center col-check"><input type="checkbox" id="select-all"></th>
+                    <th class="center col-check col-multiselect" style="display:none"><input type="checkbox" id="select-all"></th>
                     <th data-sort="text">Guest</th>
                     <th data-sort="text" class="col-hide-mobile">Gender</th>
                     <th class="center">Sent</th>
@@ -133,7 +172,7 @@
                     data-date-invited-iso="{{ inv.date_invited.isoformat() if inv.date_invited else '' }}"
                     data-date-responded="{{ inv.date_responded.strftime('%b %d, %Y') if inv.date_responded else '' }}"
                     data-date-responded-iso="{{ inv.date_responded.isoformat() if inv.date_responded else '' }}">
-                    <td class="center"><input type="checkbox" class="row-select"></td>
+                    <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
                     <td class="guest-name-cell">{{ inv.guest.full_name }}</td>
                     <td class="col-hide-mobile">{{ inv.guest.gender }}</td>
                     <td class="center">
@@ -168,7 +207,7 @@
                 </tr>
                 {% endfor %}
                 <tr class="add-guest-row" data-event-id="{{ event.id }}" data-channels="{{ channels|join(',') }}">
-                    <td></td>
+                    <td class="col-multiselect" style="display:none"></td>
                     <td colspan="2">
                         <div class="autocomplete-wrapper">
                             <div class="inline-name-inputs">
@@ -203,6 +242,7 @@
     </div>
 </div>
 
+<!-- Notes -->
 <div class="collapsible section">
     <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
         <span class="collapse-icon">▼</span>
@@ -212,6 +252,23 @@
         <textarea id="event-notes" class="event-notes-textarea"
                   data-event-id="{{ event.id }}" placeholder="Add event notes...">{{ event.notes or '' }}</textarea>
         <span class="save-indicator" id="notes-save-indicator">Saved</span>
+    </div>
+</div>
+
+<!-- Guest Database Picker Modal -->
+<div class="detail-overlay" id="guest-db-overlay" style="display:none">
+    <div class="detail-card guest-db-card">
+        <div class="detail-card-header">
+            <span style="font-weight:600;font-size:1.05rem">Add from Guest Database</span>
+            <button type="button" class="detail-close" id="guest-db-close">&times;</button>
+        </div>
+        <div class="guest-db-search">
+            <input type="text" id="guest-db-search-input" placeholder="Search guests...">
+        </div>
+        <div class="guest-db-list" id="guest-db-list"></div>
+        <div class="guest-db-footer">
+            <button type="button" class="btn" id="guest-db-add-btn">Add Selected</button>
+        </div>
     </div>
 </div>
 

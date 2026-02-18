@@ -49,6 +49,7 @@ class Event(db.Model):
     event_type = db.Column(db.String(50), nullable=False, default="Other")
     location = db.Column(db.String(200), nullable=True, default="")
     date = db.Column(db.Date, nullable=False)
+    date_created = db.Column(db.Date, nullable=True)
     notes = db.Column(db.Text, default="")
     invitations = db.relationship("Invitation", backref="event", cascade="all, delete-orphan")
 
@@ -135,7 +136,7 @@ def logout():
 @login_required
 def home():
     events = Event.query.filter_by(user_id=current_user.id).order_by(Event.date).all()
-    return render_template("home.html", events=events, event_types=EVENT_TYPES)
+    return render_template("home.html", events=events, event_types=EVENT_TYPES, today_date=date.today())
 
 
 @app.route("/event/add", methods=["GET", "POST"])
@@ -148,6 +149,7 @@ def add_event():
             event_type=request.form["event_type"],
             location=request.form.get("location", ""),
             date=date.fromisoformat(request.form["date"]),
+            date_created=date.today(),
             notes=request.form.get("notes", ""),
         )
         db.session.add(event)
@@ -458,6 +460,51 @@ def update_event_notes(event_id):
     return jsonify(ok=True)
 
 
+@app.route("/api/event/<int:event_id>/available-guests")
+@login_required
+def api_available_guests(event_id):
+    event = Event.query.get_or_404(event_id)
+    if event.user_id != current_user.id:
+        abort(403)
+    invited_ids = {inv.guest_id for inv in event.invitations}
+    all_guests = Guest.query.filter_by(user_id=current_user.id).order_by(Guest.first_name, Guest.last_name).all()
+    result = []
+    for g in all_guests:
+        result.append({
+            "id": g.id, "first_name": g.first_name, "last_name": g.last_name or "",
+            "gender": g.gender, "already_invited": g.id in invited_ids
+        })
+    return jsonify(guests=result)
+
+
+@app.route("/api/event/<int:event_id>/bulk-add", methods=["POST"])
+@login_required
+def bulk_add_guests(event_id):
+    event = Event.query.get_or_404(event_id)
+    if event.user_id != current_user.id:
+        abort(403)
+    data = request.get_json()
+    guest_ids = data.get("guest_ids", [])
+    invited_ids = {inv.guest_id for inv in event.invitations}
+    added = []
+    for gid in guest_ids:
+        if gid in invited_ids:
+            continue
+        guest = Guest.query.get(gid)
+        if not guest or guest.user_id != current_user.id:
+            continue
+        inv = Invitation(event_id=event_id, guest_id=gid, status="Not Sent")
+        db.session.add(inv)
+        db.session.flush()
+        added.append({
+            "invitation_id": inv.id, "guest_id": guest.id,
+            "first_name": guest.first_name, "last_name": guest.last_name or "",
+            "gender": guest.gender, "status": "Not Sent"
+        })
+    db.session.commit()
+    return jsonify(added=added)
+
+
 # ── Export helpers ─────────────────────────────────────────────────────────────
 
 HEADER_FONT = Font(bold=True, color="FFFFFF")
@@ -610,6 +657,7 @@ with app.app_context():
             "ALTER TABLE guest ADD COLUMN is_me BOOLEAN DEFAULT 0",
             "ALTER TABLE event ADD COLUMN user_id INTEGER",
             "ALTER TABLE guest ADD COLUMN user_id INTEGER",
+            "ALTER TABLE event ADD COLUMN date_created DATE",
         ]:
             try:
                 conn.execute(db.text(stmt))

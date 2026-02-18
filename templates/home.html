@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% set today = import('datetime').date.today() if false else none %}
 <div class="header-row">
     <h1>List of Events</h1>
     <div class="btn-group">
@@ -16,7 +17,7 @@
                 <div class="kebab-menu-search">
                     <input type="text" id="event-search" placeholder="Search events...">
                 </div>
-                <a href="{{ url_for('export_events') }}">Export Excel</a>
+                <a href="{{ url_for('export_events') }}">Excel</a>
             </div>
         </div>
     </div>
@@ -33,6 +34,7 @@
     <select class="filter-select" id="event-sort">
         <option value="date-asc">Date (earliest first)</option>
         <option value="date-desc">Date (latest first)</option>
+        <option value="created-desc">Recently created</option>
         <option value="name-asc">Name (A-Z)</option>
         <option value="name-desc">Name (Z-A)</option>
         <option value="guests-desc">Most guests</option>
@@ -48,8 +50,10 @@
        data-name="{{ event.name|lower }}"
        data-type="{{ event.event_type }}"
        data-date="{{ event.date.isoformat() }}"
+       data-created="{{ event.date_created.isoformat() if event.date_created else '' }}"
        data-location="{{ (event.location or '')|lower }}"
-       data-guests="{{ total }}">
+       data-guests="{{ total }}"
+       data-past="{{ 'true' if event.date < today_date else 'false' }}">
         <div class="event-row-left">
             <span class="event-row-name">{{ event.name }}</span>
             {% if event.location %}
@@ -67,6 +71,16 @@
     </a>
     {% endfor %}
 </div>
+
+<div class="past-events-section" id="past-events-section" style="display:none">
+    <div class="past-events-toggle" id="past-events-toggle">
+        <span class="collapse-icon">▶</span>
+        <span>Past Events</span>
+        <span class="past-events-count" id="past-events-count"></span>
+    </div>
+    <div class="event-list" id="past-event-grid" style="display:none"></div>
+</div>
+
 <p class="empty" id="no-results" style="display:none;">No events match your filters.</p>
 {% else %}
 <p class="empty">No events yet. Create your first event!</p>

@@ -411,7 +411,97 @@ td select {
     cursor: pointer;
 }
 
-/* ── Event info ────────────────────────────────────────────────────────────── */
+/* ── Event info card ───────────────────────────────────────────────────────── */
+.event-info-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.event-info-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem 0;
+}
+
+.event-info-details { padding: 0.5rem 0; }
+
+.event-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.45rem 1rem;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+
+.event-info-row:last-child { border-bottom: none; }
+.event-info-label { font-size: 0.88rem; color: #8e8e93; }
+.event-info-value { font-size: 0.88rem; font-weight: 500; color: #1c1c1e; }
+
+/* ── Summary highlight column ─────────────────────────────────────────────── */
+.summary-highlight { background: rgba(0,122,255,0.06) !important; font-weight: 700 !important; }
+
+/* ── Guest list controls bar ──────────────────────────────────────────────── */
+.guest-list-controls { display: flex; gap: 0.4rem; margin-bottom: 0.6rem; align-items: center; }
+.guest-list-controls .search-input { flex: 1; min-width: 120px; }
+.guest-list-actions { margin-bottom: 0.6rem; }
+
+/* ── Past events section ──────────────────────────────────────────────────── */
+.past-events-section { margin-top: 1.5rem; }
+
+.past-events-toggle {
+    display: flex; align-items: center; gap: 0.5rem; cursor: pointer;
+    padding: 0.5rem 0; font-size: 0.92rem; font-weight: 600; color: #8e8e93;
+    -webkit-tap-highlight-color: transparent; user-select: none;
+}
+
+.past-events-toggle .collapse-icon { transition: transform 0.2s; font-size: 0.7rem; }
+.past-events-toggle.open .collapse-icon { transform: rotate(90deg); }
+
+.past-events-count {
+    font-size: 0.78rem; font-weight: 500;
+    background: rgba(118,118,128,0.12); padding: 0.1rem 0.45rem; border-radius: 10px;
+}
+
+/* ── Guest Database Picker ────────────────────────────────────────────────── */
+.guest-db-card { max-height: 80vh; display: flex; flex-direction: column; }
+
+.guest-db-search { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(0,0,0,0.06); }
+
+.guest-db-search input {
+    width: 100%; padding: 0.45rem 0.7rem; border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px; font-size: 0.88rem; background: rgba(118,118,128,0.08); font-family: inherit;
+}
+
+.guest-db-search input:focus { outline: none; border-color: #007aff; box-shadow: 0 0 0 3px rgba(0,122,255,0.15); }
+
+.guest-db-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+.guest-db-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.65rem 1rem; border-bottom: 1px solid rgba(0,0,0,0.04);
+    cursor: pointer; transition: background 0.1s; -webkit-tap-highlight-color: transparent;
+}
+
+.guest-db-item:hover { background: rgba(0,122,255,0.04); }
+.guest-db-item.disabled { opacity: 0.4; cursor: default; }
+.guest-db-item.disabled:hover { background: none; }
+
+.guest-db-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #007aff; flex-shrink: 0; }
+
+.guest-db-item-info { flex: 1; min-width: 0; }
+.guest-db-item-name { font-size: 0.92rem; font-weight: 500; }
+.guest-db-item-gender { font-size: 0.78rem; color: #8e8e93; }
+
+.guest-db-footer {
+    padding: 0.75rem 1rem; border-top: 1px solid rgba(0,0,0,0.06);
+    text-align: right; background: white; border-radius: 0 0 14px 14px;
+}
+
+/* ── Event info (legacy) ──────────────────────────────────────────────────── */
 .event-info {
     background: white;
     padding: 1.25rem;

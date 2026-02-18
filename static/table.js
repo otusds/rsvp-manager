@@ -841,17 +841,20 @@ document.addEventListener("DOMContentLoaded", function () {
         hamburgerOverlay.addEventListener("click", closeHamburger);
     }
 
-    // ── Filter toggle button ────────────────────────────────────────────────
-    var toggleFiltersBtn = document.getElementById("toggle-filters-btn");
-    var eventFilters = document.getElementById("event-filters");
-
-    if (toggleFiltersBtn && eventFilters) {
-        toggleFiltersBtn.addEventListener("click", function () {
-            var hidden = eventFilters.style.display === "none";
-            eventFilters.style.display = hidden ? "" : "none";
-            toggleFiltersBtn.classList.toggle("active", hidden);
-        });
+    // ── Filter toggle buttons (home + guest list) ──────────────────────────
+    function setupFilterToggle(btnId, panelId) {
+        var btn = document.getElementById(btnId);
+        var panel = document.getElementById(panelId);
+        if (btn && panel) {
+            btn.addEventListener("click", function () {
+                var hidden = panel.style.display === "none";
+                panel.style.display = hidden ? "" : "none";
+                btn.classList.toggle("active", hidden);
+            });
+        }
     }
+    setupFilterToggle("toggle-filters-btn", "event-filters");
+    setupFilterToggle("gl-toggle-filters-btn", "gl-filters");
 
     // ── Page 3-dot menu ─────────────────────────────────────────────────────
     var pageMenuBtn = document.getElementById("page-menu-btn");
@@ -867,9 +870,144 @@ document.addEventListener("DOMContentLoaded", function () {
                 pageMenu.classList.remove("open");
             }
         });
-        // Keep menu open while typing in search
         pageMenu.addEventListener("click", function (e) {
             if (e.target.tagName === "INPUT") e.stopPropagation();
+        });
+    }
+
+    // ── Guest list 3-dot menu ────────────────────────────────────────────────
+    var glMenuBtn = document.querySelector(".gl-menu-btn");
+    if (glMenuBtn) {
+        attachKebabListener(glMenuBtn);
+    }
+
+    // ── Multi-select toggle ──────────────────────────────────────────────────
+    var toggleMultiBtn = document.getElementById("toggle-multiselect-btn");
+    if (toggleMultiBtn) {
+        toggleMultiBtn.addEventListener("click", function () {
+            var cols = document.querySelectorAll(".col-multiselect");
+            var showing = cols.length > 0 && cols[0].style.display !== "none";
+            cols.forEach(function (el) { el.style.display = showing ? "none" : ""; });
+            // Close the kebab menu
+            var menu = toggleMultiBtn.closest(".kebab-menu");
+            if (menu) menu.classList.remove("open");
+        });
+    }
+
+    // ── Guest Database Picker ────────────────────────────────────────────────
+    var addFromDbBtn = document.getElementById("add-from-db-btn");
+    var guestDbOverlay = document.getElementById("guest-db-overlay");
+    var guestDbClose = document.getElementById("guest-db-close");
+    var guestDbList = document.getElementById("guest-db-list");
+    var guestDbSearchInput = document.getElementById("guest-db-search-input");
+    var guestDbAddBtn = document.getElementById("guest-db-add-btn");
+
+    if (addFromDbBtn && guestDbOverlay) {
+        var addRow = document.querySelector(".add-guest-row");
+        var eventId = addRow ? addRow.getAttribute("data-event-id") : null;
+
+        addFromDbBtn.addEventListener("click", function () {
+            if (!eventId) return;
+            fetch("/api/event/" + eventId + "/available-guests")
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    guestDbList.innerHTML = "";
+                    data.guests.forEach(function (g) {
+                        var name = g.last_name ? g.first_name + " " + g.last_name : g.first_name;
+                        var div = document.createElement("div");
+                        div.className = "guest-db-item" + (g.already_invited ? " disabled" : "");
+                        div.innerHTML =
+                            '<input type="checkbox" data-guest-id="' + g.id + '"' +
+                            (g.already_invited ? ' checked disabled' : '') + '>' +
+                            '<div class="guest-db-item-info">' +
+                            '<div class="guest-db-item-name">' + escapeHtml(name) + '</div>' +
+                            '<div class="guest-db-item-gender">' + escapeHtml(g.gender) + '</div>' +
+                            '</div>';
+                        if (!g.already_invited) {
+                            div.addEventListener("click", function (e) {
+                                if (e.target.tagName !== "INPUT") {
+                                    var cb = div.querySelector("input");
+                                    cb.checked = !cb.checked;
+                                }
+                            });
+                        }
+                        guestDbList.appendChild(div);
+                    });
+                    guestDbOverlay.style.display = "flex";
+                    guestDbSearchInput.value = "";
+                    guestDbSearchInput.focus();
+                });
+        });
+
+        guestDbClose.addEventListener("click", function () { guestDbOverlay.style.display = "none"; });
+        guestDbOverlay.addEventListener("click", function (e) {
+            if (e.target === guestDbOverlay) guestDbOverlay.style.display = "none";
+        });
+
+        guestDbSearchInput.addEventListener("input", function () {
+            var q = guestDbSearchInput.value.toLowerCase();
+            guestDbList.querySelectorAll(".guest-db-item").forEach(function (item) {
+                var name = item.querySelector(".guest-db-item-name").textContent.toLowerCase();
+                item.style.display = (!q || name.indexOf(q) !== -1) ? "" : "none";
+            });
+        });
+
+        guestDbAddBtn.addEventListener("click", function () {
+            var ids = [];
+            guestDbList.querySelectorAll("input[type=checkbox]:checked:not(:disabled)").forEach(function (cb) {
+                ids.push(parseInt(cb.getAttribute("data-guest-id")));
+            });
+            if (ids.length === 0) { guestDbOverlay.style.display = "none"; return; }
+
+            fetch("/api/event/" + eventId + "/bulk-add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ guest_ids: ids })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var tbody = document.querySelector("#invitations-table tbody");
+                var addGuestRow = tbody.querySelector(".add-guest-row");
+                data.added.forEach(function (g) {
+                    var displayName = g.last_name ? g.first_name + " " + g.last_name : g.first_name;
+                    var tr = document.createElement("tr");
+                    tr.setAttribute("data-inv-id", g.invitation_id);
+                    tr.setAttribute("data-guest-id", g.guest_id);
+                    tr.setAttribute("data-channel", "");
+                    tr.setAttribute("data-sent", "false");
+                    tr.setAttribute("data-date-invited", "");
+                    tr.setAttribute("data-date-invited-iso", "");
+                    tr.setAttribute("data-date-responded", "");
+                    tr.setAttribute("data-date-responded-iso", "");
+
+                    var multiShow = document.querySelector(".col-multiselect") &&
+                                    document.querySelector(".col-multiselect").style.display !== "none" ? "" : "none";
+
+                    tr.innerHTML =
+                        '<td class="center col-multiselect" style="display:' + multiShow + '"><input type="checkbox" class="row-select"></td>' +
+                        '<td class="guest-name-cell">' + escapeHtml(displayName) + '</td>' +
+                        '<td class="col-hide-mobile">' + escapeHtml(g.gender) + '</td>' +
+                        '<td class="center"><input type="checkbox" class="sent-checkbox" data-inv-id="' + g.invitation_id + '"></td>' +
+                        '<td><span class="status-not-sent">Not Sent</span></td>' +
+                        '<td class="col-hide-mobile"><input type="text" class="inv-notes-input" data-inv-id="' + g.invitation_id + '" value="" placeholder="Add note..."></td>' +
+                        '<td><div class="kebab-wrapper">' +
+                        '<button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>' +
+                        '<div class="kebab-menu">' +
+                        '<button type="button" class="edit-btn">Edit</button>' +
+                        '<button type="button" class="kebab-danger remove-btn" data-inv-id="' + g.invitation_id + '">Remove</button>' +
+                        '</div></div></td>';
+
+                    tbody.insertBefore(tr, addGuestRow);
+                    attachCheckboxListener(tr.querySelector(".sent-checkbox"));
+                    attachInvNotesListener(tr.querySelector(".inv-notes-input"));
+                    attachRemoveListener(tr.querySelector(".remove-btn"));
+                    attachEditListener(tr.querySelector(".edit-btn"));
+                    attachKebabListener(tr.querySelector(".kebab-btn"));
+                    attachRowSelectListener(tr.querySelector(".row-select"));
+                });
+                refreshSummary();
+                guestDbOverlay.style.display = "none";
+            });
         });
     }
 
@@ -881,54 +1019,91 @@ document.addEventListener("DOMContentLoaded", function () {
     var typeFilter = document.getElementById("event-type-filter");
     var sortSelect = document.getElementById("event-sort");
     var noResults = document.getElementById("no-results");
+    var pastSection = document.getElementById("past-events-section");
+    var pastGrid = document.getElementById("past-event-grid");
+    var pastToggle = document.getElementById("past-events-toggle");
+    var pastCount = document.getElementById("past-events-count");
+
+    function sortCards(cards) {
+        if (!sortSelect) return;
+        var sortVal = sortSelect.value;
+        var parts = sortVal.split("-");
+        var key = parts[0], dir = parts[1];
+
+        cards.sort(function (a, b) {
+            var valA, valB;
+            if (key === "date") {
+                valA = a.getAttribute("data-date");
+                valB = b.getAttribute("data-date");
+            } else if (key === "created") {
+                valA = a.getAttribute("data-created") || "9999";
+                valB = b.getAttribute("data-created") || "9999";
+            } else if (key === "name") {
+                valA = a.getAttribute("data-name");
+                valB = b.getAttribute("data-name");
+            } else if (key === "guests") {
+                valA = parseInt(a.getAttribute("data-guests")) || 0;
+                valB = parseInt(b.getAttribute("data-guests")) || 0;
+                return dir === "asc" ? valA - valB : valB - valA;
+            }
+            if (valA < valB) return dir === "asc" ? -1 : 1;
+            if (valA > valB) return dir === "asc" ? 1 : -1;
+            return 0;
+        });
+    }
 
     function applyCardControls() {
         var query = searchInput ? searchInput.value.toLowerCase() : "";
         var typeVal = typeFilter ? typeFilter.value : "";
-        var cards = Array.from(grid.querySelectorAll(".event-row-card"));
-        var visible = 0;
+        var allCards = Array.from(document.querySelectorAll(".event-row-card"));
+        var futureCards = [];
+        var pastCards = [];
 
-        cards.forEach(function (card) {
+        allCards.forEach(function (card) {
             var name = card.getAttribute("data-name");
             var location = card.getAttribute("data-location");
             var type = card.getAttribute("data-type");
+            var isPast = card.getAttribute("data-past") === "true";
             var matchSearch = !query || name.indexOf(query) !== -1 || location.indexOf(query) !== -1;
             var matchType = !typeVal || type === typeVal;
             var show = matchSearch && matchType;
             card.style.display = show ? "" : "none";
-            if (show) visible++;
+            if (show) {
+                if (isPast) pastCards.push(card);
+                else futureCards.push(card);
+            }
         });
 
-        if (noResults) noResults.style.display = visible === 0 ? "" : "none";
+        sortCards(futureCards);
+        sortCards(pastCards);
 
-        if (sortSelect) {
-            var sortVal = sortSelect.value;
-            var parts = sortVal.split("-");
-            var key = parts[0], dir = parts[1];
+        futureCards.forEach(function (c) { grid.appendChild(c); });
 
-            cards.sort(function (a, b) {
-                var valA, valB;
-                if (key === "date") {
-                    valA = a.getAttribute("data-date");
-                    valB = b.getAttribute("data-date");
-                } else if (key === "name") {
-                    valA = a.getAttribute("data-name");
-                    valB = b.getAttribute("data-name");
-                } else if (key === "guests") {
-                    valA = parseInt(a.getAttribute("data-guests")) || 0;
-                    valB = parseInt(b.getAttribute("data-guests")) || 0;
-                    return dir === "asc" ? valA - valB : valB - valA;
-                }
-                if (valA < valB) return dir === "asc" ? -1 : 1;
-                if (valA > valB) return dir === "asc" ? 1 : -1;
-                return 0;
-            });
-
-            cards.forEach(function (card) { grid.appendChild(card); });
+        if (pastSection) {
+            if (pastCards.length > 0) {
+                pastSection.style.display = "";
+                pastCount.textContent = pastCards.length;
+                pastCards.forEach(function (c) { pastGrid.appendChild(c); });
+            } else {
+                pastSection.style.display = "none";
+            }
         }
+
+        var totalVisible = futureCards.length + pastCards.length;
+        if (noResults) noResults.style.display = totalVisible === 0 ? "" : "none";
+    }
+
+    if (pastToggle) {
+        pastToggle.addEventListener("click", function () {
+            var isOpen = pastToggle.classList.toggle("open");
+            pastGrid.style.display = isOpen ? "" : "none";
+        });
     }
 
     if (searchInput) searchInput.addEventListener("input", applyCardControls);
     if (typeFilter) typeFilter.addEventListener("change", applyCardControls);
     if (sortSelect) sortSelect.addEventListener("change", applyCardControls);
+
+    // Initial separation of past events
+    applyCardControls();
 });
