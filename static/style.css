@@ -231,13 +231,6 @@ h2 {
 
 .kebab-menu-search input::placeholder { color: #8e8e93; }
 
-/* ── iOS-style Cards (shared) ─────────────────────────────────────────────── */
-.ios-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
-}
-
 /* ── Tables ────────────────────────────────────────────────────────────────── */
 .table-scroll {
     overflow-x: auto;
@@ -513,17 +506,6 @@ td select {
     text-align: right; background: white; border-radius: 0 0 14px 14px;
 }
 
-/* ── Event info (legacy) ──────────────────────────────────────────────────── */
-.event-info {
-    background: white;
-    padding: 1.25rem;
-    border-radius: 12px;
-    box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
-    margin-bottom: 1.5rem;
-}
-
-.event-info p { margin-bottom: 0.35rem; font-size: 0.92rem; }
-
 .section { margin-top: 0.75rem; }
 
 /* ── Collapsible sections ──────────────────────────────────────────────────── */
@@ -691,21 +673,6 @@ td select {
 .badge-ceremony   { background: #ff3b30; }
 .badge-other      { background: #8e8e93; }
 
-/* ── Status pills ─────────────────────────────────────────────────────────── */
-.status-pill {
-    display: inline-block;
-    padding: 0.15rem 0.55rem;
-    border-radius: 6px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.status-notsent {
-    background: rgba(142,142,147,0.12);
-    color: #8e8e93;
-}
-
 .status-pending {
     background: rgba(255,149,0,0.12);
     color: #c77d00;
@@ -861,14 +828,7 @@ td.center, th.center { text-align: center; }
     transition: opacity 0.3s;
 }
 
-.save-indicator.visible { opacity: 1; }
-
 /* ── Invitation notes ────────────────────────────────────────────────────── */
-.inv-notes-text {
-    font-size: 0.82rem;
-    color: #636366;
-}
-
 .inv-notes-input {
     padding: 0.3rem 0.5rem;
     border: 1px solid rgba(0,0,0,0.1);
@@ -1164,22 +1124,6 @@ td.center, th.center { text-align: center; }
     accent-color: #007aff;
 }
 
-/* ── Invite form ───────────────────────────────────────────────────────────── */
-.invite-form {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    align-items: center;
-}
-
-.invite-form select {
-    padding: 0.4rem;
-    border: 1px solid rgba(0,0,0,0.1);
-    border-radius: 10px;
-    font-size: 0.9rem;
-    min-width: 200px;
-}
-
 /* ── Responsive button labels ─────────────────────────────────────────────── */
 .btn-label-short { display: none; }
 .btn-label-full { display: inline; }
@@ -1226,9 +1170,6 @@ td.center, th.center { text-align: center; }
     }
 
     .detail-name-input { font-size: 0.95rem; }
-
-    .event-info { padding: 1rem; }
-    .event-info p { font-size: 0.85rem; }
 
     .form { padding: 1.25rem; }
 

@@ -159,6 +159,59 @@ document.addEventListener("DOMContentLoaded", function () {
     // Color all status selects on load
     document.querySelectorAll(".status-select").forEach(colorStatusSelect);
 
+    function buildStatusHtml(invId, status) {
+        if (status === "Not Sent") {
+            return '<span class="status-not-sent">Not Sent</span>';
+        }
+        return '<select class="inline-select status-select" data-inv-id="' + invId + '">' +
+            '<option value="Pending"' + (status === "Pending" ? " selected" : "") + '>Pending</option>' +
+            '<option value="Attending"' + (status === "Attending" ? " selected" : "") + '>Attending</option>' +
+            '<option value="Declined"' + (status === "Declined" ? " selected" : "") + '>Declined</option>' +
+            '</select>';
+    }
+
+    function buildInvitationRow(data) {
+        var displayName = data.last_name ? data.first_name + " " + data.last_name : data.first_name;
+        var isSent = data.status !== "Not Sent";
+        var multiCol = document.querySelector(".col-multiselect");
+        var multiShow = multiCol && multiCol.style.display !== "none" ? "" : "none";
+
+        var tr = document.createElement("tr");
+        tr.setAttribute("data-inv-id", data.invitation_id);
+        tr.setAttribute("data-guest-id", data.guest_id);
+        tr.setAttribute("data-channel", data.channel || "");
+        tr.setAttribute("data-sent", isSent ? "true" : "false");
+        tr.setAttribute("data-date-invited", data.date_invited || "");
+        tr.setAttribute("data-date-invited-iso", data.date_invited_iso || "");
+        tr.setAttribute("data-date-responded", data.date_responded || "");
+        tr.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
+
+        tr.innerHTML =
+            '<td class="center col-multiselect" style="display:' + multiShow + '"><input type="checkbox" class="row-select"></td>' +
+            '<td class="guest-name-cell">' + escapeHtml(displayName) + '</td>' +
+            '<td class="col-hide-mobile">' + escapeHtml(data.gender) + '</td>' +
+            '<td class="center"><input type="checkbox" class="sent-checkbox" data-inv-id="' + data.invitation_id + '"' + (isSent ? ' checked' : '') + '></td>' +
+            '<td>' + buildStatusHtml(data.invitation_id, data.status) + '</td>' +
+            '<td class="col-hide-mobile"><input type="text" class="inv-notes-input" data-inv-id="' + data.invitation_id + '" value="' + escapeHtml(data.notes || "") + '" placeholder="Add note..."></td>' +
+            '<td><div class="kebab-wrapper">' +
+            '<button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>' +
+            '<div class="kebab-menu">' +
+            '<button type="button" class="edit-btn">Edit</button>' +
+            '<button type="button" class="kebab-danger remove-btn" data-inv-id="' + data.invitation_id + '">Remove</button>' +
+            '</div></div></td>';
+
+        attachCheckboxListener(tr.querySelector(".sent-checkbox"));
+        var statusSel = tr.querySelector(".status-select");
+        if (statusSel) attachStatusListener(statusSel);
+        attachInvNotesListener(tr.querySelector(".inv-notes-input"));
+        attachRemoveListener(tr.querySelector(".remove-btn"));
+        attachEditListener(tr.querySelector(".edit-btn"));
+        attachKebabListener(tr.querySelector(".kebab-btn"));
+        attachRowSelectListener(tr.querySelector(".row-select"));
+
+        return tr;
+    }
+
     // ── Kebab (3-dot) menu toggle ───────────────────────────────────────────
 
     function attachKebabListener(btn) {
@@ -202,22 +255,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     row.setAttribute("data-date-invited-iso", "");
                     row.setAttribute("data-date-responded", "");
                     row.setAttribute("data-date-responded-iso", "");
-                    statusCell.innerHTML = '<span class="status-not-sent">Not Sent</span>';
                 } else {
                     checkbox.checked = true;
                     row.setAttribute("data-sent", "true");
                     row.setAttribute("data-date-invited", data.date_invited);
                     row.setAttribute("data-date-invited-iso", data.date_invited_iso);
-                    statusCell.innerHTML =
-                        '<select class="inline-select status-select" data-inv-id="' + invId + '">' +
-                        '<option value="Pending" selected>Pending</option>' +
-                        '<option value="Attending">Attending</option>' +
-                        '<option value="Declined">Declined</option>' +
-                        '</select>';
-                    var newSel = statusCell.querySelector(".status-select");
-                    attachStatusListener(newSel);
-                    colorStatusSelect(newSel);
                 }
+                statusCell.innerHTML = buildStatusHtml(invId, data.status);
+                var newSel = statusCell.querySelector(".status-select");
+                if (newSel) { attachStatusListener(newSel); colorStatusSelect(newSel); }
                 refreshSummary();
             });
         });
@@ -538,12 +584,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         row.setAttribute("data-date-invited", data.date_invited);
                         row.setAttribute("data-date-invited-iso", data.date_invited_iso);
                         var statusCell = row.cells[4];
-                        statusCell.innerHTML =
-                            '<select class="inline-select status-select" data-inv-id="' + invId + '">' +
-                            '<option value="Pending" selected>Pending</option>' +
-                            '<option value="Attending">Attending</option>' +
-                            '<option value="Declined">Declined</option>' +
-                            '</select>';
+                        statusCell.innerHTML = buildStatusHtml(invId, "Pending");
                         attachStatusListener(statusCell.querySelector(".status-select"));
                     });
                 } else if (action === "unsend" && isSent) {
@@ -557,7 +598,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         row.setAttribute("data-date-invited-iso", "");
                         row.setAttribute("data-date-responded", "");
                         row.setAttribute("data-date-responded-iso", "");
-                        row.cells[4].innerHTML = '<span class="status-not-sent">Not Sent</span>';
+                        row.cells[4].innerHTML = buildStatusHtml(invId, "Not Sent");
                     });
                 } else if (action === "attending" || action === "pending" || action === "declined") {
                     var newStatus = action.charAt(0).toUpperCase() + action.slice(1);
@@ -572,12 +613,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             row.setAttribute("data-date-invited", data.date_invited);
                             row.setAttribute("data-date-invited-iso", data.date_invited_iso);
                             var statusCell = row.cells[4];
-                            statusCell.innerHTML =
-                                '<select class="inline-select status-select" data-inv-id="' + invId + '">' +
-                                '<option value="Pending">Pending</option>' +
-                                '<option value="Attending">Attending</option>' +
-                                '<option value="Declined">Declined</option>' +
-                                '</select>';
+                            statusCell.innerHTML = buildStatusHtml(invId, "Pending");
                             attachStatusListener(statusCell.querySelector(".status-select"));
                           })
                         : Promise.resolve();
@@ -755,54 +791,9 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data.error) { alert(data.error); return; }
-                var displayName = data.last_name ? data.first_name + " " + data.last_name : data.first_name;
-                var isSent = data.status !== "Not Sent";
                 var tbody = document.querySelector("#invitations-table tbody");
-                var tr = document.createElement("tr");
-                tr.setAttribute("data-inv-id", data.invitation_id);
-                tr.setAttribute("data-guest-id", data.guest_id);
-                tr.setAttribute("data-channel", data.channel || "");
-                tr.setAttribute("data-sent", isSent ? "true" : "false");
-                tr.setAttribute("data-date-invited", data.date_invited || "");
-                tr.setAttribute("data-date-invited-iso", data.date_invited_iso || "");
-                tr.setAttribute("data-date-responded", data.date_responded || "");
-                tr.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
-
-                var statusHtml;
-                if (isSent) {
-                    statusHtml =
-                        '<select class="inline-select status-select" data-inv-id="' + data.invitation_id + '">' +
-                        '<option value="Pending"' + (data.status === "Pending" ? " selected" : "") + '>Pending</option>' +
-                        '<option value="Attending"' + (data.status === "Attending" ? " selected" : "") + '>Attending</option>' +
-                        '<option value="Declined"' + (data.status === "Declined" ? " selected" : "") + '>Declined</option>' +
-                        '</select>';
-                } else {
-                    statusHtml = '<span class="status-not-sent">Not Sent</span>';
-                }
-
-                tr.innerHTML =
-                    '<td class="center"><input type="checkbox" class="row-select"></td>' +
-                    '<td class="guest-name-cell">' + escapeHtml(displayName) + '</td>' +
-                    '<td class="col-hide-mobile">' + escapeHtml(data.gender) + '</td>' +
-                    '<td class="center"><input type="checkbox" class="sent-checkbox" data-inv-id="' + data.invitation_id + '"' + (isSent ? ' checked' : '') + '></td>' +
-                    '<td>' + statusHtml + '</td>' +
-                    '<td class="col-hide-mobile"><input type="text" class="inv-notes-input" data-inv-id="' + data.invitation_id + '" value="" placeholder="Add note..."></td>' +
-                    '<td><div class="kebab-wrapper">' +
-                    '<button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>' +
-                    '<div class="kebab-menu">' +
-                    '<button type="button" class="edit-btn">Edit</button>' +
-                    '<button type="button" class="kebab-danger remove-btn" data-inv-id="' + data.invitation_id + '">Remove</button>' +
-                    '</div></div></td>';
-
+                var tr = buildInvitationRow(data);
                 tbody.insertBefore(tr, addRow);
-                attachCheckboxListener(tr.querySelector(".sent-checkbox"));
-                var statusSel = tr.querySelector(".status-select");
-                if (statusSel) attachStatusListener(statusSel);
-                attachInvNotesListener(tr.querySelector(".inv-notes-input"));
-                attachRemoveListener(tr.querySelector(".remove-btn"));
-                attachEditListener(tr.querySelector(".edit-btn"));
-                attachKebabListener(tr.querySelector(".kebab-btn"));
-                attachRowSelectListener(tr.querySelector(".row-select"));
 
                 // Reset
                 firstNameInput.value = "";
@@ -969,41 +960,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 var tbody = document.querySelector("#invitations-table tbody");
                 var addGuestRow = tbody.querySelector(".add-guest-row");
                 data.added.forEach(function (g) {
-                    var displayName = g.last_name ? g.first_name + " " + g.last_name : g.first_name;
-                    var tr = document.createElement("tr");
-                    tr.setAttribute("data-inv-id", g.invitation_id);
-                    tr.setAttribute("data-guest-id", g.guest_id);
-                    tr.setAttribute("data-channel", "");
-                    tr.setAttribute("data-sent", "false");
-                    tr.setAttribute("data-date-invited", "");
-                    tr.setAttribute("data-date-invited-iso", "");
-                    tr.setAttribute("data-date-responded", "");
-                    tr.setAttribute("data-date-responded-iso", "");
-
-                    var multiShow = document.querySelector(".col-multiselect") &&
-                                    document.querySelector(".col-multiselect").style.display !== "none" ? "" : "none";
-
-                    tr.innerHTML =
-                        '<td class="center col-multiselect" style="display:' + multiShow + '"><input type="checkbox" class="row-select"></td>' +
-                        '<td class="guest-name-cell">' + escapeHtml(displayName) + '</td>' +
-                        '<td class="col-hide-mobile">' + escapeHtml(g.gender) + '</td>' +
-                        '<td class="center"><input type="checkbox" class="sent-checkbox" data-inv-id="' + g.invitation_id + '"></td>' +
-                        '<td><span class="status-not-sent">Not Sent</span></td>' +
-                        '<td class="col-hide-mobile"><input type="text" class="inv-notes-input" data-inv-id="' + g.invitation_id + '" value="" placeholder="Add note..."></td>' +
-                        '<td><div class="kebab-wrapper">' +
-                        '<button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>' +
-                        '<div class="kebab-menu">' +
-                        '<button type="button" class="edit-btn">Edit</button>' +
-                        '<button type="button" class="kebab-danger remove-btn" data-inv-id="' + g.invitation_id + '">Remove</button>' +
-                        '</div></div></td>';
-
+                    var tr = buildInvitationRow(g);
                     tbody.insertBefore(tr, addGuestRow);
-                    attachCheckboxListener(tr.querySelector(".sent-checkbox"));
-                    attachInvNotesListener(tr.querySelector(".inv-notes-input"));
-                    attachRemoveListener(tr.querySelector(".remove-btn"));
-                    attachEditListener(tr.querySelector(".edit-btn"));
-                    attachKebabListener(tr.querySelector(".kebab-btn"));
-                    attachRowSelectListener(tr.querySelector(".row-select"));
                 });
                 refreshSummary();
                 guestDbOverlay.style.display = "none";

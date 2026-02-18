@@ -175,9 +175,7 @@ def event_detail(event_id):
     event = Event.query.get_or_404(event_id)
     if event.user_id != current_user.id:
         return redirect(url_for("home"))
-    invited_guest_ids = [inv.guest_id for inv in event.invitations]
-    available_guests = Guest.query.filter_by(user_id=current_user.id).filter(~Guest.id.in_(invited_guest_ids)).all() if invited_guest_ids else Guest.query.filter_by(user_id=current_user.id).all()
-    return render_template("event_detail.html", event=event, available_guests=available_guests, channels=CHANNELS)
+    return render_template("event_detail.html", event=event, channels=CHANNELS)
 
 
 @app.route("/event/<int:event_id>/edit", methods=["GET", "POST"])
@@ -279,7 +277,11 @@ def invite_guest(event_id):
     event = Event.query.get_or_404(event_id)
     if event.user_id != current_user.id:
         abort(403)
-    invitation = Invitation(event_id=event_id, guest_id=int(request.form["guest_id"]),
+    guest_id = int(request.form["guest_id"])
+    guest = Guest.query.get_or_404(guest_id)
+    if guest.user_id != current_user.id:
+        abort(403)
+    invitation = Invitation(event_id=event_id, guest_id=guest_id,
                             status="Not Sent", date_invited=None)
     db.session.add(invitation)
     db.session.commit()
@@ -361,13 +363,18 @@ def api_guest_search():
     query = Guest.query.filter_by(user_id=current_user.id)
     if invited_ids:
         query = query.filter(~Guest.id.in_(invited_ids))
-    all_guests = query.order_by(Guest.first_name, Guest.last_name).all()
+    pattern = f"%{q}%"
+    query = query.filter(
+        db.or_(
+            Guest.first_name.ilike(pattern),
+            Guest.last_name.ilike(pattern),
+            (Guest.first_name + " " + Guest.last_name).ilike(pattern),
+        )
+    )
     results = []
-    for g in all_guests:
-        full = g.full_name.lower()
-        if q in full or q in g.first_name.lower() or q in (g.last_name or "").lower():
-            results.append({"id": g.id, "first_name": g.first_name, "last_name": g.last_name or "", "gender": g.gender})
-    return jsonify(guests=results[:10])
+    for g in query.order_by(Guest.first_name, Guest.last_name).limit(10).all():
+        results.append({"id": g.id, "first_name": g.first_name, "last_name": g.last_name or "", "gender": g.gender})
+    return jsonify(guests=results)
 
 
 @app.route("/event/<int:event_id>/quick-add", methods=["POST"])
@@ -380,10 +387,13 @@ def quick_add_guest(event_id):
     guest_id = data.get("guest_id")
     if guest_id:
         guest = Guest.query.get_or_404(guest_id)
+        if guest.user_id != current_user.id:
+            abort(403)
     else:
         guest = Guest(user_id=current_user.id, first_name=data["first_name"],
                       last_name=data.get("last_name", ""),
-                      gender=data.get("gender", "Male"), notes="")
+                      gender=data.get("gender", "Male"), notes="",
+                      date_created=datetime.now())
         db.session.add(guest)
         db.session.flush()
     existing = Invitation.query.filter_by(event_id=event_id, guest_id=guest.id).first()
@@ -448,6 +458,8 @@ def update_invitation_field(invitation_id):
         invitation.channel = value
     elif field == "notes":
         invitation.notes = value
+    else:
+        return jsonify(error="Invalid field"), 400
     db.session.commit()
     return jsonify(ok=True)
 
@@ -590,28 +602,30 @@ def export_event_guests(event_id):
 
 def seed(user_id):
     """Populate a user's account with sample data."""
+    today = date.today()
     events = [
-        Event(user_id=user_id, name="Annual Gala Dinner", event_type="Dinner", location="Grand Hotel, New York", date=date(2026, 4, 12), notes="Black tie event"),
-        Event(user_id=user_id, name="Team Building Retreat", event_type="Corporate", location="Lakehouse Resort, Vermont", date=date(2026, 5, 20), notes="Outdoor activities planned"),
-        Event(user_id=user_id, name="Summer Garden Party", event_type="Party", location="Riverside Park, Boston", date=date(2026, 7, 4), notes="Casual dress code"),
-        Event(user_id=user_id, name="Product Launch", event_type="Conference", location="Tech Hub, San Francisco", date=date(2026, 9, 15), notes="Press invited"),
+        Event(user_id=user_id, name="Annual Gala Dinner", event_type="Dinner", location="Grand Hotel, New York", date=date(2026, 4, 12), date_created=today, notes="Black tie event"),
+        Event(user_id=user_id, name="Team Building Retreat", event_type="Corporate", location="Lakehouse Resort, Vermont", date=date(2026, 5, 20), date_created=today, notes="Outdoor activities planned"),
+        Event(user_id=user_id, name="Summer Garden Party", event_type="Party", location="Riverside Park, Boston", date=date(2026, 7, 4), date_created=today, notes="Casual dress code"),
+        Event(user_id=user_id, name="Product Launch", event_type="Conference", location="Tech Hub, San Francisco", date=date(2026, 9, 15), date_created=today, notes="Press invited"),
     ]
     db.session.add_all(events)
     db.session.flush()
 
+    now = datetime.now()
     guests = [
-        Guest(user_id=user_id, first_name="Alice", last_name="Martin", gender="Female", notes="Vegetarian"),
-        Guest(user_id=user_id, first_name="James", last_name="Wilson", gender="Male"),
-        Guest(user_id=user_id, first_name="Sofia", last_name="Garcia", gender="Female", notes="Plus one confirmed"),
-        Guest(user_id=user_id, first_name="Oliver", last_name="Brown", gender="Male"),
-        Guest(user_id=user_id, first_name="Emma", last_name="Taylor", gender="Female"),
-        Guest(user_id=user_id, first_name="William", last_name="Anderson", gender="Male", notes="Allergic to nuts"),
-        Guest(user_id=user_id, first_name="Charlotte", last_name="Thomas", gender="Female"),
-        Guest(user_id=user_id, first_name="Henry", last_name="Jackson", gender="Male"),
-        Guest(user_id=user_id, first_name="Amelia", last_name="White", gender="Female", notes="Wheelchair accessible seating"),
-        Guest(user_id=user_id, first_name="Lucas", last_name="Harris", gender="Male"),
-        Guest(user_id=user_id, first_name="Isabella", last_name="Clark", gender="Female"),
-        Guest(user_id=user_id, first_name="Benjamin", last_name="Lee", gender="Male", notes="VIP"),
+        Guest(user_id=user_id, first_name="Alice", last_name="Martin", gender="Female", notes="Vegetarian", date_created=now),
+        Guest(user_id=user_id, first_name="James", last_name="Wilson", gender="Male", date_created=now),
+        Guest(user_id=user_id, first_name="Sofia", last_name="Garcia", gender="Female", notes="Plus one confirmed", date_created=now),
+        Guest(user_id=user_id, first_name="Oliver", last_name="Brown", gender="Male", date_created=now),
+        Guest(user_id=user_id, first_name="Emma", last_name="Taylor", gender="Female", date_created=now),
+        Guest(user_id=user_id, first_name="William", last_name="Anderson", gender="Male", notes="Allergic to nuts", date_created=now),
+        Guest(user_id=user_id, first_name="Charlotte", last_name="Thomas", gender="Female", date_created=now),
+        Guest(user_id=user_id, first_name="Henry", last_name="Jackson", gender="Male", date_created=now),
+        Guest(user_id=user_id, first_name="Amelia", last_name="White", gender="Female", notes="Wheelchair accessible seating", date_created=now),
+        Guest(user_id=user_id, first_name="Lucas", last_name="Harris", gender="Male", date_created=now),
+        Guest(user_id=user_id, first_name="Isabella", last_name="Clark", gender="Female", date_created=now),
+        Guest(user_id=user_id, first_name="Benjamin", last_name="Lee", gender="Male", notes="VIP", date_created=now),
     ]
     db.session.add_all(guests)
     db.session.flush()
