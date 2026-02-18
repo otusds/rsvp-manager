@@ -29,5 +29,16 @@
         <button type="submit" class="btn">{{ "Save" if guest else "Add Guest" }}</button>
         <a href="{{ url_for('guests') }}" class="btn btn-secondary">Cancel</a>
     </div>
+
+    {% if guest %}
+    <div class="form-meta">
+        {% if guest.date_created %}
+        <p>Created: {{ guest.date_created.strftime('%B %d, %Y at %H:%M') }}</p>
+        {% endif %}
+        {% if guest.date_edited %}
+        <p>Last edited: {{ guest.date_edited.strftime('%B %d, %Y at %H:%M') }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
 </form>
 {% endblock %}

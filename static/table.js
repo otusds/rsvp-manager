@@ -1011,6 +1011,71 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // ── Guest Database table search, filter & sort ──────────────────────────────
+    var guestsTable = document.getElementById("guests-table");
+    if (guestsTable) {
+        var guestSearchInput = document.getElementById("guest-search");
+        var guestGenderFilter = document.getElementById("guest-gender-filter");
+        var guestSortSelect = document.getElementById("guest-sort");
+        var guestNoResults = document.getElementById("no-results");
+
+        function sortGuestRows() {
+            var tbody = guestsTable.querySelector("tbody");
+            var rows = Array.from(tbody.querySelectorAll("tr"));
+            var sortVal = guestSortSelect ? guestSortSelect.value : "created-desc";
+            var parts = sortVal.split("-");
+            var key = parts[0], dir = parts[1];
+
+            rows.sort(function (a, b) {
+                // "Me" rows always on top
+                var aMe = a.getAttribute("data-is-me") === "true" ? 1 : 0;
+                var bMe = b.getAttribute("data-is-me") === "true" ? 1 : 0;
+                if (aMe !== bMe) return bMe - aMe;
+
+                var valA, valB;
+                if (key === "created") {
+                    valA = a.getAttribute("data-created") || "";
+                    valB = b.getAttribute("data-created") || "";
+                } else if (key === "first") {
+                    valA = a.getAttribute("data-first") || "";
+                    valB = b.getAttribute("data-first") || "";
+                } else if (key === "last") {
+                    valA = a.getAttribute("data-last") || "";
+                    valB = b.getAttribute("data-last") || "";
+                } else if (key === "gender") {
+                    valA = a.getAttribute("data-gender") || "";
+                    valB = b.getAttribute("data-gender") || "";
+                }
+                if (valA < valB) return dir === "asc" ? -1 : 1;
+                if (valA > valB) return dir === "asc" ? 1 : -1;
+                return 0;
+            });
+            rows.forEach(function (row) { tbody.appendChild(row); });
+        }
+
+        function applyGuestTableControls() {
+            sortGuestRows();
+            var query = guestSearchInput ? guestSearchInput.value.toLowerCase() : "";
+            var genderVal = guestGenderFilter ? guestGenderFilter.value : "";
+            var rows = guestsTable.querySelectorAll("tbody tr");
+            var visibleCount = 0;
+            rows.forEach(function (row) {
+                var text = row.textContent.toLowerCase();
+                var gender = row.getAttribute("data-gender");
+                var matchSearch = !query || text.indexOf(query) !== -1;
+                var matchGender = !genderVal || gender === genderVal;
+                var show = matchSearch && matchGender;
+                row.style.display = show ? "" : "none";
+                if (show) visibleCount++;
+            });
+            if (guestNoResults) guestNoResults.style.display = visibleCount === 0 ? "" : "none";
+        }
+
+        if (guestSearchInput) guestSearchInput.addEventListener("input", applyGuestTableControls);
+        if (guestGenderFilter) guestGenderFilter.addEventListener("change", applyGuestTableControls);
+        if (guestSortSelect) guestSortSelect.addEventListener("change", applyGuestTableControls);
+    }
+
     // ── Event card search, filter & sort ─────────────────────────────────────
     var grid = document.getElementById("event-grid");
     if (!grid) return;

@@ -392,6 +392,18 @@ th.sort-desc::after { content: "\2193"; opacity: 0.7; }
     gap: 0.5rem;
 }
 
+.form-meta {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.form-meta p {
+    font-size: 0.8rem;
+    color: #8e8e93;
+    margin-bottom: 0.2rem;
+}
+
 /* ── Inline forms ──────────────────────────────────────────────────────────── */
 .inline { display: inline; }
 
@@ -1168,6 +1180,10 @@ td.center, th.center { text-align: center; }
     min-width: 200px;
 }
 
+/* ── Responsive button labels ─────────────────────────────────────────────── */
+.btn-label-short { display: none; }
+.btn-label-full { display: inline; }
+
 /* ── Mobile responsive ────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
     main { padding: 0.75rem 0.75rem 2rem; }
@@ -1185,6 +1201,10 @@ td.center, th.center { text-align: center; }
 
     .table-controls { gap: 0.3rem; }
     .search-input, .filter-select { font-size: 0.82rem; }
+
+    /* Responsive button: show "+" only on mobile */
+    .btn-label-short { display: inline; }
+    .btn-label-full { display: none; }
 
     /* Hide gender & notes cols on mobile */
     .col-hide-mobile { display: none; }

@@ -62,6 +62,8 @@ class Guest(db.Model):
     gender = db.Column(db.String(10), nullable=False)
     is_me = db.Column(db.Boolean, default=False)
     notes = db.Column(db.Text, default="")
+    date_created = db.Column(db.DateTime, nullable=True)
+    date_edited = db.Column(db.DateTime, nullable=True)
     invitations = db.relationship("Invitation", backref="guest", cascade="all, delete-orphan")
 
     @property
@@ -229,6 +231,7 @@ def add_guest():
             gender=request.form["gender"],
             is_me=is_me,
             notes=request.form.get("notes", ""),
+            date_created=datetime.now(),
         )
         db.session.add(guest)
         db.session.commit()
@@ -251,6 +254,7 @@ def edit_guest(guest_id):
         guest.gender = request.form["gender"]
         guest.is_me = is_me
         guest.notes = request.form.get("notes", "")
+        guest.date_edited = datetime.now()
         db.session.commit()
         return redirect(url_for("guests"))
     return render_template("edit_guest.html", guest=guest)
@@ -658,6 +662,8 @@ with app.app_context():
             "ALTER TABLE event ADD COLUMN user_id INTEGER",
             "ALTER TABLE guest ADD COLUMN user_id INTEGER",
             "ALTER TABLE event ADD COLUMN date_created DATE",
+            "ALTER TABLE guest ADD COLUMN date_created TIMESTAMP",
+            "ALTER TABLE guest ADD COLUMN date_edited TIMESTAMP",
         ]:
             try:
                 conn.execute(db.text(stmt))

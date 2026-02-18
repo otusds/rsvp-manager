@@ -2,39 +2,63 @@
 
 {% block content %}
 <div class="header-row">
-    <h1>Guests</h1>
+    <h1>Guest Database</h1>
     <div class="btn-group">
-        <a href="{{ url_for('export_guests') }}" class="btn btn-secondary">Export Excel</a>
-        <a href="{{ url_for('add_guest') }}" class="btn">+ Add Guest</a>
+        <a href="{{ url_for('add_guest') }}" class="btn"><span class="btn-label-short">+</span><span class="btn-label-full">+ Add New Guest</span></a>
+        <button type="button" class="icon-btn" id="toggle-filters-btn" title="Filters">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        </button>
+        <div class="kebab-wrapper">
+            <button type="button" class="icon-btn" id="page-menu-btn" aria-label="More">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+            </button>
+            <div class="kebab-menu kebab-menu-right" id="page-menu">
+                <div class="kebab-menu-search">
+                    <input type="text" id="guest-search" placeholder="Search guests...">
+                </div>
+                <a href="{{ url_for('export_guests') }}">Export to Excel</a>
+            </div>
+        </div>
     </div>
 </div>
 
 {% if guests %}
-<div class="table-controls">
-    <input type="text" class="search-input" data-table="guests-table" placeholder="Search guests...">
-    <select class="filter-select" data-table="guests-table" data-col="2">
+<div class="table-controls" id="event-filters" style="display:none">
+    <select class="filter-select" id="guest-gender-filter">
         <option value="">All Genders</option>
         <option value="Male">Male</option>
         <option value="Female">Female</option>
     </select>
+    <select class="filter-select" id="guest-sort">
+        <option value="created-desc">Last Created</option>
+        <option value="first-asc">First Name (A-Z)</option>
+        <option value="last-asc">Last Name (A-Z)</option>
+        <option value="gender-asc">Gender</option>
+    </select>
 </div>
+
+<div class="table-scroll">
 <table id="guests-table" class="sortable">
     <thead>
         <tr>
-            <th data-sort="text">Name</th>
             <th data-sort="text">First Name</th>
+            <th data-sort="text">Last Name</th>
             <th data-sort="text">Gender</th>
-            <th data-sort="text">Notes</th>
+            <th data-sort="text" class="col-hide-mobile">Notes</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         {% for guest in guests %}
-        <tr>
-            <td>{{ guest.full_name }}{% if guest.is_me %} <span class="badge-me">Me</span>{% endif %}</td>
-            <td>{{ guest.first_name }}</td>
+        <tr data-gender="{{ guest.gender }}"
+            data-first="{{ guest.first_name|lower }}"
+            data-last="{{ (guest.last_name or '')|lower }}"
+            data-created="{{ guest.date_created.isoformat() if guest.date_created else '' }}"
+            data-is-me="{{ 'true' if guest.is_me else 'false' }}">
+            <td>{{ guest.first_name }}{% if guest.is_me %} <span class="badge-me">Me</span>{% endif %}</td>
+            <td>{{ guest.last_name or '' }}</td>
             <td>{{ guest.gender }}</td>
-            <td>{{ guest.notes or '—' }}</td>
+            <td class="col-hide-mobile">{{ guest.notes or '—' }}</td>
             <td>
                 <div class="kebab-wrapper">
                     <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>
@@ -51,6 +75,9 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
+
+<p class="empty" id="no-results" style="display:none;">No guests match your filters.</p>
 {% else %}
 <p class="empty">No guests yet. Add your first guest!</p>
 {% endif %}
