@@ -818,6 +818,61 @@ document.addEventListener("DOMContentLoaded", function () {
         addBtn.addEventListener("click", addGuest);
     }
 
+    // ── Hamburger menu ──────────────────────────────────────────────────────
+    var hamburgerBtn = document.getElementById("hamburger-btn");
+    var hamburgerMenu = document.getElementById("hamburger-menu");
+    var hamburgerOverlay = document.getElementById("hamburger-overlay");
+
+    if (hamburgerBtn) {
+        function toggleHamburger() {
+            var isOpen = hamburgerMenu.classList.toggle("open");
+            hamburgerBtn.classList.toggle("active", isOpen);
+            hamburgerOverlay.classList.toggle("open", isOpen);
+        }
+        function closeHamburger() {
+            hamburgerMenu.classList.remove("open");
+            hamburgerBtn.classList.remove("active");
+            hamburgerOverlay.classList.remove("open");
+        }
+        hamburgerBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            toggleHamburger();
+        });
+        hamburgerOverlay.addEventListener("click", closeHamburger);
+    }
+
+    // ── Filter toggle button ────────────────────────────────────────────────
+    var toggleFiltersBtn = document.getElementById("toggle-filters-btn");
+    var eventFilters = document.getElementById("event-filters");
+
+    if (toggleFiltersBtn && eventFilters) {
+        toggleFiltersBtn.addEventListener("click", function () {
+            var hidden = eventFilters.style.display === "none";
+            eventFilters.style.display = hidden ? "" : "none";
+            toggleFiltersBtn.classList.toggle("active", hidden);
+        });
+    }
+
+    // ── Page 3-dot menu ─────────────────────────────────────────────────────
+    var pageMenuBtn = document.getElementById("page-menu-btn");
+    var pageMenu = document.getElementById("page-menu");
+
+    if (pageMenuBtn && pageMenu) {
+        pageMenuBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            pageMenu.classList.toggle("open");
+        });
+        document.addEventListener("click", function (e) {
+            if (!pageMenu.contains(e.target) && e.target !== pageMenuBtn) {
+                pageMenu.classList.remove("open");
+            }
+        });
+        // Keep menu open while typing in search
+        pageMenu.addEventListener("click", function (e) {
+            if (e.target.tagName === "INPUT") e.stopPropagation();
+        });
+    }
+
     // ── Event card search, filter & sort ─────────────────────────────────────
     var grid = document.getElementById("event-grid");
     if (!grid) return;
@@ -828,8 +883,8 @@ document.addEventListener("DOMContentLoaded", function () {
     var noResults = document.getElementById("no-results");
 
     function applyCardControls() {
-        var query = searchInput.value.toLowerCase();
-        var typeVal = typeFilter.value;
+        var query = searchInput ? searchInput.value.toLowerCase() : "";
+        var typeVal = typeFilter ? typeFilter.value : "";
         var cards = Array.from(grid.querySelectorAll(".event-row-card"));
         var visible = 0;
 
@@ -844,34 +899,36 @@ document.addEventListener("DOMContentLoaded", function () {
             if (show) visible++;
         });
 
-        noResults.style.display = visible === 0 ? "" : "none";
+        if (noResults) noResults.style.display = visible === 0 ? "" : "none";
 
-        var sortVal = sortSelect.value;
-        var parts = sortVal.split("-");
-        var key = parts[0], dir = parts[1];
+        if (sortSelect) {
+            var sortVal = sortSelect.value;
+            var parts = sortVal.split("-");
+            var key = parts[0], dir = parts[1];
 
-        cards.sort(function (a, b) {
-            var valA, valB;
-            if (key === "date") {
-                valA = a.getAttribute("data-date");
-                valB = b.getAttribute("data-date");
-            } else if (key === "name") {
-                valA = a.getAttribute("data-name");
-                valB = b.getAttribute("data-name");
-            } else if (key === "guests") {
-                valA = parseInt(a.getAttribute("data-guests")) || 0;
-                valB = parseInt(b.getAttribute("data-guests")) || 0;
-                return dir === "asc" ? valA - valB : valB - valA;
-            }
-            if (valA < valB) return dir === "asc" ? -1 : 1;
-            if (valA > valB) return dir === "asc" ? 1 : -1;
-            return 0;
-        });
+            cards.sort(function (a, b) {
+                var valA, valB;
+                if (key === "date") {
+                    valA = a.getAttribute("data-date");
+                    valB = b.getAttribute("data-date");
+                } else if (key === "name") {
+                    valA = a.getAttribute("data-name");
+                    valB = b.getAttribute("data-name");
+                } else if (key === "guests") {
+                    valA = parseInt(a.getAttribute("data-guests")) || 0;
+                    valB = parseInt(b.getAttribute("data-guests")) || 0;
+                    return dir === "asc" ? valA - valB : valB - valA;
+                }
+                if (valA < valB) return dir === "asc" ? -1 : 1;
+                if (valA > valB) return dir === "asc" ? 1 : -1;
+                return 0;
+            });
 
-        cards.forEach(function (card) { grid.appendChild(card); });
+            cards.forEach(function (card) { grid.appendChild(card); });
+        }
     }
 
-    searchInput.addEventListener("input", applyCardControls);
-    typeFilter.addEventListener("change", applyCardControls);
-    sortSelect.addEventListener("change", applyCardControls);
+    if (searchInput) searchInput.addEventListener("input", applyCardControls);
+    if (typeFilter) typeFilter.addEventListener("change", applyCardControls);
+    if (sortSelect) sortSelect.addEventListener("change", applyCardControls);
 });
