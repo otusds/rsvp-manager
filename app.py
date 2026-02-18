@@ -10,7 +10,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
 app = Flask(__name__)
-database_url = os.environ.get("DATABASE_URL", "sqlite:///rsvp.db")
+database_url = os.environ.get("DATABASE_URL") or "sqlite:///rsvp.db"
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
