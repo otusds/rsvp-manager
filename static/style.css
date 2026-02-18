@@ -1188,6 +1188,12 @@ select.status-declined {
 
 .kebab-menu.open { display: block; }
 
+.kebab-menu-right {
+    right: 0;
+    left: auto;
+    min-width: 200px;
+}
+
 .kebab-menu a,
 .kebab-menu button {
     display: block;
