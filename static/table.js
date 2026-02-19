@@ -1023,12 +1023,11 @@ document.addEventListener("DOMContentLoaded", function () {
     // ── Sticky offsets for frozen headers ─────────────────────────────────
     function updateStickyOffsets() {
         document.querySelectorAll(".sticky-controls").forEach(function (el) {
-            var thTop = 52 + el.offsetHeight;
+            var usedHeight = 52 + el.offsetHeight;
             var sibling = el.nextElementSibling;
             while (sibling) {
-                var table = sibling.tagName === "TABLE" ? sibling : sibling.querySelector("table");
-                if (table) {
-                    table.style.setProperty("--sticky-th-top", thTop + "px");
+                if (sibling.classList && sibling.classList.contains("sticky-table-wrap")) {
+                    sibling.style.maxHeight = (window.innerHeight - usedHeight - 8) + "px";
                     break;
                 }
                 sibling = sibling.nextElementSibling;

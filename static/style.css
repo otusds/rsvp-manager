@@ -240,6 +240,7 @@ h2 {
     top: 52px;
     z-index: 15;
     background: #f2f2f7;
+    padding-top: 0.5rem;
     padding-bottom: 0.25rem;
 }
 
@@ -251,9 +252,16 @@ h2 {
     box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
 }
 
-/* Sticky tables: no wrapper, so th sticks to viewport */
-table.sticky-table {
+/* Scrollable table wrapper — th sticks at top:0 inside this container */
+.sticky-table-wrap {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
     box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
+}
+
+table.sticky-table {
+    border-radius: 12px 12px 0 0;
 }
 
 table {
@@ -283,7 +291,7 @@ th {
 }
 
 table.sticky-table th {
-    top: var(--sticky-th-top, 52px);
+    top: 0;
     background: #fafafa;
     z-index: 10;
 }

@@ -43,6 +43,7 @@
 </div>
 
 {% if guests %}
+<div class="sticky-table-wrap">
 <table id="guests-table" class="sortable sticky-table">
     <thead>
         <tr>
@@ -86,6 +87,7 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 
 <p class="empty" id="no-results" style="display:none;">No guests match your filters.</p>
 {% else %}
