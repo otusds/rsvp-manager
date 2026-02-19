@@ -9,20 +9,19 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open http://127.0.0.1:5000
+Open http://127.0.0.1:5000 and sign up for an account. Load sample data from the Settings page.
 
-## Test Account
+## Environment Variables
 
-A pre-created account with sample data (4 events, 12 guests, 23 invitations):
-
-- **Email:** test@test.com
-- **Password:** 123456
-
-Or sign up for a new account — check "Load sample data" to populate it automatically.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SECRET_KEY` | Yes (production) | Flask session secret. Required when `DATABASE_URL` is set. |
+| `DATABASE_URL` | No | PostgreSQL connection string. Falls back to local SQLite. |
+| `FLASK_DEBUG` | No | Set to `1` to enable debug mode (local dev only). |
 
 ## Tech Stack
 
-- Flask + SQLite (via Flask-SQLAlchemy)
+- Flask + SQLite (via Flask-SQLAlchemy) / PostgreSQL in production
 - Flask-Login for authentication
 - Jinja2 templates, vanilla JS
 - openpyxl for Excel export

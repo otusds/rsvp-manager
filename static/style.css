@@ -148,7 +148,8 @@ h2 {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.45rem 0.9rem;
+    height: 36px;
+    padding: 0 0.9rem;
     background: #007aff;
     color: white;
     border: none;
@@ -385,16 +386,39 @@ th.sort-desc::after { content: "\2193"; opacity: 0.7; }
     gap: 0.5rem;
 }
 
-.form-meta {
-    margin-top: 1.25rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(0,0,0,0.06);
+.modal-form { padding: 0; }
+.modal-form label { font-size: 0.78rem; color: #8e8e93; margin-bottom: 0.25rem; }
+.modal-form .form-actions { margin-top: 1rem; }
+
+.form-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
 }
 
-.form-meta p {
-    font-size: 0.8rem;
-    color: #8e8e93;
-    margin-bottom: 0.2rem;
+.form-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    padding: 0.45rem 0.6rem;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #1c1c1e;
+    background: #fff;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
 }
 
 /* ── Inline forms ──────────────────────────────────────────────────────────── */
@@ -416,23 +440,9 @@ td select {
     cursor: pointer;
 }
 
-/* ── Event info card ───────────────────────────────────────────────────────── */
-.event-info-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
-    margin-bottom: 1rem;
-    overflow: hidden;
-}
-
-.event-info-card-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1rem 0;
-}
-
+/* ── Event info details ────────────────────────────────────────────────────── */
 .event-info-details { padding: 0.5rem 0; }
+.event-details-notes { padding: 0.25rem 1rem 0.75rem; }
 
 .event-info-row {
     display: flex;
@@ -446,13 +456,9 @@ td select {
 .event-info-label { font-size: 0.88rem; color: #8e8e93; }
 .event-info-value { font-size: 0.88rem; font-weight: 500; color: #1c1c1e; }
 
-/* ── Summary highlight column ─────────────────────────────────────────────── */
-.summary-highlight { background: rgba(0,122,255,0.06) !important; font-weight: 700 !important; }
-
 /* ── Guest list controls bar ──────────────────────────────────────────────── */
 .guest-list-controls { display: flex; gap: 0.4rem; margin-bottom: 0.6rem; align-items: center; }
 .guest-list-controls .search-input { flex: 1; min-width: 120px; }
-.guest-list-actions { margin-bottom: 0.6rem; }
 
 /* ── Past events section ──────────────────────────────────────────────────── */
 .past-events-section { margin-top: 1.5rem; }
@@ -506,6 +512,48 @@ td select {
     text-align: right; background: white; border-radius: 0 0 14px 14px;
 }
 
+/* ── Add New Guest modal table ────────────────────────────────────────────── */
+.add-guest-table-wrapper {
+    padding: 0.75rem 1rem;
+    overflow-x: auto;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.add-guest-table { font-size: 0.85rem; }
+.add-guest-table th { font-size: 0.7rem; padding: 0.35rem 0.5rem; }
+.add-guest-table td { padding: 0.35rem 0.4rem; }
+
+.add-guest-table input,
+.add-guest-table select {
+    width: 100%;
+    padding: 0.3rem 0.45rem;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 7px;
+    font-size: 0.82rem;
+    font-family: inherit;
+}
+
+.add-guest-table input:focus,
+.add-guest-table select:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 2px rgba(0,122,255,0.15);
+}
+
+.add-guest-remove-btn {
+    background: none;
+    border: none;
+    color: #ff3b30;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.2rem;
+    border-radius: 4px;
+    line-height: 1;
+}
+
+.add-guest-remove-btn:hover { background: rgba(255,59,48,0.1); }
+
 .section { margin-top: 0.75rem; }
 
 /* ── Collapsible sections ──────────────────────────────────────────────────── */
@@ -528,12 +576,6 @@ td select {
 
 .collapsible.collapsed .collapse-icon { transform: rotate(-90deg); }
 .collapsible.collapsed .collapsible-body { display: none; }
-
-.summary-label {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1c1c1e;
-}
 
 /* ── Summary table ─────────────────────────────────────────────────────────── */
 .summary-table {
@@ -562,6 +604,147 @@ td select {
 .summary-table .total-row {
     background: rgba(0,0,0,0.02);
     font-weight: 600;
+}
+
+.summary-table .total-row td[data-stat="attending"] { color: #248a3d; background: rgba(52,199,89,0.08); }
+.summary-table .total-row td[data-stat="pending"] { color: #c77d00; background: rgba(255,149,0,0.08); }
+.summary-table .total-row td[data-stat="declined"] { color: #d70015; background: rgba(255,59,48,0.08); }
+.summary-table td[data-stat="invited"] { font-weight: 700; }
+
+/* ── Summary progress bars ──────────────────────────────────────────────── */
+.summary-bars { margin-bottom: 1rem; }
+
+.summary-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+}
+
+.summary-bar-label {
+    font-size: 0.78rem;
+    color: #8e8e93;
+    width: 130px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.summary-bar {
+    flex: 1;
+    height: 20px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+}
+
+.summary-bar-segment {
+    height: 100%;
+    transition: width 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.summary-bar-segment span {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #fff;
+    padding: 0 3px;
+}
+.bar-attending { background: #34c759; }
+.bar-attending.over-target { background: #ff9500; }
+.bar-pending { background: #ff9500; }
+.bar-declined { background: #ff3b30; }
+
+.summary-bar-value {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #1c1c1e;
+    min-width: 60px;
+    text-align: right;
+    white-space: nowrap;
+}
+.summary-bar-value.at-target { color: #248a3d; }
+.summary-bar-value.over-target { color: #c77d00; }
+
+/* ── Mini progress bar (event cards) ────────────────────────────────────── */
+.progress-bar-mini {
+    flex: 1;
+    height: 6px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar-mini-fill {
+    height: 100%;
+    background: #34c759;
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+.progress-bar-mini-fill.over-target { background: #ff9500; }
+
+/* ── Event card progress row ───────────────────────────────────────────── */
+.event-row-progress {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 0.35rem;
+}
+
+.progress-bar-mini-value {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #1c1c1e;
+    white-space: nowrap;
+}
+
+.progress-bar-mini-value.at-target { color: #248a3d; }
+.progress-bar-mini-value.over-target { color: #c77d00; }
+
+/* ── Guest DB Picker select all ─────────────────────────────────────────── */
+.guest-db-select-all {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 1rem;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    font-size: 0.85rem;
+    color: #8e8e93;
+}
+
+.guest-db-select-all input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #007aff;
+}
+
+/* ── Flash messages ────────────────────────────────────────────────────────── */
+.flash-msg {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+/* ── Settings page ─────────────────────────────────────────────────────────── */
+.settings-desc {
+    font-size: 0.85rem;
+    color: #8e8e93;
+    margin-bottom: 1rem;
+}
+
+.settings-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 /* ── Event list (1 card per row) ───────────────────────────────────────────── */
@@ -720,14 +903,6 @@ td.center, th.center { text-align: center; }
     font-size: 0.82rem;
 }
 
-/* ── Inline add row ───────────────────────────────────────────────────────── */
-.add-guest-row { background: rgba(0,0,0,0.015); }
-.add-guest-row td { border-bottom: none; }
-
-.inline-name-inputs {
-    display: flex;
-    gap: 0.25rem;
-}
 
 .inline-input {
     padding: 0.3rem 0.5rem;
@@ -744,6 +919,33 @@ td.center, th.center { text-align: center; }
     border-color: #007aff;
     box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
 }
+
+.inline-edit-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.inline-edit {
+    flex: 1;
+    min-width: 0;
+    padding: 0.3rem 0.4rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    color: #1c1c1e;
+    background: transparent;
+    transition: border-color 0.15s, background 0.15s;
+    box-sizing: border-box;
+}
+.inline-edit:hover { border-color: rgba(0,0,0,0.1); }
+.inline-edit:focus {
+    outline: none;
+    border-color: #007aff;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+}
+.inline-edit::placeholder { color: #c7c7cc; }
 
 .inline-select {
     padding: 0.3rem 1.3rem 0.3rem 0.4rem;
@@ -765,38 +967,6 @@ td.center, th.center { text-align: center; }
     opacity: 0.4;
     cursor: not-allowed;
 }
-
-/* ── Autocomplete ─────────────────────────────────────────────────────────── */
-.autocomplete-wrapper { position: relative; }
-
-.autocomplete-dropdown {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid rgba(0,0,0,0.08);
-    border-top: none;
-    border-radius: 0 0 10px 10px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 100;
-}
-
-.autocomplete-item {
-    padding: 0.5rem 0.7rem;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: background 0.1s;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.autocomplete-item:hover, .autocomplete-item:active { background: rgba(0,122,255,0.08); }
-.autocomplete-item:last-child { border-radius: 0 0 10px 10px; }
-.autocomplete-item .guest-name { font-weight: 600; }
-.autocomplete-item .guest-gender { color: #8e8e93; font-size: 0.78rem; margin-left: 0.4rem; }
 
 /* ── Event notes ──────────────────────────────────────────────────────────── */
 .event-notes-textarea {
@@ -1172,6 +1342,8 @@ td.center, th.center { text-align: center; }
     .detail-name-input { font-size: 0.95rem; }
 
     .form { padding: 1.25rem; }
+
+    .form-row { flex-direction: column; gap: 0.5rem; }
 
     .batch-bar { font-size: 0.8rem; padding: 0.4rem 0.6rem; }
 }

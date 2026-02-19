@@ -3,18 +3,13 @@
 {% block content %}
 <div class="header-row">
     <h1>{{ event.name }}</h1>
-</div>
-
-<!-- Event info card -->
-<div class="event-info-card">
-    <div class="event-info-card-top">
-        <div class="event-info-left">
-            <span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span>
-        </div>
+    <div class="btn-group">
         <div class="kebab-wrapper">
-            <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>
-            <div class="kebab-menu kebab-menu-right">
-                <a href="{{ url_for('edit_event', event_id=event.id) }}">Edit Event</a>
+            <button type="button" class="icon-btn" id="page-menu-btn" aria-label="More">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+            </button>
+            <div class="kebab-menu kebab-menu-right" id="page-menu">
+                <button type="button" id="open-edit-event-btn">Edit Event</button>
                 <a href="{{ url_for('export_event_guests', event_id=event.id) }}">Export to Excel</a>
                 <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" class="inline"
                       onsubmit="return confirm('Delete this event and all its invitations?');">
@@ -23,36 +18,100 @@
             </div>
         </div>
     </div>
-    <div class="event-info-details">
-        <div class="event-info-row">
-            <span class="event-info-label">Event Date</span>
-            <span class="event-info-value">{{ event.date.strftime('%B %d, %Y') }}</span>
+</div>
+
+<!-- Event Details -->
+<div class="collapsible section collapsed">
+    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <span class="collapse-icon">▼</span>
+        <h2 style="margin-bottom:0">Event Details</h2>
+    </div>
+    <div class="collapsible-body">
+        <div class="event-info-details">
+            <div class="event-info-row">
+                <span class="event-info-label">Event Date</span>
+                <span class="event-info-value">{{ event.date.strftime('%B %d, %Y') }}</span>
+            </div>
+            {% if event.location %}
+            <div class="event-info-row">
+                <span class="event-info-label">Location</span>
+                <span class="event-info-value">{{ event.location }}</span>
+            </div>
+            {% endif %}
+            <div class="event-info-row">
+                <span class="event-info-label">Event Type</span>
+                <span class="event-info-value">
+                    <span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span>
+                </span>
+            </div>
+            {% if event.target_attendees %}
+            <div class="event-info-row">
+                <span class="event-info-label">Target Attendees</span>
+                <span class="event-info-value">{{ event.target_attendees }}</span>
+            </div>
+            {% endif %}
+            {% if event.date_created %}
+            <div class="event-info-row">
+                <span class="event-info-label">Date Created</span>
+                <span class="event-info-value">{{ event.date_created.strftime('%B %d, %Y') }}</span>
+            </div>
+            {% endif %}
+            <div class="event-info-row">
+                <span class="event-info-label">Last Edited</span>
+                <span class="event-info-value">{{ event.date_edited.strftime('%B %d, %Y at %I:%M %p') if event.date_edited else '—' }}</span>
+            </div>
         </div>
-        {% if event.location %}
-        <div class="event-info-row">
-            <span class="event-info-label">Location</span>
-            <span class="event-info-value">{{ event.location }}</span>
+        <div class="event-details-notes">
+            <span class="event-info-label">Event Notes</span>
+            <textarea id="event-notes" class="event-notes-textarea"
+                      data-event-id="{{ event.id }}" placeholder="Add event notes...">{{ event.notes or '' }}</textarea>
+            <span class="save-indicator" id="notes-save-indicator">Saved</span>
         </div>
-        {% endif %}
-        {% if event.date_created %}
-        <div class="event-info-row">
-            <span class="event-info-label">Date Created</span>
-            <span class="event-info-value">{{ event.date_created.strftime('%B %d, %Y') }}</span>
-        </div>
-        {% endif %}
     </div>
 </div>
 
-<!-- Attendance Summary (always shown) -->
+<!-- Attendance Summary -->
 {% set all_inv = event.invitations %}
 {% set male_inv = all_inv|selectattr('guest.gender', 'equalto', 'Male')|list %}
 {% set female_inv = all_inv|selectattr('guest.gender', 'equalto', 'Female')|list %}
-<div class="collapsible">
+<div class="collapsible section">
     <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
         <span class="collapse-icon">▼</span>
-        <span class="summary-label">Attendance Summary</span>
+        <h2 style="margin-bottom:0">Attendance Summary</h2>
     </div>
     <div class="collapsible-body">
+        {% set att_count = all_inv|selectattr('status', 'equalto', 'Attending')|list|length %}
+        {% set pend_count = all_inv|selectattr('status', 'equalto', 'Pending')|list|length %}
+        {% set decl_count = all_inv|selectattr('status', 'equalto', 'Declined')|list|length %}
+        {% set invited_count = att_count + pend_count + decl_count %}
+        <div class="summary-bars" id="summary-bars" data-target="{{ event.target_attendees or 0 }}">
+            {% if event.target_attendees %}
+            {% set target_pct = [((att_count / event.target_attendees) * 100)|round|int, 100]|min if event.target_attendees else 0 %}
+            <div class="summary-bar-row" id="target-bar-row">
+                <span class="summary-bar-label">Attending vs Target</span>
+                <div class="summary-bar">
+                    <div class="summary-bar-segment bar-attending{% if att_count > event.target_attendees %} over-target{% endif %}" id="target-bar-fill"
+                         style="width: {{ target_pct }}%"><span>{{ target_pct }}%</span></div>
+                </div>
+                <span class="summary-bar-value{% if att_count > event.target_attendees %} over-target{% elif att_count == event.target_attendees %} at-target{% endif %}" id="target-bar-value">{% if att_count > event.target_attendees %}⚠ {% elif att_count == event.target_attendees %}✓ {% endif %}{{ att_count }}/{{ event.target_attendees }}</span>
+            </div>
+            {% endif %}
+            {% set att_pct = ((att_count / invited_count) * 100)|round|int if invited_count else 0 %}
+            {% set pend_pct = ((pend_count / invited_count) * 100)|round|int if invited_count else 0 %}
+            {% set decl_pct = ((decl_count / invited_count) * 100)|round|int if invited_count else 0 %}
+            <div class="summary-bar-row" id="invited-bar-row">
+                <span class="summary-bar-label">RSVP Status</span>
+                <div class="summary-bar">
+                    <div class="summary-bar-segment bar-attending" id="invited-bar-attending"
+                         style="width: {{ att_pct }}%"><span>{{ att_pct }}%</span></div>
+                    <div class="summary-bar-segment bar-pending" id="invited-bar-pending"
+                         style="width: {{ pend_pct }}%"><span>{{ pend_pct }}%</span></div>
+                    <div class="summary-bar-segment bar-declined" id="invited-bar-declined"
+                         style="width: {{ decl_pct }}%"><span>{{ decl_pct }}%</span></div>
+                </div>
+                <span class="summary-bar-value" id="invited-bar-value">{{ invited_count }} invited</span>
+            </div>
+        </div>
         <table class="summary-table" id="summary-table">
             <thead>
                 <tr>
@@ -60,8 +119,7 @@
                     <th>Attending</th>
                     <th>Pending</th>
                     <th>Declined</th>
-                    <th class="summary-highlight">Total Invited</th>
-                    <th>Not Yet Invited</th>
+                    <th>Total Invited</th>
                 </tr>
             </thead>
             <tbody>
@@ -70,24 +128,21 @@
                     <td data-stat="attending">{{ male_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</td>
                     <td data-stat="pending">{{ male_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</td>
                     <td data-stat="declined">{{ male_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</td>
-                    <td data-stat="invited" class="summary-highlight">{{ male_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
-                    <td data-stat="notsent">{{ male_inv|selectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
+                    <td data-stat="invited">{{ male_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
                 </tr>
                 <tr data-gender="female">
                     <td class="row-label">Female</td>
                     <td data-stat="attending">{{ female_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</td>
                     <td data-stat="pending">{{ female_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</td>
                     <td data-stat="declined">{{ female_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</td>
-                    <td data-stat="invited" class="summary-highlight">{{ female_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
-                    <td data-stat="notsent">{{ female_inv|selectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
+                    <td data-stat="invited">{{ female_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
                 </tr>
                 <tr class="total-row" data-gender="total">
                     <td class="row-label">Total</td>
                     <td data-stat="attending"><strong>{{ all_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</strong></td>
                     <td data-stat="pending"><strong>{{ all_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</strong></td>
                     <td data-stat="declined"><strong>{{ all_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</strong></td>
-                    <td data-stat="invited" class="summary-highlight"><strong>{{ all_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</strong></td>
-                    <td data-stat="notsent"><strong>{{ all_inv|selectattr('status', 'equalto', 'Not Sent')|list|length }}</strong></td>
+                    <td data-stat="invited"><strong>{{ all_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</strong></td>
                 </tr>
             </tbody>
         </table>
@@ -103,6 +158,16 @@
     <div class="collapsible-body">
         <div class="guest-list-controls">
             <input type="text" class="search-input" data-table="invitations-table" placeholder="Search guests...">
+            <div class="kebab-wrapper" id="new-invite-wrapper">
+                <button type="button" class="btn btn-small" id="new-invite-btn">
+                    <span class="btn-label-full">+ New Invite</span>
+                    <span class="btn-label-short">+</span>
+                </button>
+                <div class="kebab-menu" id="new-invite-menu">
+                    <button type="button" id="select-from-db-btn">Select from Guest Database</button>
+                    <button type="button" id="add-new-guest-btn">Add New Guest</button>
+                </div>
+            </div>
             <button type="button" class="icon-btn" id="gl-toggle-filters-btn" title="Filters">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
             </button>
@@ -146,20 +211,16 @@
             <button type="button" class="btn btn-small btn-secondary" id="batch-clear">Clear</button>
         </div>
 
-        <div class="guest-list-actions">
-            <button type="button" class="btn btn-secondary" id="add-from-db-btn">+ Add from Guest Database</button>
-        </div>
-
         <div class="table-scroll">
-        <table id="invitations-table" class="sortable">
+        <table id="invitations-table" class="sortable" data-event-id="{{ event.id }}" data-channels="{{ channels|join(',') }}">
             <thead>
                 <tr>
                     <th class="center col-check col-multiselect" style="display:none"><input type="checkbox" id="select-all"></th>
                     <th data-sort="text">Guest</th>
                     <th data-sort="text" class="col-hide-mobile">Gender</th>
                     <th class="center">Sent</th>
-                    <th data-sort="text">Status</th>
-                    <th class="col-hide-mobile">Notes</th>
+                    <th data-sort="text">RSVP Status</th>
+                    <th class="col-hide-mobile">Invite Notes</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -193,7 +254,7 @@
                     </td>
                     <td class="col-hide-mobile">
                         <input type="text" class="inv-notes-input" data-inv-id="{{ inv.id }}"
-                               value="{{ inv.notes or '' }}" placeholder="Add note...">
+                               value="{{ inv.notes or '' }}" placeholder="Invite note...">
                     </td>
                     <td>
                         <div class="kebab-wrapper">
@@ -206,52 +267,20 @@
                     </td>
                 </tr>
                 {% endfor %}
-                <tr class="add-guest-row" data-event-id="{{ event.id }}" data-channels="{{ channels|join(',') }}">
-                    <td class="col-multiselect" style="display:none"></td>
-                    <td colspan="2">
-                        <div class="autocomplete-wrapper">
-                            <div class="inline-name-inputs">
-                                <input type="text" class="inline-input" id="add-first-name" placeholder="First name">
-                                <input type="text" class="inline-input" id="add-last-name" placeholder="Last name">
-                            </div>
-                            <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
-                        </div>
-                    </td>
-                    <td></td>
-                    <td>
-                        <select class="inline-select" id="add-status">
-                            <option value="Not Sent">Not Sent</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Attending">Attending</option>
-                            <option value="Declined">Declined</option>
-                        </select>
-                    </td>
-                    <td class="col-hide-mobile">
-                        <select class="inline-select" id="add-gender">
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-small" id="add-guest-btn">+ Add</button>
-                    </td>
-                </tr>
             </tbody>
         </table>
         </div>
     </div>
 </div>
 
-<!-- Notes -->
-<div class="collapsible section">
+<!-- Seating Plan -->
+<div class="collapsible section collapsed">
     <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
         <span class="collapse-icon">▼</span>
-        <h2 style="margin-bottom:0">Notes</h2>
+        <h2 style="margin-bottom:0">Seating Plan</h2>
     </div>
     <div class="collapsible-body">
-        <textarea id="event-notes" class="event-notes-textarea"
-                  data-event-id="{{ event.id }}" placeholder="Add event notes...">{{ event.notes or '' }}</textarea>
-        <span class="save-indicator" id="notes-save-indicator">Saved</span>
+        <p class="empty" style="padding:1.5rem 1rem;">In development</p>
     </div>
 </div>
 
@@ -263,11 +292,60 @@
             <button type="button" class="detail-close" id="guest-db-close">&times;</button>
         </div>
         <div class="guest-db-search">
-            <input type="text" id="guest-db-search-input" placeholder="Search guests...">
+            <div style="display:flex;gap:0.4rem;align-items:center">
+                <input type="text" id="guest-db-search-input" placeholder="Search guests..." style="flex:1">
+                <button type="button" class="icon-btn" id="guest-db-filter-btn" title="Filters">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="table-controls" id="guest-db-filters" style="display:none;margin-top:0.4rem">
+                <select class="filter-select" id="guest-db-gender-filter">
+                    <option value="">All Genders</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+                <select class="filter-select" id="guest-db-sort">
+                    <option value="first-asc">First Name (A-Z)</option>
+                    <option value="last-asc">Last Name (A-Z)</option>
+                    <option value="gender-asc">Gender</option>
+                </select>
+            </div>
+        </div>
+        <div class="guest-db-select-all">
+            <input type="checkbox" id="guest-db-select-all">
+            <label for="guest-db-select-all">Select All</label>
         </div>
         <div class="guest-db-list" id="guest-db-list"></div>
         <div class="guest-db-footer">
             <button type="button" class="btn" id="guest-db-add-btn">Add Selected</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Guest Modal -->
+<div class="detail-overlay" id="add-guest-overlay" style="display:none">
+    <div class="detail-card guest-db-card">
+        <div class="detail-card-header">
+            <span style="font-weight:600;font-size:1.05rem">Add New Guests</span>
+            <button type="button" class="detail-close" id="add-guest-close">&times;</button>
+        </div>
+        <div class="add-guest-table-wrapper">
+            <table class="add-guest-table" id="add-guest-table">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Gender</th>
+                        <th>Guest Notes</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="add-guest-tbody">
+                </tbody>
+            </table>
+        </div>
+        <div class="guest-db-footer">
+            <button type="button" class="btn" id="add-guest-save-btn">Save</button>
         </div>
     </div>
 </div>
@@ -311,7 +389,7 @@
                 <span id="detail-date-invited" class="detail-value"></span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Status</span>
+                <span class="detail-label">RSVP Status</span>
                 <select id="detail-status">
                     <option value="Pending">Pending</option>
                     <option value="Attending">Attending</option>
@@ -323,9 +401,63 @@
                 <span id="detail-date-responded" class="detail-value"></span>
             </div>
             <div class="detail-row detail-row-full">
-                <span class="detail-label">Notes</span>
-                <textarea id="detail-notes" placeholder="Add note..."></textarea>
+                <span class="detail-label">Invite Notes</span>
+                <textarea id="detail-notes" placeholder="Invite note..."></textarea>
             </div>
+        </div>
+    </div>
+</div>
+<!-- Edit Event modal -->
+<div class="detail-overlay" id="edit-event-overlay" style="display:none">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <span style="font-weight:600;font-size:1.05rem">Edit Event</span>
+            <button type="button" class="detail-close" id="edit-event-close">&times;</button>
+        </div>
+        <div class="detail-card-body">
+            <form method="POST" action="{{ url_for('edit_event', event_id=event.id) }}" class="form modal-form">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="ee-name">Event Name</label>
+                        <input type="text" id="ee-name" name="name" value="{{ event.name }}" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="ee-location">Location</label>
+                        <input type="text" id="ee-location" name="location" value="{{ event.location or '' }}" placeholder="Optional">
+                    </div>
+                    <div class="form-field">
+                        <label for="ee-date">Date</label>
+                        <input type="date" id="ee-date" name="date" value="{{ event.date.isoformat() }}" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="ee-type">Type</label>
+                        <select id="ee-type" name="event_type" required>
+                            {% for t in event_types %}
+                            <option value="{{ t }}"{{ ' selected' if event.event_type == t }}>{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="ee-target">Target Attendees</label>
+                        <input type="number" id="ee-target" name="target_attendees" value="{{ event.target_attendees if event.target_attendees else '' }}" placeholder="Optional" min="1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="ee-notes">Notes</label>
+                        <textarea id="ee-notes" name="notes" rows="3" placeholder="Optional">{{ event.notes or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

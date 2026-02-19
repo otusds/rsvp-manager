@@ -133,11 +133,51 @@ document.addEventListener("DOMContentLoaded", function () {
             var d = counts[g];
             if (!d) return;
             var bold = g === "total";
-            ["attending", "pending", "declined", "invited", "notsent"].forEach(function (stat) {
+            ["attending", "pending", "declined", "invited"].forEach(function (stat) {
                 var cell = row.querySelector("[data-stat='" + stat + "']");
                 if (cell) cell.innerHTML = bold ? "<strong>" + d[stat] + "</strong>" : String(d[stat]);
             });
         });
+
+        // Update progress bars
+        var summaryBars = document.getElementById("summary-bars");
+        if (summaryBars) {
+            var target = parseInt(summaryBars.getAttribute("data-target")) || 0;
+            var t = counts.total;
+
+            // Bar 1: Attending vs Target
+            if (target > 0) {
+                var pct = Math.min(100, (t.attending / target) * 100);
+                var fill = document.getElementById("target-bar-fill");
+                if (fill) {
+                    fill.style.width = pct + "%";
+                    fill.innerHTML = "<span>" + Math.round(pct) + "%</span>";
+                    fill.classList.toggle("over-target", t.attending > target);
+                }
+                var val = document.getElementById("target-bar-value");
+                if (val) {
+                    val.classList.remove("at-target", "over-target");
+                    var prefix = "";
+                    if (t.attending > target) { val.classList.add("over-target"); prefix = "\u26a0 "; }
+                    else if (t.attending === target) { val.classList.add("at-target"); prefix = "\u2713 "; }
+                    val.textContent = prefix + t.attending + "/" + target;
+                }
+            }
+
+            // Bar 2: RSVP Status breakdown
+            var invited = t.invited;
+            var attBar = document.getElementById("invited-bar-attending");
+            var pendBar = document.getElementById("invited-bar-pending");
+            var declBar = document.getElementById("invited-bar-declined");
+            var attPct = invited > 0 ? Math.round(t.attending / invited * 100) : 0;
+            var pendPct = invited > 0 ? Math.round(t.pending / invited * 100) : 0;
+            var declPct = invited > 0 ? Math.round(t.declined / invited * 100) : 0;
+            if (attBar) { attBar.style.width = attPct + "%"; attBar.innerHTML = "<span>" + attPct + "%</span>"; }
+            if (pendBar) { pendBar.style.width = pendPct + "%"; pendBar.innerHTML = "<span>" + pendPct + "%</span>"; }
+            if (declBar) { declBar.style.width = declPct + "%"; declBar.innerHTML = "<span>" + declPct + "%</span>"; }
+            var invVal = document.getElementById("invited-bar-value");
+            if (invVal) invVal.textContent = invited + " invited";
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -149,7 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function colorStatusSelect(select) {
-        select.className = select.className.replace(/\bstatus-\w+\b/g, "").trim();
+        select.className = select.className.replace(/\bstatus-(attending|pending|declined)\b/g, "").trim();
         var val = select.value;
         if (val === "Attending") select.classList.add("status-attending");
         else if (val === "Pending") select.classList.add("status-pending");
@@ -192,7 +232,7 @@ document.addEventListener("DOMContentLoaded", function () {
             '<td class="col-hide-mobile">' + escapeHtml(data.gender) + '</td>' +
             '<td class="center"><input type="checkbox" class="sent-checkbox" data-inv-id="' + data.invitation_id + '"' + (isSent ? ' checked' : '') + '></td>' +
             '<td>' + buildStatusHtml(data.invitation_id, data.status) + '</td>' +
-            '<td class="col-hide-mobile"><input type="text" class="inv-notes-input" data-inv-id="' + data.invitation_id + '" value="' + escapeHtml(data.notes || "") + '" placeholder="Add note..."></td>' +
+            '<td class="col-hide-mobile"><input type="text" class="inv-notes-input" data-inv-id="' + data.invitation_id + '" value="' + escapeHtml(data.notes || "") + '" placeholder="Invite note..."></td>' +
             '<td><div class="kebab-wrapper">' +
             '<button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>' +
             '<div class="kebab-menu">' +
@@ -691,122 +731,144 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ── Inline guest addition with autocomplete ─────────────────────────────
+    // ── New Invite dropdown ──────────────────────────────────────────────────
 
-    var addRow = document.querySelector(".add-guest-row");
-    if (addRow) {
-        var eventId = addRow.getAttribute("data-event-id");
-        var firstNameInput = document.getElementById("add-first-name");
-        var lastNameInput = document.getElementById("add-last-name");
-        var addStatusSelect = document.getElementById("add-status");
-        var addGenderSelect = document.getElementById("add-gender");
-        var addBtn = document.getElementById("add-guest-btn");
-        var dropdown = document.getElementById("autocomplete-dropdown");
-        var selectedGuestId = null;
+    var newInviteBtn = document.getElementById("new-invite-btn");
+    var newInviteMenu = document.getElementById("new-invite-menu");
 
-        function searchGuests() {
-            var firstName = firstNameInput.value.trim();
-            var lastName = lastNameInput.value.trim();
-            var q = (firstName + " " + lastName).trim();
-            if (!q) { dropdown.style.display = "none"; return; }
-            fetch("/api/guests/search?q=" + encodeURIComponent(q) + "&event_id=" + eventId)
-                .then(function (res) { return res.json(); })
-                .then(function (data) {
-                    if (data.guests.length === 0) {
-                        dropdown.style.display = "none";
-                        return;
-                    }
-                    dropdown.innerHTML = "";
-                    data.guests.forEach(function (g) {
-                        var div = document.createElement("div");
-                        div.className = "autocomplete-item";
-                        var name = g.last_name ? g.first_name + " " + g.last_name : g.first_name;
-                        div.innerHTML = '<span class="guest-name">' + escapeHtml(name) + '</span>' +
-                                       '<span class="guest-gender">' + escapeHtml(g.gender) + '</span>';
-                        div.addEventListener("mousedown", function (e) {
-                            e.preventDefault();
-                            firstNameInput.value = g.first_name;
-                            lastNameInput.value = g.last_name;
-                            addGenderSelect.value = g.gender;
-                            selectedGuestId = g.id;
-                            dropdown.style.display = "none";
-                        });
-                        dropdown.appendChild(div);
-                    });
-                    dropdown.style.display = "block";
-                });
-        }
+    if (newInviteBtn && newInviteMenu) {
+        newInviteBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            document.querySelectorAll(".kebab-menu.open").forEach(function (m) {
+                if (m !== newInviteMenu) m.classList.remove("open");
+            });
+            newInviteMenu.classList.toggle("open");
+        });
+    }
 
-        var debounceTimer;
-        function debouncedSearch() {
-            clearTimeout(debounceTimer);
-            selectedGuestId = null;
-            debounceTimer = setTimeout(searchGuests, 200);
-        }
+    // ── Add New Guest modal ──────────────────────────────────────────────────
 
-        firstNameInput.addEventListener("input", debouncedSearch);
-        lastNameInput.addEventListener("input", debouncedSearch);
+    var addGuestOverlay = document.getElementById("add-guest-overlay");
+    var addGuestClose = document.getElementById("add-guest-close");
+    var addGuestTbody = document.getElementById("add-guest-tbody");
+    var addGuestSaveBtn = document.getElementById("add-guest-save-btn");
 
-        document.addEventListener("click", function (e) {
-            if (!dropdown.contains(e.target) && e.target !== firstNameInput && e.target !== lastNameInput) {
-                dropdown.style.display = "none";
+    function createBlankGuestRow() {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+            '<td><input type="text" class="ag-first-name" placeholder="First name"></td>' +
+            '<td><input type="text" class="ag-last-name" placeholder="Last name"></td>' +
+            '<td><select class="ag-gender"><option value="Male">Male</option><option value="Female">Female</option></select></td>' +
+            '<td><input type="text" class="ag-notes" placeholder="Add notes about guest"></td>' +
+            '<td><button type="button" class="add-guest-remove-btn">&times;</button></td>';
+
+        tr.querySelector(".add-guest-remove-btn").addEventListener("click", function () {
+            tr.remove();
+            if (addGuestTbody.querySelectorAll("tr").length === 0) {
+                addGuestTbody.appendChild(createBlankGuestRow());
             }
         });
 
-        firstNameInput.addEventListener("keydown", function (e) {
-            if (e.key === "Tab") { dropdown.style.display = "none"; }
-            else if (e.key === "Enter") { e.preventDefault(); dropdown.style.display = "none"; addGuest(); }
-        });
-        lastNameInput.addEventListener("keydown", function (e) {
-            if (e.key === "Tab") { dropdown.style.display = "none"; }
-            else if (e.key === "Enter") { e.preventDefault(); dropdown.style.display = "none"; addGuest(); }
-        });
-        addStatusSelect.addEventListener("keydown", function (e) {
-            if (e.key === "Enter") { e.preventDefault(); addGuest(); }
-        });
-
-        function addGuest() {
-            var firstName = firstNameInput.value.trim();
-            var lastName = lastNameInput.value.trim();
-            if (!firstName) { firstNameInput.focus(); return; }
-
-            var statusVal = addStatusSelect.value;
-            var sent = statusVal !== "Not Sent";
-            var body = {
-                first_name: firstName,
-                last_name: lastName,
-                gender: addGenderSelect.value,
-                sent: sent,
-                status: statusVal,
-                channel: "",
-                notes: ""
-            };
-            if (selectedGuestId) body.guest_id = selectedGuestId;
-
-            fetch("/event/" + eventId + "/quick-add", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                if (data.error) { alert(data.error); return; }
-                var tbody = document.querySelector("#invitations-table tbody");
-                var tr = buildInvitationRow(data);
-                tbody.insertBefore(tr, addRow);
-
-                // Reset
-                firstNameInput.value = "";
-                lastNameInput.value = "";
-                addGenderSelect.value = "Male";
-                addStatusSelect.value = "Not Sent";
-                selectedGuestId = null;
-                firstNameInput.focus();
-                refreshSummary();
+        tr.querySelectorAll("input").forEach(function (input) {
+            input.addEventListener("keydown", function (e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    var firstName = tr.querySelector(".ag-first-name").value.trim();
+                    if (firstName) {
+                        var newRow = createBlankGuestRow();
+                        addGuestTbody.appendChild(newRow);
+                        newRow.querySelector(".ag-first-name").focus();
+                    }
+                }
             });
-        }
+        });
 
-        addBtn.addEventListener("click", addGuest);
+        return tr;
+    }
+
+    function openAddGuestModal() {
+        addGuestTbody.innerHTML = "";
+        addGuestTbody.appendChild(createBlankGuestRow());
+        addGuestOverlay.style.display = "flex";
+        addGuestTbody.querySelector(".ag-first-name").focus();
+    }
+
+    // Event page trigger (inside kebab menu)
+    var addNewGuestBtn = document.getElementById("add-new-guest-btn");
+    if (addNewGuestBtn && addGuestOverlay) {
+        addNewGuestBtn.addEventListener("click", function () {
+            var menu = addNewGuestBtn.closest(".kebab-menu");
+            if (menu) menu.classList.remove("open");
+            openAddGuestModal();
+        });
+    }
+
+    // Guest DB page trigger (header button)
+    var openAddGuestPageBtn = document.getElementById("open-add-guest-btn");
+    if (openAddGuestPageBtn && addGuestOverlay) {
+        openAddGuestPageBtn.addEventListener("click", openAddGuestModal);
+    }
+
+    if (addGuestOverlay) {
+        addGuestClose.addEventListener("click", function () {
+            addGuestOverlay.style.display = "none";
+        });
+        addGuestOverlay.addEventListener("click", function (e) {
+            if (e.target === addGuestOverlay) addGuestOverlay.style.display = "none";
+        });
+
+        addGuestSaveBtn.addEventListener("click", function () {
+            var guests = [];
+            addGuestTbody.querySelectorAll("tr").forEach(function (row) {
+                var firstName = row.querySelector(".ag-first-name").value.trim();
+                if (!firstName) return;
+                guests.push({
+                    first_name: firstName,
+                    last_name: row.querySelector(".ag-last-name").value.trim(),
+                    gender: row.querySelector(".ag-gender").value,
+                    notes: row.querySelector(".ag-notes").value.trim()
+                });
+            });
+
+            if (guests.length === 0) {
+                addGuestOverlay.style.display = "none";
+                return;
+            }
+
+            var invTable = document.getElementById("invitations-table");
+            var eventId = invTable ? invTable.getAttribute("data-event-id") : null;
+
+            if (eventId) {
+                // Event page: create guests and add as invitations
+                fetch("/api/event/" + eventId + "/bulk-create-and-invite", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ guests: guests })
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var tbody = document.querySelector("#invitations-table tbody");
+                    data.added.forEach(function (g) {
+                        var tr = buildInvitationRow(g);
+                        tbody.appendChild(tr);
+                    });
+                    refreshSummary();
+                    addGuestOverlay.style.display = "none";
+                });
+            } else {
+                // Guest DB page: create guests only, reload to get inline-edit rows
+                fetch("/api/guests/bulk-create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ guests: guests })
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.added.length > 0) location.reload();
+                    else addGuestOverlay.style.display = "none";
+                });
+            }
+        });
     }
 
     // ── Hamburger menu ──────────────────────────────────────────────────────
@@ -886,18 +948,83 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ── Guest Database Picker ────────────────────────────────────────────────
-    var addFromDbBtn = document.getElementById("add-from-db-btn");
+    var selectFromDbBtn = document.getElementById("select-from-db-btn");
     var guestDbOverlay = document.getElementById("guest-db-overlay");
     var guestDbClose = document.getElementById("guest-db-close");
     var guestDbList = document.getElementById("guest-db-list");
     var guestDbSearchInput = document.getElementById("guest-db-search-input");
     var guestDbAddBtn = document.getElementById("guest-db-add-btn");
+    var guestDbFilterBtn = document.getElementById("guest-db-filter-btn");
+    var guestDbFilters = document.getElementById("guest-db-filters");
+    var guestDbGenderFilter = document.getElementById("guest-db-gender-filter");
+    var guestDbSort = document.getElementById("guest-db-sort");
 
-    if (addFromDbBtn && guestDbOverlay) {
-        var addRow = document.querySelector(".add-guest-row");
-        var eventId = addRow ? addRow.getAttribute("data-event-id") : null;
+    if (selectFromDbBtn && guestDbOverlay) {
+        var invTable = document.getElementById("invitations-table");
+        var eventId = invTable ? invTable.getAttribute("data-event-id") : null;
 
-        addFromDbBtn.addEventListener("click", function () {
+        function applyGuestDbFilters() {
+            var q = guestDbSearchInput ? guestDbSearchInput.value.toLowerCase() : "";
+            var genderVal = guestDbGenderFilter ? guestDbGenderFilter.value : "";
+            var sortVal = guestDbSort ? guestDbSort.value : "first-asc";
+            var items = Array.from(guestDbList.querySelectorAll(".guest-db-item"));
+
+            // Sort
+            var parts = sortVal.split("-");
+            var key = parts[0], dir = parts[1];
+            items.sort(function (a, b) {
+                var valA, valB;
+                if (key === "first") {
+                    valA = (a.getAttribute("data-first") || "").toLowerCase();
+                    valB = (b.getAttribute("data-first") || "").toLowerCase();
+                } else if (key === "last") {
+                    valA = (a.getAttribute("data-last") || "").toLowerCase();
+                    valB = (b.getAttribute("data-last") || "").toLowerCase();
+                } else if (key === "gender") {
+                    valA = (a.getAttribute("data-gender") || "").toLowerCase();
+                    valB = (b.getAttribute("data-gender") || "").toLowerCase();
+                }
+                if (valA < valB) return dir === "asc" ? -1 : 1;
+                if (valA > valB) return dir === "asc" ? 1 : -1;
+                return 0;
+            });
+            items.forEach(function (item) { guestDbList.appendChild(item); });
+
+            // Filter
+            items.forEach(function (item) {
+                var name = item.querySelector(".guest-db-item-name").textContent.toLowerCase();
+                var gender = item.getAttribute("data-gender") || "";
+                var matchSearch = !q || name.indexOf(q) !== -1;
+                var matchGender = !genderVal || gender === genderVal;
+                item.style.display = (matchSearch && matchGender) ? "" : "none";
+            });
+        }
+
+        var guestDbSelectAll = document.getElementById("guest-db-select-all");
+        if (guestDbSelectAll) {
+            guestDbSelectAll.addEventListener("change", function () {
+                var checked = guestDbSelectAll.checked;
+                guestDbList.querySelectorAll(".guest-db-item:not(.disabled)").forEach(function (item) {
+                    if (item.style.display === "none") return;
+                    var cb = item.querySelector("input[type=checkbox]");
+                    if (cb && !cb.disabled) cb.checked = checked;
+                });
+            });
+        }
+
+        if (guestDbFilterBtn && guestDbFilters) {
+            guestDbFilterBtn.addEventListener("click", function () {
+                var hidden = guestDbFilters.style.display === "none";
+                guestDbFilters.style.display = hidden ? "flex" : "none";
+                guestDbFilterBtn.classList.toggle("active", hidden);
+            });
+        }
+        if (guestDbGenderFilter) guestDbGenderFilter.addEventListener("change", applyGuestDbFilters);
+        if (guestDbSort) guestDbSort.addEventListener("change", applyGuestDbFilters);
+
+        selectFromDbBtn.addEventListener("click", function () {
+            var menu = selectFromDbBtn.closest(".kebab-menu");
+            if (menu) menu.classList.remove("open");
             if (!eventId) return;
             fetch("/api/event/" + eventId + "/available-guests")
                 .then(function (r) { return r.json(); })
@@ -907,6 +1034,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         var name = g.last_name ? g.first_name + " " + g.last_name : g.first_name;
                         var div = document.createElement("div");
                         div.className = "guest-db-item" + (g.already_invited ? " disabled" : "");
+                        div.setAttribute("data-first", g.first_name.toLowerCase());
+                        div.setAttribute("data-last", (g.last_name || "").toLowerCase());
+                        div.setAttribute("data-gender", g.gender);
                         div.innerHTML =
                             '<input type="checkbox" data-guest-id="' + g.id + '"' +
                             (g.already_invited ? ' checked disabled' : '') + '>' +
@@ -924,8 +1054,15 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                         guestDbList.appendChild(div);
                     });
+                    // Reset filters
+                    if (guestDbGenderFilter) guestDbGenderFilter.value = "";
+                    if (guestDbSort) guestDbSort.value = "first-asc";
+                    if (guestDbFilters) { guestDbFilters.style.display = "none"; }
+                    if (guestDbFilterBtn) guestDbFilterBtn.classList.remove("active");
+                    if (guestDbSelectAll) guestDbSelectAll.checked = false;
                     guestDbOverlay.style.display = "flex";
                     guestDbSearchInput.value = "";
+                    applyGuestDbFilters();
                     guestDbSearchInput.focus();
                 });
         });
@@ -935,13 +1072,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (e.target === guestDbOverlay) guestDbOverlay.style.display = "none";
         });
 
-        guestDbSearchInput.addEventListener("input", function () {
-            var q = guestDbSearchInput.value.toLowerCase();
-            guestDbList.querySelectorAll(".guest-db-item").forEach(function (item) {
-                var name = item.querySelector(".guest-db-item-name").textContent.toLowerCase();
-                item.style.display = (!q || name.indexOf(q) !== -1) ? "" : "none";
-            });
-        });
+        guestDbSearchInput.addEventListener("input", applyGuestDbFilters);
 
         guestDbAddBtn.addEventListener("click", function () {
             var ids = [];
@@ -958,10 +1089,9 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 var tbody = document.querySelector("#invitations-table tbody");
-                var addGuestRow = tbody.querySelector(".add-guest-row");
                 data.added.forEach(function (g) {
                     var tr = buildInvitationRow(g);
-                    tbody.insertBefore(tr, addGuestRow);
+                    tbody.appendChild(tr);
                 });
                 refreshSummary();
                 guestDbOverlay.style.display = "none";
@@ -1032,6 +1162,130 @@ document.addEventListener("DOMContentLoaded", function () {
         if (guestSearchInput) guestSearchInput.addEventListener("input", applyGuestTableControls);
         if (guestGenderFilter) guestGenderFilter.addEventListener("change", applyGuestTableControls);
         if (guestSortSelect) guestSortSelect.addEventListener("change", applyGuestTableControls);
+
+        // ── Inline editing ───────────────────────────────────────────────────
+        function saveGuestName(input) {
+            var row = input.closest("tr");
+            var guestId = input.getAttribute("data-guest-id");
+            var firstName = row.querySelector(".ge-first").value.trim();
+            var lastName = row.querySelector(".ge-last").value.trim();
+            if (!firstName) return;
+            row.setAttribute("data-first", firstName.toLowerCase());
+            row.setAttribute("data-last", lastName.toLowerCase());
+            fetch("/api/guest/" + guestId + "/name", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ first_name: firstName, last_name: lastName })
+            });
+        }
+
+        guestsTable.querySelectorAll(".ge-first, .ge-last").forEach(function (input) {
+            input.addEventListener("blur", function () { saveGuestName(input); });
+        });
+
+        guestsTable.querySelectorAll(".ge-gender").forEach(function (select) {
+            select.addEventListener("change", function () {
+                var guestId = select.getAttribute("data-guest-id");
+                var row = select.closest("tr");
+                row.setAttribute("data-gender", select.value);
+                fetch("/api/guest/" + guestId + "/gender", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ gender: select.value })
+                });
+            });
+        });
+
+        guestsTable.querySelectorAll(".ge-notes").forEach(function (input) {
+            var timer;
+            input.addEventListener("input", function () {
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    var guestId = input.getAttribute("data-guest-id");
+                    fetch("/api/guest/" + guestId + "/notes", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ notes: input.value.trim() })
+                    });
+                }, 500);
+            });
+        });
+
+        guestsTable.querySelectorAll(".ge-is-me-btn").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                var guestId = btn.getAttribute("data-guest-id");
+                var row = btn.closest("tr");
+                var wasMe = row.getAttribute("data-is-me") === "true";
+                var newVal = !wasMe;
+                fetch("/api/guest/" + guestId + "/is-me", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ is_me: newVal })
+                })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    // Clear old "Me" badges
+                    guestsTable.querySelectorAll("tr[data-is-me='true']").forEach(function (r) {
+                        r.setAttribute("data-is-me", "false");
+                        var badge = r.querySelector(".badge-me");
+                        if (badge) badge.remove();
+                        var meBtn = r.querySelector(".ge-is-me-btn");
+                        if (meBtn) meBtn.textContent = "This is me";
+                    });
+                    if (data.is_me) {
+                        row.setAttribute("data-is-me", "true");
+                        var firstInput = row.querySelector(".ge-first");
+                        if (firstInput && !row.querySelector(".badge-me")) {
+                            var badge = document.createElement("span");
+                            badge.className = "badge-me";
+                            badge.textContent = "Me";
+                            firstInput.parentNode.appendChild(badge);
+                        }
+                        btn.textContent = "\u2713 This is me";
+                    } else {
+                        row.setAttribute("data-is-me", "false");
+                        btn.textContent = "This is me";
+                    }
+                    btn.closest(".kebab-menu").classList.remove("open");
+                });
+            });
+        });
+    }
+
+    // ── New Event modal ──────────────────────────────────────────────────────
+    var newEventBtn = document.getElementById("open-new-event-btn");
+    var newEventOverlay = document.getElementById("new-event-overlay");
+    var newEventClose = document.getElementById("new-event-close");
+    if (newEventBtn && newEventOverlay) {
+        newEventBtn.addEventListener("click", function () {
+            newEventOverlay.style.display = "flex";
+            var nameInput = document.getElementById("ne-name");
+            if (nameInput) nameInput.focus();
+        });
+        newEventClose.addEventListener("click", function () {
+            newEventOverlay.style.display = "none";
+        });
+        newEventOverlay.addEventListener("click", function (e) {
+            if (e.target === newEventOverlay) newEventOverlay.style.display = "none";
+        });
+    }
+
+    // ── Edit Event modal ─────────────────────────────────────────────────────
+    var editEventBtn = document.getElementById("open-edit-event-btn");
+    var editEventOverlay = document.getElementById("edit-event-overlay");
+    var editEventClose = document.getElementById("edit-event-close");
+    if (editEventBtn && editEventOverlay) {
+        editEventBtn.addEventListener("click", function () {
+            var menu = editEventBtn.closest(".kebab-menu");
+            if (menu) menu.classList.remove("open");
+            editEventOverlay.style.display = "flex";
+        });
+        editEventClose.addEventListener("click", function () {
+            editEventOverlay.style.display = "none";
+        });
+        editEventOverlay.addEventListener("click", function (e) {
+            if (e.target === editEventOverlay) editEventOverlay.style.display = "none";
+        });
     }
 
     // ── Event card search, filter & sort ─────────────────────────────────────

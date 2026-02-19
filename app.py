@@ -1,8 +1,8 @@
 import os
+import re
 from io import BytesIO
 from datetime import date, datetime
-from urllib.parse import urlparse
-from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify, abort
+from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify, abort, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -14,7 +14,10 @@ database_url = os.environ.get("DATABASE_URL") or "sqlite:///rsvp.db"
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only-change-me")
+if os.environ.get("DATABASE_URL"):
+    app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
+else:
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only-change-me")
 db = SQLAlchemy(app)
 
 login_manager = LoginManager(app)
@@ -50,7 +53,9 @@ class Event(db.Model):
     location = db.Column(db.String(200), nullable=True, default="")
     date = db.Column(db.Date, nullable=False)
     date_created = db.Column(db.Date, nullable=True)
+    date_edited = db.Column(db.DateTime, nullable=True)
     notes = db.Column(db.Text, default="")
+    target_attendees = db.Column(db.Integer, nullable=True)
     invitations = db.relationship("Invitation", backref="event", cascade="all, delete-orphan")
 
 
@@ -93,6 +98,8 @@ def signup():
     if request.method == "POST":
         email = request.form["email"].strip().lower()
         password = request.form["password"]
+        if not email or "@" not in email:
+            return render_template("signup.html", error="Valid email is required")
         if User.query.filter_by(email=email).first():
             return render_template("signup.html", error="Email already registered")
         if len(password) < 6:
@@ -100,8 +107,6 @@ def signup():
         user = User(email=email, password_hash=generate_password_hash(password))
         db.session.add(user)
         db.session.commit()
-        if request.form.get("sample_data"):
-            seed(user.id)
         login_user(user)
         return redirect(url_for("home"))
     return render_template("signup.html")
@@ -119,7 +124,7 @@ def login():
             return render_template("login.html", error="Invalid email or password")
         login_user(user)
         next_page = request.args.get("next")
-        if next_page and urlparse(next_page).netloc:
+        if next_page and (not next_page.startswith("/") or next_page.startswith("//")):
             next_page = None
         return redirect(next_page or url_for("home"))
     return render_template("login.html")
@@ -132,41 +137,73 @@ def logout():
     return redirect(url_for("login"))
 
 
+# ── Settings ──────────────────────────────────────────────────────────────────
+
+@app.route("/settings")
+@login_required
+def settings():
+    return render_template("settings.html")
+
+
+@app.route("/settings/load-sample-data", methods=["POST"])
+@login_required
+def load_sample_data():
+    seed(current_user.id)
+    flash("Sample data loaded successfully.")
+    return redirect(url_for("settings"))
+
+
+@app.route("/settings/reset-sample-data", methods=["POST"])
+@login_required
+def reset_sample_data():
+    uid = current_user.id
+    Invitation.query.filter(Invitation.event.has(user_id=uid)).delete(synchronize_session=False)
+    Event.query.filter_by(user_id=uid).delete()
+    Guest.query.filter_by(user_id=uid).delete()
+    db.session.commit()
+    seed(uid)
+    flash("All data reset to sample data.")
+    return redirect(url_for("settings"))
+
+
 # ── Event routes ──────────────────────────────────────────────────────────────
 
 @app.route("/")
 @login_required
 def home():
     events = Event.query.filter_by(user_id=current_user.id).order_by(Event.date).all()
-    return render_template("home.html", events=events, event_types=EVENT_TYPES, today_date=date.today())
+    me_exists = Guest.query.filter_by(user_id=current_user.id, is_me=True).first() is not None
+    return render_template("home.html", events=events, event_types=EVENT_TYPES, today_date=date.today(), me_exists=me_exists)
 
 
-@app.route("/event/add", methods=["GET", "POST"])
+@app.route("/event/add", methods=["POST"])
 @login_required
 def add_event():
-    if request.method == "POST":
-        event = Event(
-            user_id=current_user.id,
-            name=request.form["name"],
-            event_type=request.form["event_type"],
-            location=request.form.get("location", ""),
-            date=date.fromisoformat(request.form["date"]),
-            date_created=date.today(),
-            notes=request.form.get("notes", ""),
-        )
-        db.session.add(event)
-        db.session.commit()
-        if request.form.get("include_me"):
-            me = Guest.query.filter_by(user_id=current_user.id, is_me=True).first()
-            if me:
-                inv = Invitation(event_id=event.id, guest_id=me.id,
-                                 status="Attending", date_invited=date.today(),
-                                 date_responded=date.today())
-                db.session.add(inv)
-                db.session.commit()
-        return redirect(url_for("event_detail", event_id=event.id))
-    me_exists = Guest.query.filter_by(user_id=current_user.id, is_me=True).first() is not None
-    return render_template("edit_event.html", event=None, event_types=EVENT_TYPES, me_exists=me_exists)
+    try:
+        event_date = date.fromisoformat(request.form["date"])
+    except (ValueError, KeyError):
+        return "Invalid date", 400
+    event = Event(
+        user_id=current_user.id,
+        name=request.form["name"],
+        event_type=request.form["event_type"],
+        location=request.form.get("location", ""),
+        date=event_date,
+        date_created=date.today(),
+        notes=request.form.get("notes", ""),
+        target_attendees=request.form.get("target_attendees", type=int) or None,
+    )
+    db.session.add(event)
+    db.session.commit()
+    if request.form.get("include_me"):
+        me = Guest.query.filter_by(user_id=current_user.id, is_me=True).first()
+        if me:
+            inv = Invitation(event_id=event.id, guest_id=me.id,
+                             status="Attending", date_invited=date.today(),
+                             date_responded=date.today())
+            db.session.add(inv)
+            db.session.commit()
+    return redirect(url_for("event_detail", event_id=event.id))
 
 
 @app.route("/event/<int:event_id>")
@@ -175,24 +212,28 @@ def event_detail(event_id):
     event = Event.query.get_or_404(event_id)
     if event.user_id != current_user.id:
         return redirect(url_for("home"))
-    return render_template("event_detail.html", event=event, channels=CHANNELS)
+    return render_template("event_detail.html", event=event, channels=CHANNELS, event_types=EVENT_TYPES)
 
 
-@app.route("/event/<int:event_id>/edit", methods=["GET", "POST"])
+@app.route("/event/<int:event_id>/edit", methods=["POST"])
 @login_required
 def edit_event(event_id):
     event = Event.query.get_or_404(event_id)
     if event.user_id != current_user.id:
         return redirect(url_for("home"))
-    if request.method == "POST":
-        event.name = request.form["name"]
-        event.event_type = request.form["event_type"]
-        event.location = request.form.get("location", "")
-        event.date = date.fromisoformat(request.form["date"])
-        event.notes = request.form.get("notes", "")
-        db.session.commit()
-        return redirect(url_for("event_detail", event_id=event.id))
-    return render_template("edit_event.html", event=event, event_types=EVENT_TYPES, me_exists=False)
+    try:
+        event_date = date.fromisoformat(request.form["date"])
+    except (ValueError, KeyError):
+        return "Invalid date", 400
+    event.name = request.form["name"]
+    event.event_type = request.form["event_type"]
+    event.location = request.form.get("location", "")
+    event.date = event_date
+    event.notes = request.form.get("notes", "")
+    event.target_attendees = request.form.get("target_attendees", type=int) or None
+    event.date_edited = datetime.now()
+    db.session.commit()
+    return redirect(url_for("event_detail", event_id=event.id))
 
 
 @app.route("/event/<int:event_id>/delete", methods=["POST"])
@@ -215,47 +256,43 @@ def guests():
     return render_template("guests.html", guests=all_guests)
 
 
-@app.route("/guest/add", methods=["GET", "POST"])
+@app.route("/guest/add", methods=["POST"])
 @login_required
 def add_guest():
-    if request.method == "POST":
-        is_me = bool(request.form.get("is_me"))
-        if is_me:
-            Guest.query.filter_by(user_id=current_user.id, is_me=True).update({"is_me": False})
-        guest = Guest(
-            user_id=current_user.id,
-            first_name=request.form["first_name"],
-            last_name=request.form.get("last_name", ""),
-            gender=request.form["gender"],
-            is_me=is_me,
-            notes=request.form.get("notes", ""),
-            date_created=datetime.now(),
-        )
-        db.session.add(guest)
-        db.session.commit()
-        return redirect(url_for("guests"))
-    return render_template("edit_guest.html", guest=None)
+    is_me = bool(request.form.get("is_me"))
+    if is_me:
+        Guest.query.filter_by(user_id=current_user.id, is_me=True).update({"is_me": False})
+    guest = Guest(
+        user_id=current_user.id,
+        first_name=request.form["first_name"],
+        last_name=request.form.get("last_name", ""),
+        gender=request.form["gender"],
+        is_me=is_me,
+        notes=request.form.get("notes", ""),
+        date_created=datetime.now(),
+    )
+    db.session.add(guest)
+    db.session.commit()
+    return redirect(url_for("guests"))
 
 
-@app.route("/guest/<int:guest_id>/edit", methods=["GET", "POST"])
+@app.route("/guest/<int:guest_id>/edit", methods=["POST"])
 @login_required
 def edit_guest(guest_id):
     guest = Guest.query.get_or_404(guest_id)
     if guest.user_id != current_user.id:
         return redirect(url_for("guests"))
-    if request.method == "POST":
-        is_me = bool(request.form.get("is_me"))
-        if is_me and not guest.is_me:
-            Guest.query.filter_by(user_id=current_user.id, is_me=True).update({"is_me": False})
-        guest.first_name = request.form["first_name"]
-        guest.last_name = request.form.get("last_name", "")
-        guest.gender = request.form["gender"]
-        guest.is_me = is_me
-        guest.notes = request.form.get("notes", "")
-        guest.date_edited = datetime.now()
-        db.session.commit()
-        return redirect(url_for("guests"))
-    return render_template("edit_guest.html", guest=guest)
+    is_me = bool(request.form.get("is_me"))
+    if is_me and not guest.is_me:
+        Guest.query.filter_by(user_id=current_user.id, is_me=True).update({"is_me": False})
+    guest.first_name = request.form["first_name"]
+    guest.last_name = request.form.get("last_name", "")
+    guest.gender = request.form["gender"]
+    guest.is_me = is_me
+    guest.notes = request.form.get("notes", "")
+    guest.date_edited = datetime.now()
+    db.session.commit()
+    return redirect(url_for("guests"))
 
 
 @app.route("/guest/<int:guest_id>/delete", methods=["POST"])
@@ -271,23 +308,6 @@ def delete_guest(guest_id):
 
 # ── Invitation routes ─────────────────────────────────────────────────────────
 
-@app.route("/event/<int:event_id>/invite", methods=["POST"])
-@login_required
-def invite_guest(event_id):
-    event = Event.query.get_or_404(event_id)
-    if event.user_id != current_user.id:
-        abort(403)
-    guest_id = int(request.form["guest_id"])
-    guest = Guest.query.get_or_404(guest_id)
-    if guest.user_id != current_user.id:
-        abort(403)
-    invitation = Invitation(event_id=event_id, guest_id=guest_id,
-                            status="Not Sent", date_invited=None)
-    db.session.add(invitation)
-    db.session.commit()
-    return redirect(url_for("event_detail", event_id=event_id))
-
-
 @app.route("/invitation/<int:invitation_id>/send", methods=["POST"])
 @login_required
 def toggle_send_invitation(invitation_id):
@@ -301,6 +321,7 @@ def toggle_send_invitation(invitation_id):
         invitation.status = "Not Sent"
         invitation.date_invited = None
         invitation.date_responded = None
+    invitation.event.date_edited = datetime.now()
     db.session.commit()
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify(
@@ -317,13 +338,16 @@ def update_invitation(invitation_id):
     invitation = Invitation.query.get_or_404(invitation_id)
     if invitation.event.user_id != current_user.id:
         abort(403)
-    new_status = request.form["status"]
+    new_status = request.form.get("status")
+    if not new_status:
+        return jsonify(error="Missing status"), 400
     if new_status != invitation.status:
         invitation.status = new_status
         if new_status in ("Attending", "Declined"):
             invitation.date_responded = date.today()
         elif new_status == "Pending":
             invitation.date_responded = None
+    invitation.event.date_edited = datetime.now()
     db.session.commit()
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify(
@@ -341,6 +365,7 @@ def remove_invitation(invitation_id):
     if invitation.event.user_id != current_user.id:
         abort(403)
     event_id = invitation.event_id
+    invitation.event.date_edited = datetime.now()
     db.session.delete(invitation)
     db.session.commit()
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -350,74 +375,34 @@ def remove_invitation(invitation_id):
 
 # ── API endpoints ─────────────────────────────────────────────────────────────
 
-@app.route("/api/guests/search")
+@app.route("/api/guests/bulk-create", methods=["POST"])
 @login_required
-def api_guest_search():
-    q = request.args.get("q", "").strip().lower()
-    event_id = request.args.get("event_id", type=int)
-    if not q:
-        return jsonify(guests=[])
-    invited_ids = []
-    if event_id:
-        invited_ids = [inv.guest_id for inv in Invitation.query.filter_by(event_id=event_id).all()]
-    query = Guest.query.filter_by(user_id=current_user.id)
-    if invited_ids:
-        query = query.filter(~Guest.id.in_(invited_ids))
-    pattern = f"%{q}%"
-    query = query.filter(
-        db.or_(
-            Guest.first_name.ilike(pattern),
-            Guest.last_name.ilike(pattern),
-            db.func.concat(Guest.first_name, " ", db.func.coalesce(Guest.last_name, "")).ilike(pattern),
-        )
-    )
-    results = []
-    for g in query.order_by(Guest.first_name, Guest.last_name).limit(10).all():
-        results.append({"id": g.id, "first_name": g.first_name, "last_name": g.last_name or "", "gender": g.gender})
-    return jsonify(guests=results)
-
-
-@app.route("/event/<int:event_id>/quick-add", methods=["POST"])
-@login_required
-def quick_add_guest(event_id):
-    event = Event.query.get_or_404(event_id)
-    if event.user_id != current_user.id:
-        abort(403)
+def bulk_create_guests():
     data = request.get_json()
-    guest_id = data.get("guest_id")
-    if guest_id:
-        guest = Guest.query.get_or_404(guest_id)
-        if guest.user_id != current_user.id:
-            abort(403)
-    else:
-        guest = Guest(user_id=current_user.id, first_name=data["first_name"],
-                      last_name=data.get("last_name", ""),
-                      gender=data.get("gender", "Male"), notes="",
-                      date_created=datetime.now())
+    guests_data = data.get("guests", [])
+    added = []
+    for g_data in guests_data:
+        first_name = g_data.get("first_name", "").strip()
+        if not first_name:
+            continue
+        guest = Guest(
+            user_id=current_user.id,
+            first_name=first_name,
+            last_name=g_data.get("last_name", "").strip(),
+            gender=g_data.get("gender", "Male"),
+            notes=g_data.get("notes", "").strip(),
+            date_created=datetime.now()
+        )
         db.session.add(guest)
         db.session.flush()
-    existing = Invitation.query.filter_by(event_id=event_id, guest_id=guest.id).first()
-    if existing:
-        return jsonify(error="Guest already invited"), 400
-    sent = data.get("sent", False)
-    status = data.get("status", "Not Sent") if sent else "Not Sent"
-    channel = data.get("channel", "") if sent else ""
-    notes = data.get("notes", "")
-    date_invited = date.today() if sent else None
-    date_responded = date.today() if status in ("Attending", "Declined") else None
-    invitation = Invitation(event_id=event_id, guest_id=guest.id, status=status,
-                            channel=channel, notes=notes,
-                            date_invited=date_invited, date_responded=date_responded)
-    db.session.add(invitation)
+        added.append({
+            "id": guest.id, "first_name": guest.first_name,
+            "last_name": guest.last_name or "", "gender": guest.gender,
+            "notes": guest.notes or "", "is_me": False,
+            "date_created": guest.date_created.isoformat()
+        })
     db.session.commit()
-    return jsonify(invitation_id=invitation.id, guest_id=guest.id,
-                   first_name=guest.first_name, last_name=guest.last_name or "",
-                   gender=guest.gender, status=invitation.status, channel=invitation.channel,
-                   notes=invitation.notes or "",
-                   date_invited=invitation.date_invited.strftime("%b %d, %Y") if invitation.date_invited else "",
-                   date_invited_iso=invitation.date_invited.isoformat() if invitation.date_invited else "",
-                   date_responded=invitation.date_responded.strftime("%b %d, %Y") if invitation.date_responded else "",
-                   date_responded_iso=invitation.date_responded.isoformat() if invitation.date_responded else "")
+    return jsonify(added=added)
 
 
 @app.route("/api/guest/<int:guest_id>/gender", methods=["POST"])
@@ -428,6 +413,7 @@ def update_guest_gender(guest_id):
         abort(403)
     data = request.get_json()
     guest.gender = data.get("gender", guest.gender)
+    guest.date_edited = datetime.now()
     db.session.commit()
     return jsonify(ok=True)
 
@@ -441,8 +427,38 @@ def update_guest_name(guest_id):
     data = request.get_json()
     guest.first_name = data.get("first_name", guest.first_name)
     guest.last_name = data.get("last_name", guest.last_name or "")
+    guest.date_edited = datetime.now()
     db.session.commit()
     return jsonify(ok=True, full_name=guest.full_name)
+
+
+@app.route("/api/guest/<int:guest_id>/notes", methods=["POST"])
+@login_required
+def update_guest_notes(guest_id):
+    guest = Guest.query.get_or_404(guest_id)
+    if guest.user_id != current_user.id:
+        abort(403)
+    data = request.get_json()
+    guest.notes = data.get("notes", "")
+    guest.date_edited = datetime.now()
+    db.session.commit()
+    return jsonify(ok=True)
+
+
+@app.route("/api/guest/<int:guest_id>/is-me", methods=["POST"])
+@login_required
+def update_guest_is_me(guest_id):
+    guest = Guest.query.get_or_404(guest_id)
+    if guest.user_id != current_user.id:
+        abort(403)
+    data = request.get_json()
+    is_me = data.get("is_me", False)
+    if is_me and not guest.is_me:
+        Guest.query.filter_by(user_id=current_user.id, is_me=True).update({"is_me": False})
+    guest.is_me = is_me
+    guest.date_edited = datetime.now()
+    db.session.commit()
+    return jsonify(ok=True, is_me=guest.is_me)
 
 
 @app.route("/api/invitation/<int:invitation_id>/field", methods=["POST"])
@@ -460,6 +476,7 @@ def update_invitation_field(invitation_id):
         invitation.notes = value
     else:
         return jsonify(error="Invalid field"), 400
+    invitation.event.date_edited = datetime.now()
     db.session.commit()
     return jsonify(ok=True)
 
@@ -472,6 +489,7 @@ def update_event_notes(event_id):
         abort(403)
     data = request.get_json()
     event.notes = data.get("notes", "")
+    event.date_edited = datetime.now()
     db.session.commit()
     return jsonify(ok=True)
 
@@ -517,6 +535,48 @@ def bulk_add_guests(event_id):
             "first_name": guest.first_name, "last_name": guest.last_name or "",
             "gender": guest.gender, "status": "Not Sent"
         })
+    if added:
+        event.date_edited = datetime.now()
+    db.session.commit()
+    return jsonify(added=added)
+
+
+@app.route("/api/event/<int:event_id>/bulk-create-and-invite", methods=["POST"])
+@login_required
+def bulk_create_and_invite(event_id):
+    event = Event.query.get_or_404(event_id)
+    if event.user_id != current_user.id:
+        abort(403)
+    data = request.get_json()
+    guests_data = data.get("guests", [])
+    added = []
+    for g_data in guests_data:
+        first_name = g_data.get("first_name", "").strip()
+        if not first_name:
+            continue
+        guest = Guest(
+            user_id=current_user.id,
+            first_name=first_name,
+            last_name=g_data.get("last_name", "").strip(),
+            gender=g_data.get("gender", "Male"),
+            notes=g_data.get("notes", "").strip(),
+            date_created=datetime.now()
+        )
+        db.session.add(guest)
+        db.session.flush()
+        inv = Invitation(event_id=event_id, guest_id=guest.id, status="Not Sent")
+        db.session.add(inv)
+        db.session.flush()
+        added.append({
+            "invitation_id": inv.id, "guest_id": guest.id,
+            "first_name": guest.first_name, "last_name": guest.last_name or "",
+            "gender": guest.gender, "status": "Not Sent",
+            "channel": "", "notes": "",
+            "date_invited": "", "date_invited_iso": "",
+            "date_responded": "", "date_responded_iso": ""
+        })
+    if added:
+        event.date_edited = datetime.now()
     db.session.commit()
     return jsonify(added=added)
 
@@ -529,7 +589,7 @@ HEADER_FILL = PatternFill(start_color="2C3E50", end_color="2C3E50", fill_type="s
 
 def _styled_sheet(wb, title, headers):
     ws = wb.active
-    ws.title = title
+    ws.title = re.sub(r"[/\\*?\[\]:]", "_", title)
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col, value=header)
         cell.font = HEADER_FONT
@@ -594,7 +654,7 @@ def export_event_guests(event_id):
                    inv.notes or "", g.notes or ""])
     for col in ws.columns:
         ws.column_dimensions[col[0].column_letter].width = 18
-    safe_name = event.name.replace(" ", "_").lower()
+    safe_name = re.sub(r"[^\w\-]", "_", event.name).strip("_").lower()
     return _to_download(wb, f"{safe_name}_guests.xlsx")
 
 
@@ -604,10 +664,16 @@ def seed(user_id):
     """Populate a user's account with sample data."""
     today = date.today()
     events = [
-        Event(user_id=user_id, name="Annual Gala Dinner", event_type="Dinner", location="Grand Hotel, New York", date=date(2026, 4, 12), date_created=today, notes="Black tie event"),
-        Event(user_id=user_id, name="Team Building Retreat", event_type="Corporate", location="Lakehouse Resort, Vermont", date=date(2026, 5, 20), date_created=today, notes="Outdoor activities planned"),
+        # Past events
+        Event(user_id=user_id, name="New Year's Eve Bash", event_type="Party", location="Rooftop Lounge, Miami", date=date(2025, 12, 31), date_created=date(2025, 11, 15), notes="Great turnout!", target_attendees=20),
+        Event(user_id=user_id, name="Q4 Board Meeting", event_type="Corporate", location="HQ Boardroom, Chicago", date=date(2026, 1, 15), date_created=date(2025, 12, 1), notes="Quarterly review completed"),
+        Event(user_id=user_id, name="Valentine's Dinner", event_type="Dinner", location="Le Petit Bistro, Paris", date=date(2026, 2, 14), date_created=date(2026, 1, 10), notes="Intimate dinner for couples", target_attendees=8),
+        # Upcoming events
+        Event(user_id=user_id, name="Annual Gala Dinner", event_type="Dinner", location="Grand Hotel, New York", date=date(2026, 4, 12), date_created=today, notes="Black tie event", target_attendees=10),
+        Event(user_id=user_id, name="Team Building Retreat", event_type="Corporate", location="Lakehouse Resort, Vermont", date=date(2026, 5, 20), date_created=today, notes="Outdoor activities planned", target_attendees=6),
         Event(user_id=user_id, name="Summer Garden Party", event_type="Party", location="Riverside Park, Boston", date=date(2026, 7, 4), date_created=today, notes="Casual dress code"),
-        Event(user_id=user_id, name="Product Launch", event_type="Conference", location="Tech Hub, San Francisco", date=date(2026, 9, 15), date_created=today, notes="Press invited"),
+        Event(user_id=user_id, name="Sarah & Tom Wedding", event_type="Wedding", location="Meadow Estate, Napa Valley", date=date(2026, 8, 22), date_created=today, notes="Ceremony at 3pm, reception follows", target_attendees=15),
+        Event(user_id=user_id, name="Product Launch", event_type="Conference", location="Tech Hub, San Francisco", date=date(2026, 9, 15), date_created=today, notes="Press invited", target_attendees=4),
     ]
     db.session.add_all(events)
     db.session.flush()
@@ -626,38 +692,103 @@ def seed(user_id):
         Guest(user_id=user_id, first_name="Lucas", last_name="Harris", gender="Male", date_created=now),
         Guest(user_id=user_id, first_name="Isabella", last_name="Clark", gender="Female", date_created=now),
         Guest(user_id=user_id, first_name="Benjamin", last_name="Lee", gender="Male", notes="VIP", date_created=now),
+        Guest(user_id=user_id, first_name="Mia", last_name="Robinson", gender="Female", date_created=now),
+        Guest(user_id=user_id, first_name="Ethan", last_name="Wright", gender="Male", notes="Prefers window seat", date_created=now),
+        Guest(user_id=user_id, first_name="Ava", last_name="Lopez", gender="Female", notes="Gluten-free", date_created=now),
+        Guest(user_id=user_id, first_name="Noah", last_name="Mitchell", gender="Male", date_created=now),
+        Guest(user_id=user_id, first_name="Lily", last_name="Perez", gender="Female", date_created=now),
+        Guest(user_id=user_id, first_name="Daniel", last_name="Roberts", gender="Male", notes="Board member", date_created=now),
+        Guest(user_id=user_id, first_name="Grace", last_name="Turner", gender="Female", date_created=now),
+        Guest(user_id=user_id, first_name="Jack", last_name="Phillips", gender="Male", date_created=now),
+        Guest(user_id=user_id, first_name="Chloe", last_name="Campbell", gender="Female", notes="Bringing plus one", date_created=now),
+        Guest(user_id=user_id, first_name="Ryan", last_name="Parker", gender="Male", date_created=now),
+        Guest(user_id=user_id, first_name="Zoe", last_name="Evans", gender="Female", date_created=now),
+        Guest(user_id=user_id, first_name="Nathan", last_name="Collins", gender="Male", notes="Photographer", date_created=now),
+        Guest(user_id=user_id, first_name="Hannah", last_name="Stewart", gender="Female", date_created=now),
     ]
     db.session.add_all(guests)
     db.session.flush()
 
     invitations = [
-        # Gala Dinner — 8 guests
-        Invitation(event_id=events[0].id, guest_id=guests[0].id, status="Attending", channel="Email", date_invited=date(2026, 2, 1), date_responded=date(2026, 2, 5), notes="Confirmed plus one"),
-        Invitation(event_id=events[0].id, guest_id=guests[1].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 2, 1), date_responded=date(2026, 2, 3)),
-        Invitation(event_id=events[0].id, guest_id=guests[2].id, status="Pending", channel="Email", date_invited=date(2026, 2, 1)),
-        Invitation(event_id=events[0].id, guest_id=guests[3].id, status="Declined", channel="Call", date_invited=date(2026, 2, 1), date_responded=date(2026, 2, 10), notes="Travel conflict"),
-        Invitation(event_id=events[0].id, guest_id=guests[4].id, status="Attending", channel="Email", date_invited=date(2026, 2, 5), date_responded=date(2026, 2, 8)),
-        Invitation(event_id=events[0].id, guest_id=guests[8].id, status="Attending", channel="Live", date_invited=date(2026, 2, 5), date_responded=date(2026, 2, 7)),
-        Invitation(event_id=events[0].id, guest_id=guests[10].id, status="Not Sent"),
-        Invitation(event_id=events[0].id, guest_id=guests[11].id, status="Attending", channel="Email", date_invited=date(2026, 2, 1), date_responded=date(2026, 2, 2), notes="VIP table"),
-        # Team Building — 6 guests
-        Invitation(event_id=events[1].id, guest_id=guests[1].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 3, 1), date_responded=date(2026, 3, 5)),
-        Invitation(event_id=events[1].id, guest_id=guests[3].id, status="Attending", channel="Email", date_invited=date(2026, 3, 1), date_responded=date(2026, 3, 4)),
-        Invitation(event_id=events[1].id, guest_id=guests[5].id, status="Pending", channel="Call", date_invited=date(2026, 3, 1), notes="Call back tomorrow"),
-        Invitation(event_id=events[1].id, guest_id=guests[7].id, status="Declined", channel="WhatsApp", date_invited=date(2026, 3, 1), date_responded=date(2026, 3, 8)),
-        Invitation(event_id=events[1].id, guest_id=guests[9].id, status="Not Sent"),
-        Invitation(event_id=events[1].id, guest_id=guests[11].id, status="Not Sent"),
-        # Garden Party — 5 guests
-        Invitation(event_id=events[2].id, guest_id=guests[0].id, status="Attending", channel="Live", date_invited=date(2026, 4, 1), date_responded=date(2026, 4, 3)),
-        Invitation(event_id=events[2].id, guest_id=guests[2].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 4, 1), date_responded=date(2026, 4, 2)),
-        Invitation(event_id=events[2].id, guest_id=guests[4].id, status="Pending", channel="Email", date_invited=date(2026, 4, 5)),
-        Invitation(event_id=events[2].id, guest_id=guests[6].id, status="Attending", channel="SMS", date_invited=date(2026, 4, 1), date_responded=date(2026, 4, 4)),
-        Invitation(event_id=events[2].id, guest_id=guests[8].id, status="Declined", channel="Call", date_invited=date(2026, 4, 1), date_responded=date(2026, 4, 7), notes="Health reasons"),
-        # Product Launch — 4 guests
-        Invitation(event_id=events[3].id, guest_id=guests[5].id, status="Not Sent"),
-        Invitation(event_id=events[3].id, guest_id=guests[7].id, status="Not Sent"),
-        Invitation(event_id=events[3].id, guest_id=guests[9].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 3)),
-        Invitation(event_id=events[3].id, guest_id=guests[11].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 2), notes="Keynote speaker"),
+        # New Year's Eve Bash (past) — 12 guests, target 20
+        Invitation(event_id=events[0].id, guest_id=guests[0].id, status="Attending", channel="Email", date_invited=date(2025, 11, 20), date_responded=date(2025, 11, 25)),
+        Invitation(event_id=events[0].id, guest_id=guests[1].id, status="Attending", channel="WhatsApp", date_invited=date(2025, 11, 20), date_responded=date(2025, 11, 22)),
+        Invitation(event_id=events[0].id, guest_id=guests[2].id, status="Attending", channel="Email", date_invited=date(2025, 11, 20), date_responded=date(2025, 12, 1)),
+        Invitation(event_id=events[0].id, guest_id=guests[4].id, status="Attending", channel="SMS", date_invited=date(2025, 11, 25), date_responded=date(2025, 11, 28)),
+        Invitation(event_id=events[0].id, guest_id=guests[6].id, status="Declined", channel="Email", date_invited=date(2025, 11, 20), date_responded=date(2025, 11, 30), notes="Out of town"),
+        Invitation(event_id=events[0].id, guest_id=guests[8].id, status="Attending", channel="Live", date_invited=date(2025, 11, 25), date_responded=date(2025, 11, 26)),
+        Invitation(event_id=events[0].id, guest_id=guests[12].id, status="Attending", channel="WhatsApp", date_invited=date(2025, 12, 1), date_responded=date(2025, 12, 5)),
+        Invitation(event_id=events[0].id, guest_id=guests[14].id, status="Attending", channel="Email", date_invited=date(2025, 12, 1), date_responded=date(2025, 12, 3)),
+        Invitation(event_id=events[0].id, guest_id=guests[16].id, status="Declined", channel="Call", date_invited=date(2025, 12, 1), date_responded=date(2025, 12, 10)),
+        Invitation(event_id=events[0].id, guest_id=guests[19].id, status="Attending", channel="Email", date_invited=date(2025, 12, 5), date_responded=date(2025, 12, 8)),
+        Invitation(event_id=events[0].id, guest_id=guests[20].id, status="Attending", channel="SMS", date_invited=date(2025, 12, 5), date_responded=date(2025, 12, 9)),
+        Invitation(event_id=events[0].id, guest_id=guests[23].id, status="Attending", channel="Email", date_invited=date(2025, 12, 5), date_responded=date(2025, 12, 7), notes="Taking photos"),
+        # Q4 Board Meeting (past) — 6 guests
+        Invitation(event_id=events[1].id, guest_id=guests[1].id, status="Attending", channel="Email", date_invited=date(2025, 12, 10), date_responded=date(2025, 12, 12)),
+        Invitation(event_id=events[1].id, guest_id=guests[5].id, status="Attending", channel="Email", date_invited=date(2025, 12, 10), date_responded=date(2025, 12, 11)),
+        Invitation(event_id=events[1].id, guest_id=guests[17].id, status="Attending", channel="Email", date_invited=date(2025, 12, 10), date_responded=date(2025, 12, 13), notes="Presenting Q4 numbers"),
+        Invitation(event_id=events[1].id, guest_id=guests[3].id, status="Declined", channel="Email", date_invited=date(2025, 12, 10), date_responded=date(2025, 12, 15)),
+        Invitation(event_id=events[1].id, guest_id=guests[9].id, status="Attending", channel="Call", date_invited=date(2025, 12, 12), date_responded=date(2025, 12, 14)),
+        Invitation(event_id=events[1].id, guest_id=guests[15].id, status="Pending", channel="Email", date_invited=date(2025, 12, 15)),
+        # Valentine's Dinner (past) — 8 guests, target 8
+        Invitation(event_id=events[2].id, guest_id=guests[0].id, status="Attending", channel="Email", date_invited=date(2026, 1, 15), date_responded=date(2026, 1, 18)),
+        Invitation(event_id=events[2].id, guest_id=guests[1].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 1, 15), date_responded=date(2026, 1, 17)),
+        Invitation(event_id=events[2].id, guest_id=guests[2].id, status="Attending", channel="Email", date_invited=date(2026, 1, 15), date_responded=date(2026, 1, 20)),
+        Invitation(event_id=events[2].id, guest_id=guests[4].id, status="Attending", channel="Live", date_invited=date(2026, 1, 18), date_responded=date(2026, 1, 19)),
+        Invitation(event_id=events[2].id, guest_id=guests[12].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 1, 18), date_responded=date(2026, 1, 22)),
+        Invitation(event_id=events[2].id, guest_id=guests[13].id, status="Attending", channel="Email", date_invited=date(2026, 1, 18), date_responded=date(2026, 1, 21)),
+        Invitation(event_id=events[2].id, guest_id=guests[18].id, status="Attending", channel="SMS", date_invited=date(2026, 1, 20), date_responded=date(2026, 1, 25)),
+        Invitation(event_id=events[2].id, guest_id=guests[20].id, status="Attending", channel="Email", date_invited=date(2026, 1, 20), date_responded=date(2026, 1, 24), notes="Anniversary celebration"),
+        # Annual Gala Dinner — 10 guests, target 10
+        Invitation(event_id=events[3].id, guest_id=guests[0].id, status="Attending", channel="Email", date_invited=date(2026, 2, 1), date_responded=date(2026, 2, 5), notes="Confirmed plus one"),
+        Invitation(event_id=events[3].id, guest_id=guests[1].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 2, 1), date_responded=date(2026, 2, 3)),
+        Invitation(event_id=events[3].id, guest_id=guests[2].id, status="Pending", channel="Email", date_invited=date(2026, 2, 1)),
+        Invitation(event_id=events[3].id, guest_id=guests[3].id, status="Declined", channel="Call", date_invited=date(2026, 2, 1), date_responded=date(2026, 2, 10), notes="Travel conflict"),
+        Invitation(event_id=events[3].id, guest_id=guests[4].id, status="Attending", channel="Email", date_invited=date(2026, 2, 5), date_responded=date(2026, 2, 8)),
+        Invitation(event_id=events[3].id, guest_id=guests[8].id, status="Attending", channel="Live", date_invited=date(2026, 2, 5), date_responded=date(2026, 2, 7)),
+        Invitation(event_id=events[3].id, guest_id=guests[10].id, status="Not Sent"),
+        Invitation(event_id=events[3].id, guest_id=guests[11].id, status="Attending", channel="Email", date_invited=date(2026, 2, 1), date_responded=date(2026, 2, 2), notes="VIP table"),
+        Invitation(event_id=events[3].id, guest_id=guests[14].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 2, 8), date_responded=date(2026, 2, 12)),
+        Invitation(event_id=events[3].id, guest_id=guests[21].id, status="Pending", channel="Email", date_invited=date(2026, 2, 10)),
+        # Team Building Retreat — 8 guests, target 6
+        Invitation(event_id=events[4].id, guest_id=guests[1].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 3, 1), date_responded=date(2026, 3, 5)),
+        Invitation(event_id=events[4].id, guest_id=guests[3].id, status="Attending", channel="Email", date_invited=date(2026, 3, 1), date_responded=date(2026, 3, 4)),
+        Invitation(event_id=events[4].id, guest_id=guests[5].id, status="Pending", channel="Call", date_invited=date(2026, 3, 1), notes="Call back tomorrow"),
+        Invitation(event_id=events[4].id, guest_id=guests[7].id, status="Declined", channel="WhatsApp", date_invited=date(2026, 3, 1), date_responded=date(2026, 3, 8)),
+        Invitation(event_id=events[4].id, guest_id=guests[9].id, status="Not Sent"),
+        Invitation(event_id=events[4].id, guest_id=guests[11].id, status="Not Sent"),
+        Invitation(event_id=events[4].id, guest_id=guests[15].id, status="Attending", channel="Email", date_invited=date(2026, 3, 5), date_responded=date(2026, 3, 7)),
+        Invitation(event_id=events[4].id, guest_id=guests[19].id, status="Attending", channel="SMS", date_invited=date(2026, 3, 5), date_responded=date(2026, 3, 9)),
+        # Summer Garden Party — 7 guests, no target
+        Invitation(event_id=events[5].id, guest_id=guests[0].id, status="Attending", channel="Live", date_invited=date(2026, 4, 1), date_responded=date(2026, 4, 3)),
+        Invitation(event_id=events[5].id, guest_id=guests[2].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 4, 1), date_responded=date(2026, 4, 2)),
+        Invitation(event_id=events[5].id, guest_id=guests[4].id, status="Pending", channel="Email", date_invited=date(2026, 4, 5)),
+        Invitation(event_id=events[5].id, guest_id=guests[6].id, status="Attending", channel="SMS", date_invited=date(2026, 4, 1), date_responded=date(2026, 4, 4)),
+        Invitation(event_id=events[5].id, guest_id=guests[8].id, status="Declined", channel="Call", date_invited=date(2026, 4, 1), date_responded=date(2026, 4, 7), notes="Health reasons"),
+        Invitation(event_id=events[5].id, guest_id=guests[16].id, status="Attending", channel="Email", date_invited=date(2026, 4, 8), date_responded=date(2026, 4, 10)),
+        Invitation(event_id=events[5].id, guest_id=guests[22].id, status="Not Sent"),
+        # Sarah & Tom Wedding — 14 guests, target 15
+        Invitation(event_id=events[6].id, guest_id=guests[0].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 5)),
+        Invitation(event_id=events[6].id, guest_id=guests[2].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 3)),
+        Invitation(event_id=events[6].id, guest_id=guests[4].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 4)),
+        Invitation(event_id=events[6].id, guest_id=guests[6].id, status="Pending", channel="Email", date_invited=date(2026, 5, 1)),
+        Invitation(event_id=events[6].id, guest_id=guests[8].id, status="Attending", channel="Live", date_invited=date(2026, 5, 5), date_responded=date(2026, 5, 6)),
+        Invitation(event_id=events[6].id, guest_id=guests[10].id, status="Attending", channel="Email", date_invited=date(2026, 5, 5), date_responded=date(2026, 5, 9)),
+        Invitation(event_id=events[6].id, guest_id=guests[12].id, status="Declined", channel="Call", date_invited=date(2026, 5, 5), date_responded=date(2026, 5, 12), notes="Scheduling conflict"),
+        Invitation(event_id=events[6].id, guest_id=guests[14].id, status="Attending", channel="Email", date_invited=date(2026, 5, 8), date_responded=date(2026, 5, 11)),
+        Invitation(event_id=events[6].id, guest_id=guests[16].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 5, 8), date_responded=date(2026, 5, 10)),
+        Invitation(event_id=events[6].id, guest_id=guests[18].id, status="Not Sent"),
+        Invitation(event_id=events[6].id, guest_id=guests[20].id, status="Attending", channel="SMS", date_invited=date(2026, 5, 10), date_responded=date(2026, 5, 14), notes="Bringing plus one"),
+        Invitation(event_id=events[6].id, guest_id=guests[22].id, status="Pending", channel="Email", date_invited=date(2026, 5, 10)),
+        Invitation(event_id=events[6].id, guest_id=guests[23].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 2), notes="Official photographer"),
+        Invitation(event_id=events[6].id, guest_id=guests[24].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 5, 10), date_responded=date(2026, 5, 13)),
+        # Product Launch — 6 guests, target 4
+        Invitation(event_id=events[7].id, guest_id=guests[5].id, status="Not Sent"),
+        Invitation(event_id=events[7].id, guest_id=guests[7].id, status="Not Sent"),
+        Invitation(event_id=events[7].id, guest_id=guests[9].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 3)),
+        Invitation(event_id=events[7].id, guest_id=guests[11].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 2), notes="Keynote speaker"),
+        Invitation(event_id=events[7].id, guest_id=guests[17].id, status="Attending", channel="Call", date_invited=date(2026, 5, 5), date_responded=date(2026, 5, 8)),
+        Invitation(event_id=events[7].id, guest_id=guests[23].id, status="Pending", channel="Email", date_invited=date(2026, 5, 10)),
     ]
     db.session.add_all(invitations)
     db.session.commit()
@@ -679,6 +810,8 @@ with app.app_context():
             "ALTER TABLE event ADD COLUMN date_created DATE",
             "ALTER TABLE guest ADD COLUMN date_created TIMESTAMP",
             "ALTER TABLE guest ADD COLUMN date_edited TIMESTAMP",
+            "ALTER TABLE event ADD COLUMN date_edited TIMESTAMP",
+            "ALTER TABLE event ADD COLUMN target_attendees INTEGER",
         ]:
             try:
                 conn.execute(db.text("SAVEPOINT sp"))
@@ -688,4 +821,4 @@ with app.app_context():
                 conn.execute(db.text("ROLLBACK TO SAVEPOINT sp"))
         conn.commit()
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=os.environ.get("FLASK_DEBUG", "0") == "1")
