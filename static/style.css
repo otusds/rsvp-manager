@@ -107,6 +107,7 @@ nav .logo {
     left: 0;
     right: 0;
     bottom: 0;
+    background: rgba(0,0,0,0.15);
     z-index: 105;
 }
 
@@ -1017,14 +1018,15 @@ td.center, th.center { text-align: center; }
 
 /* ── "Me" badge ───────────────────────────────────────────────────────────── */
 .badge-me {
-    background: #ff9500;
-    color: white;
-    font-size: 0.65rem;
-    padding: 0.08rem 0.35rem;
-    border-radius: 5px;
-    font-weight: 700;
-    margin-left: 0.3rem;
-    vertical-align: middle;
+    color: #ff9500;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-left: -0.1rem;
+    pointer-events: none;
+    white-space: nowrap;
+}
+.inline-edit-cell .ge-first:focus ~ .badge-me {
+    display: none;
 }
 
 /* ── Include-me toggle ────────────────────────────────────────────────────── */

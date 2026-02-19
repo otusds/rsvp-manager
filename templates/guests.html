@@ -56,7 +56,7 @@
             data-last="{{ (guest.last_name or '')|lower }}"
             data-created="{{ guest.date_created.isoformat() if guest.date_created else '' }}"
             data-is-me="{{ 'true' if guest.is_me else 'false' }}">
-            <td class="inline-edit-cell"><input type="text" class="inline-edit ge-first" value="{{ guest.first_name }}" data-guest-id="{{ guest.id }}">{% if guest.is_me %}<span class="badge-me">Me</span>{% endif %}</td>
+            <td class="inline-edit-cell"><input type="text" class="inline-edit ge-first" value="{{ guest.first_name }}" data-guest-id="{{ guest.id }}">{% if guest.is_me %}<span class="badge-me">(me)</span>{% endif %}</td>
             <td><input type="text" class="inline-edit ge-last" value="{{ guest.last_name or '' }}" data-guest-id="{{ guest.id }}"></td>
             <td>
                 <select class="inline-select ge-gender" data-guest-id="{{ guest.id }}">
@@ -110,6 +110,7 @@
             </table>
         </div>
         <div class="guest-db-footer">
+            <span style="font-size:0.78rem;color:#8e8e93">Press Enter to add another guest</span>
             <button type="button" class="btn" id="add-guest-save-btn">Save</button>
         </div>
     </div>

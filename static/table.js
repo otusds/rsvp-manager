@@ -1221,7 +1221,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (firstInput && !row.querySelector(".badge-me")) {
                             var badge = document.createElement("span");
                             badge.className = "badge-me";
-                            badge.textContent = "Me";
+                            badge.textContent = "(me)";
                             firstInput.parentNode.appendChild(badge);
                         }
                         btn.textContent = "\u2713 This is me";
