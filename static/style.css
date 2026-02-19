@@ -323,11 +323,11 @@ tr:last-child td { border-bottom: none; }
 }
 
 /* ── Sort indicators ───────────────────────────────────────────────────────── */
-th[data-sort] { cursor: pointer; user-select: none; position: relative; padding-right: 1.3rem; }
+th[data-sort] { cursor: pointer; user-select: none; position: relative; padding-right: 1.4rem; }
 th[data-sort]:hover { background: rgba(0,0,0,0.04); }
-th[data-sort]::after { content: "\2195"; position: absolute; right: 0.3rem; opacity: 0.3; font-size: 0.65rem; }
-th.sort-asc::after { content: "\2191"; opacity: 0.7; }
-th.sort-desc::after { content: "\2193"; opacity: 0.7; }
+th[data-sort]::after { content: "\2195\FE0E"; position: absolute; right: 0.3rem; opacity: 0.3; font-size: 0.85rem; top: 50%; transform: translateY(-50%); }
+th.sort-asc::after { content: "\2191\FE0E"; opacity: 0.7; }
+th.sort-desc::after { content: "\2193\FE0E"; opacity: 0.7; }
 
 /* ── Forms ─────────────────────────────────────────────────────────────────── */
 .form {
@@ -925,6 +925,8 @@ td.center, th.center { text-align: center; }
     border-color: #007aff;
     box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
 }
+
+.gender-tag { color: #8e8e93; font-size: 0.78rem; }
 
 .inline-edit-cell {
     display: flex;

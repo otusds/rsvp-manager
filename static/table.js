@@ -51,6 +51,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 return 0;
             });
             rows.forEach(function (row) { tbody.appendChild(row); });
+
+            // Sync header arrows with dropdown sort
+            var ths = table.querySelectorAll("th");
+            ths.forEach(function (h) {
+                h.classList.remove("sort-asc", "sort-desc");
+                h.removeAttribute("data-dir");
+            });
+            if (ths[colIndex]) {
+                ths[colIndex].classList.add(dir === "asc" ? "sort-asc" : "sort-desc");
+                ths[colIndex].setAttribute("data-dir", dir);
+            }
         });
     });
 
@@ -60,9 +71,14 @@ document.addEventListener("DOMContentLoaded", function () {
         var query = searchInput ? searchInput.value.toLowerCase() : "";
         var filters = [];
         document.querySelectorAll('.filter-select[data-table="' + tableId + '"]').forEach(function (sel) {
-            var col = parseInt(sel.getAttribute("data-col"));
             var val = sel.value;
-            if (val) filters.push({ col: col, val: val });
+            if (!val) return;
+            var attr = sel.getAttribute("data-attr");
+            if (attr) {
+                filters.push({ attr: attr, val: val });
+            } else {
+                filters.push({ col: parseInt(sel.getAttribute("data-col")), val: val });
+            }
         });
 
         var rows = table.querySelectorAll("tbody tr");
@@ -72,12 +88,18 @@ document.addEventListener("DOMContentLoaded", function () {
             var matchesSearch = !query || text.indexOf(query) !== -1;
             var matchesFilters = true;
             for (var i = 0; i < filters.length; i++) {
-                var cell = row.cells[filters[i].col];
-                if (!cell) continue;
-                var cellText = cell.textContent.trim();
-                var selectEl = cell.querySelector("select");
-                if (selectEl) cellText = selectEl.value;
-                if (cellText !== filters[i].val) { matchesFilters = false; break; }
+                var f = filters[i];
+                var cellText;
+                if (f.attr) {
+                    cellText = row.getAttribute(f.attr) || "";
+                } else {
+                    var cell = row.cells[f.col];
+                    if (!cell) continue;
+                    cellText = cell.textContent.trim();
+                    var selectEl = cell.querySelector("select");
+                    if (selectEl) cellText = selectEl.value;
+                }
+                if (cellText !== f.val) { matchesFilters = false; break; }
             }
             row.style.display = (matchesSearch && matchesFilters) ? "" : "none";
         });
@@ -109,9 +131,16 @@ document.addEventListener("DOMContentLoaded", function () {
                     valA = parseFloat(cellA.textContent) || 0;
                     valB = parseFloat(cellB.textContent) || 0;
                     return dir === "asc" ? valA - valB : valB - valA;
+                } else if (sortType === "check") {
+                    var cbA = cellA.querySelector("input[type=checkbox]");
+                    var cbB = cellB.querySelector("input[type=checkbox]");
+                    valA = cbA && cbA.checked ? "1" : "0";
+                    valB = cbB && cbB.checked ? "1" : "0";
                 } else {
-                    valA = cellA.textContent.trim().toLowerCase();
-                    valB = cellB.textContent.trim().toLowerCase();
+                    var selA = cellA.querySelector("select");
+                    var selB = cellB.querySelector("select");
+                    valA = selA ? selA.value.toLowerCase() : cellA.textContent.trim().toLowerCase();
+                    valB = selB ? selB.value.toLowerCase() : cellB.textContent.trim().toLowerCase();
                 }
                 if (valA < valB) return dir === "asc" ? -1 : 1;
                 if (valA > valB) return dir === "asc" ? 1 : -1;
@@ -128,15 +157,15 @@ document.addEventListener("DOMContentLoaded", function () {
     // Cols: 0=Select, 1=Guest, 2=Gender, 3=Sent(checkbox), 4=Status, 5=Notes, 6=Actions
 
     function getRowStatus(row) {
-        var checkbox = row.cells[3] && row.cells[3].querySelector(".sent-checkbox");
+        var checkbox = row.cells[2] && row.cells[2].querySelector(".sent-checkbox");
         if (!checkbox || !checkbox.checked) return "Not Sent";
-        var sel = row.cells[4] && row.cells[4].querySelector("select");
+        var sel = row.cells[3] && row.cells[3].querySelector("select");
         if (sel) return sel.value;
         return "Not Sent";
     }
 
     function getRowGender(row) {
-        return row.cells[2] ? row.cells[2].textContent.trim().toLowerCase() : "male";
+        return (row.getAttribute("data-gender") || "male").toLowerCase();
     }
 
     function refreshSummary() {
@@ -257,16 +286,17 @@ document.addEventListener("DOMContentLoaded", function () {
         var tr = document.createElement("tr");
         tr.setAttribute("data-inv-id", data.invitation_id);
         tr.setAttribute("data-guest-id", data.guest_id);
+        tr.setAttribute("data-gender", data.gender || "");
         tr.setAttribute("data-sent", isSent ? "true" : "false");
         tr.setAttribute("data-date-invited", data.date_invited || "");
         tr.setAttribute("data-date-invited-iso", data.date_invited_iso || "");
         tr.setAttribute("data-date-responded", data.date_responded || "");
         tr.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
 
+        var genderTag = data.gender === "Male" ? " (M)" : data.gender === "Female" ? " (F)" : "";
         tr.innerHTML =
             '<td class="center col-multiselect" style="display:' + multiShow + '"><input type="checkbox" class="row-select"></td>' +
-            '<td class="guest-name-cell">' + escapeHtml(displayName) + '</td>' +
-            '<td class="col-hide-mobile">' + escapeHtml(data.gender) + '</td>' +
+            '<td class="guest-name-cell">' + escapeHtml(displayName) + ' <span class="gender-tag">' + escapeHtml(genderTag) + '</span></td>' +
             '<td class="center"><input type="checkbox" class="sent-checkbox" data-inv-id="' + data.invitation_id + '"' + (isSent ? ' checked' : '') + '></td>' +
             '<td>' + buildStatusHtml(data.invitation_id, data.status) + '</td>' +
             '<td class="col-hide-mobile"><input type="text" class="inv-notes-input" data-inv-id="' + data.invitation_id + '" value="' + escapeHtml(data.notes || "") + '" placeholder="Invite note..."></td>' +
@@ -324,7 +354,7 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                var statusCell = row.cells[4];
+                var statusCell = row.cells[3];
                 if (data.status === "Not Sent") {
                     checkbox.checked = false;
                     row.setAttribute("data-sent", "false");
@@ -419,19 +449,19 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!detailOverlay) return;
         currentDetailRow = row;
 
-        // Read name
-        var fullName = row.cells[1].textContent.trim();
+        // Read name (strip gender tag like "(M)" or "(F)")
+        var fullName = row.cells[1].textContent.trim().replace(/\s*\([MF]\)\s*$/, "");
         var nameParts = fullName.split(" ");
         var firstName = nameParts[0] || "";
         var lastName = nameParts.slice(1).join(" ") || "";
         document.getElementById("detail-first-name").value = firstName;
         document.getElementById("detail-last-name").value = lastName;
 
-        // Gender from col 2
-        document.getElementById("detail-gender").value = row.cells[2].textContent.trim();
+        // Gender from data attribute
+        document.getElementById("detail-gender").value = row.getAttribute("data-gender") || "";
 
         // Sent toggle
-        var sentCheckbox = row.cells[3].querySelector(".sent-checkbox");
+        var sentCheckbox = row.cells[2].querySelector(".sent-checkbox");
         var isSent = sentCheckbox && sentCheckbox.checked;
         document.getElementById("detail-sent-toggle").checked = isSent;
 
@@ -451,7 +481,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Notes
-        var notesInput = row.cells[5] && row.cells[5].querySelector(".inv-notes-input");
+        var notesInput = row.cells[4] && row.cells[4].querySelector(".inv-notes-input");
         document.getElementById("detail-notes").value = notesInput ? notesInput.value : "";
 
         detailOverlay.style.display = "flex";
@@ -483,7 +513,10 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data.ok && currentDetailRow) {
-                    currentDetailRow.cells[1].textContent = data.full_name;
+                    var nameCell = currentDetailRow.cells[1];
+                    var genderTag = nameCell.querySelector(".gender-tag");
+                    var tagHTML = genderTag ? " " + genderTag.outerHTML : "";
+                    nameCell.innerHTML = escapeHtml(data.full_name) + tagHTML;
                 }
             });
         }
@@ -503,7 +536,9 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(function (res) { return res.json(); })
             .then(function () {
                 if (currentDetailRow) {
-                    currentDetailRow.cells[2].textContent = newGender;
+                    currentDetailRow.setAttribute("data-gender", newGender);
+                    var genderTag = currentDetailRow.cells[1] && currentDetailRow.cells[1].querySelector(".gender-tag");
+                    if (genderTag) genderTag.textContent = newGender === "Male" ? "(M)" : newGender === "Female" ? "(F)" : "";
                     refreshSummary();
                 }
             });
@@ -512,7 +547,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Sent toggle (syncs with table checkbox)
         document.getElementById("detail-sent-toggle").addEventListener("change", function () {
             if (!currentDetailRow) return;
-            var sentCheckbox = currentDetailRow.cells[3].querySelector(".sent-checkbox");
+            var sentCheckbox = currentDetailRow.cells[2].querySelector(".sent-checkbox");
             if (sentCheckbox) {
                 sentCheckbox.checked = this.checked;
                 sentCheckbox.dispatchEvent(new Event("change"));
@@ -538,7 +573,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!currentDetailRow) return;
             var invId = currentDetailRow.getAttribute("data-inv-id");
             var newStatus = this.value;
-            var tableSelect = currentDetailRow.cells[4].querySelector(".status-select");
+            var tableSelect = currentDetailRow.cells[3].querySelector(".status-select");
             if (tableSelect) { tableSelect.value = newStatus; colorStatusSelect(tableSelect); }
             var formData = new FormData();
             formData.append("status", newStatus);
@@ -562,7 +597,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!currentDetailRow) return;
             var invId = currentDetailRow.getAttribute("data-inv-id");
             var newNotes = this.value;
-            var tableInput = currentDetailRow.cells[5] && currentDetailRow.cells[5].querySelector(".inv-notes-input");
+            var tableInput = currentDetailRow.cells[4] && currentDetailRow.cells[4].querySelector(".inv-notes-input");
             if (tableInput) tableInput.value = newNotes;
             fetch("/api/invitation/" + invId + "/field", {
                 method: "POST",
@@ -633,7 +668,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             var promises = rows.map(function (row) {
                 var invId = row.getAttribute("data-inv-id");
-                var checkbox = row.cells[3].querySelector(".sent-checkbox");
+                var checkbox = row.cells[2].querySelector(".sent-checkbox");
                 var isSent = checkbox && checkbox.checked;
 
                 if (action === "send" && !isSent) {
@@ -645,7 +680,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         row.setAttribute("data-sent", "true");
                         row.setAttribute("data-date-invited", data.date_invited);
                         row.setAttribute("data-date-invited-iso", data.date_invited_iso);
-                        var statusCell = row.cells[4];
+                        var statusCell = row.cells[3];
                         statusCell.innerHTML = buildStatusHtml(invId, "Pending");
                         attachStatusListener(statusCell.querySelector(".status-select"));
                     });
@@ -660,7 +695,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         row.setAttribute("data-date-invited-iso", "");
                         row.setAttribute("data-date-responded", "");
                         row.setAttribute("data-date-responded-iso", "");
-                        row.cells[4].innerHTML = buildStatusHtml(invId, "Not Sent");
+                        row.cells[3].innerHTML = buildStatusHtml(invId, "Not Sent");
                     });
                 } else if (action === "attending" || action === "pending" || action === "declined") {
                     var newStatus = action.charAt(0).toUpperCase() + action.slice(1);
@@ -674,7 +709,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             row.setAttribute("data-sent", "true");
                             row.setAttribute("data-date-invited", data.date_invited);
                             row.setAttribute("data-date-invited-iso", data.date_invited_iso);
-                            var statusCell = row.cells[4];
+                            var statusCell = row.cells[3];
                             statusCell.innerHTML = buildStatusHtml(invId, "Pending");
                             attachStatusListener(statusCell.querySelector(".status-select"));
                           })
@@ -688,7 +723,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             body: formData
                         });
                     }).then(function (res) { return res.json(); }).then(function (data) {
-                        var sel = row.cells[4].querySelector(".status-select");
+                        var sel = row.cells[3].querySelector(".status-select");
                         if (sel) { sel.value = newStatus; colorStatusSelect(sel); }
                         row.setAttribute("data-date-responded", data.date_responded || "");
                         row.setAttribute("data-date-responded-iso", data.date_responded_iso || "");

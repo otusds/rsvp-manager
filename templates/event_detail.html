@@ -188,19 +188,18 @@
                 <option value="Attending">Attending</option>
                 <option value="Declined">Declined</option>
             </select>
-            <select class="filter-select" data-table="invitations-table" data-col="2">
+            <select class="filter-select" data-table="invitations-table" data-attr="data-gender">
                 <option value="">All Genders</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
             </select>
             <select class="sort-select" id="gl-sort" data-table="invitations-table">
                 <option value="">Sort by...</option>
-                <option value="1:asc">First Name A-Z</option>
-                <option value="1:desc">First Name Z-A</option>
-                <option value="2:asc">Gender A-Z</option>
-                <option value="3:asc">Sent first</option>
-                <option value="3:desc">Not sent first</option>
-                <option value="4:asc">Status A-Z</option>
+                <option value="1:asc">Name A-Z</option>
+                <option value="1:desc">Name Z-A</option>
+                <option value="2:asc">Sent first</option>
+                <option value="2:desc">Not sent first</option>
+                <option value="3:asc">Status A-Z</option>
             </select>
         </div>
 
@@ -224,8 +223,7 @@
                 <tr>
                     <th class="center col-check col-multiselect" style="display:none"><input type="checkbox" id="select-all"></th>
                     <th data-sort="text">Guest</th>
-                    <th data-sort="text" class="col-hide-mobile">Gender</th>
-                    <th class="center">Sent</th>
+                    <th data-sort="check" class="center">Sent</th>
                     <th data-sort="text">RSVP Status</th>
                     <th class="col-hide-mobile">Invite Notes</th>
                     <th>Actions</th>
@@ -234,14 +232,14 @@
             <tbody>
                 {% for inv in event.invitations %}
                 <tr data-inv-id="{{ inv.id }}" data-guest-id="{{ inv.guest.id }}"
+                    data-gender="{{ inv.guest.gender }}"
                     data-sent="{{ 'true' if inv.status != 'Not Sent' else 'false' }}"
                     data-date-invited="{{ inv.date_invited.strftime('%b %d, %Y') if inv.date_invited else '' }}"
                     data-date-invited-iso="{{ inv.date_invited.isoformat() if inv.date_invited else '' }}"
                     data-date-responded="{{ inv.date_responded.strftime('%b %d, %Y') if inv.date_responded else '' }}"
                     data-date-responded-iso="{{ inv.date_responded.isoformat() if inv.date_responded else '' }}">
                     <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
-                    <td class="guest-name-cell">{{ inv.guest.full_name }}</td>
-                    <td class="col-hide-mobile">{{ inv.guest.gender }}</td>
+                    <td class="guest-name-cell">{{ inv.guest.full_name }} <span class="gender-tag">{{ '(M)' if inv.guest.gender == 'Male' else '(F)' if inv.guest.gender == 'Female' else '' }}</span></td>
                     <td class="center">
                         <input type="checkbox" class="sent-checkbox"
                                data-inv-id="{{ inv.id }}"
