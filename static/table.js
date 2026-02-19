@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var table = document.getElementById(tableId);
         if (!table) return;
         input.addEventListener("input", function () { filterTable(table); });
+        input.addEventListener("search", function () { filterTable(table); });
     });
 
     // ── Table filter dropdowns ───────────────────────────────────────────────
@@ -1164,6 +1165,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         guestDbSearchInput.addEventListener("input", applyGuestDbFilters);
+        guestDbSearchInput.addEventListener("search", applyGuestDbFilters);
 
         guestDbAddBtn.addEventListener("click", function () {
             var ids = [];
@@ -1250,7 +1252,10 @@ document.addEventListener("DOMContentLoaded", function () {
             if (guestNoResults) guestNoResults.style.display = visibleCount === 0 ? "" : "none";
         }
 
-        if (guestSearchInput) guestSearchInput.addEventListener("input", applyGuestTableControls);
+        if (guestSearchInput) {
+            guestSearchInput.addEventListener("input", applyGuestTableControls);
+            guestSearchInput.addEventListener("search", applyGuestTableControls);
+        }
         if (guestGenderFilter) guestGenderFilter.addEventListener("change", applyGuestTableControls);
         if (guestSortSelect) guestSortSelect.addEventListener("change", applyGuestTableControls);
 
@@ -1513,7 +1518,10 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    if (searchInput) searchInput.addEventListener("input", applyCardControls);
+    if (searchInput) {
+        searchInput.addEventListener("input", applyCardControls);
+        searchInput.addEventListener("search", applyCardControls);
+    }
     if (typeFilter) typeFilter.addEventListener("change", applyCardControls);
     if (sortSelect) sortSelect.addEventListener("change", applyCardControls);
 
