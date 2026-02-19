@@ -219,7 +219,6 @@ document.addEventListener("DOMContentLoaded", function () {
         var tr = document.createElement("tr");
         tr.setAttribute("data-inv-id", data.invitation_id);
         tr.setAttribute("data-guest-id", data.guest_id);
-        tr.setAttribute("data-channel", data.channel || "");
         tr.setAttribute("data-sent", isSent ? "true" : "false");
         tr.setAttribute("data-date-invited", data.date_invited || "");
         tr.setAttribute("data-date-invited-iso", data.date_invited_iso || "");
@@ -398,9 +397,6 @@ document.addEventListener("DOMContentLoaded", function () {
         var isSent = sentCheckbox && sentCheckbox.checked;
         document.getElementById("detail-sent-toggle").checked = isSent;
 
-        // Channel
-        document.getElementById("detail-channel").value = row.getAttribute("data-channel") || "";
-
         // Dates
         document.getElementById("detail-date-invited").textContent = row.getAttribute("data-date-invited") || "\u2014";
         document.getElementById("detail-date-responded").textContent = row.getAttribute("data-date-responded") || "\u2014";
@@ -497,18 +493,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     document.getElementById("detail-date-invited").textContent = "\u2014";
                 }
             }, 300);
-        });
-
-        // Channel change
-        document.getElementById("detail-channel").addEventListener("change", function () {
-            if (!currentDetailRow) return;
-            var invId = currentDetailRow.getAttribute("data-inv-id");
-            currentDetailRow.setAttribute("data-channel", this.value);
-            fetch("/api/invitation/" + invId + "/field", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ field: "channel", value: this.value })
-            });
         });
 
         // Status change (syncs with table dropdown)
@@ -759,7 +743,6 @@ document.addEventListener("DOMContentLoaded", function () {
             '<td><input type="text" class="ag-first-name" placeholder="First name"></td>' +
             '<td><input type="text" class="ag-last-name" placeholder="Last name"></td>' +
             '<td><select class="ag-gender"><option value="Male">Male</option><option value="Female">Female</option></select></td>' +
-            '<td><input type="text" class="ag-notes" placeholder="Add notes about guest"></td>' +
             '<td><button type="button" class="add-guest-remove-btn">&times;</button></td>';
 
         tr.querySelector(".add-guest-remove-btn").addEventListener("click", function () {
@@ -826,7 +809,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     first_name: firstName,
                     last_name: row.querySelector(".ag-last-name").value.trim(),
                     gender: row.querySelector(".ag-gender").value,
-                    notes: row.querySelector(".ag-notes").value.trim()
+                    notes: ""
                 });
             });
 

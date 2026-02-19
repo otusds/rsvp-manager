@@ -1303,9 +1303,16 @@ td.center, th.center { text-align: center; }
     main { padding: 0.75rem 0.75rem 2rem; }
 
     .header-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.6rem;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .header-row h1 {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     h1 { font-size: 1.5rem; }
@@ -1346,6 +1353,32 @@ td.center, th.center { text-align: center; }
     .form-row { flex-direction: column; gap: 0.5rem; }
 
     .batch-bar { font-size: 0.8rem; padding: 0.4rem 0.6rem; }
+
+    /* "+" invite button matches icon-btn size (36x36 rounded square) */
+    .new-invite-icon-btn.btn-small {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 10px;
+        font-size: 1.1rem;
+    }
+
+    /* Narrower name inputs in guest database */
+    .inline-edit.ge-first,
+    .inline-edit.ge-last {
+        max-width: 90px;
+    }
+
+    /* Prevent iOS auto-zoom on input focus (requires font-size >= 16px) */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
 }
 
 /* ── Color-coded status selects ───────────────────────────────────────────── */
