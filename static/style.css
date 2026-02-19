@@ -1535,18 +1535,35 @@ select.status-declined {
 
 /* ── Auth pages ───────────────────────────────────────────────────────────── */
 .auth-container {
-    max-width: 400px;
-    margin: 2rem auto;
+    max-width: 380px;
+    margin: 3rem auto;
+    padding: 0 1.25rem;
     text-align: center;
 }
 
-.auth-container h1 {
-    margin-bottom: 1.25rem;
+.auth-header {
+    margin-bottom: 2rem;
+}
+
+.auth-header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 0.4rem;
+}
+
+.auth-tagline {
+    color: #8e8e93;
+    font-size: 1rem;
+    font-weight: 400;
 }
 
 .auth-container .form {
     margin: 0 auto;
     text-align: left;
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
 }
 
 .auth-error {
