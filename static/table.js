@@ -1435,6 +1435,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var searchInput = document.getElementById("event-search");
     var typeFilter = document.getElementById("event-type-filter");
+    var locationFilter = document.getElementById("event-location-filter");
     var sortSelect = document.getElementById("event-sort");
     var noResults = document.getElementById("no-results");
     var pastSection = document.getElementById("past-events-section");
@@ -1482,9 +1483,11 @@ document.addEventListener("DOMContentLoaded", function () {
             var location = card.getAttribute("data-location");
             var type = card.getAttribute("data-type");
             var isPast = card.getAttribute("data-past") === "true";
+            var locVal = locationFilter ? locationFilter.value : "";
             var matchSearch = !query || name.indexOf(query) !== -1 || location.indexOf(query) !== -1;
             var matchType = !typeVal || type === typeVal;
-            var show = matchSearch && matchType;
+            var matchLocation = !locVal || location === locVal.toLowerCase();
+            var show = matchSearch && matchType && matchLocation;
             card.style.display = show ? "" : "none";
             if (show) {
                 if (isPast) pastCards.push(card);
@@ -1523,6 +1526,7 @@ document.addEventListener("DOMContentLoaded", function () {
         searchInput.addEventListener("search", applyCardControls);
     }
     if (typeFilter) typeFilter.addEventListener("change", applyCardControls);
+    if (locationFilter) locationFilter.addEventListener("change", applyCardControls);
     if (sortSelect) sortSelect.addEventListener("change", applyCardControls);
 
     // Initial separation of past events

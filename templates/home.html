@@ -31,14 +31,17 @@
         <option value="{{ t }}">{{ t }}</option>
         {% endfor %}
     </select>
+    <select class="filter-select" id="event-location-filter">
+        <option value="">All Locations</option>
+        {% for loc in events|map(attribute='location')|select|unique|sort %}
+        <option value="{{ loc }}">{{ loc }}</option>
+        {% endfor %}
+    </select>
     <select class="filter-select" id="event-sort">
-        <option value="date-asc">Date (earliest first)</option>
-        <option value="date-desc">Date (latest first)</option>
+        <option value="date-asc">Date</option>
         <option value="created-desc">Recently created</option>
-        <option value="name-asc">Name (A-Z)</option>
-        <option value="name-desc">Name (Z-A)</option>
+        <option value="name-asc">Name</option>
         <option value="guests-desc">Most guests</option>
-        <option value="guests-asc">Fewest guests</option>
     </select>
 </div>
 
