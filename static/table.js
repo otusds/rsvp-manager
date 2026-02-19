@@ -16,6 +16,44 @@ document.addEventListener("DOMContentLoaded", function () {
         select.addEventListener("change", function () { filterTable(table); });
     });
 
+    // Sort-by dropdowns
+    document.querySelectorAll(".sort-select[data-table]").forEach(function (select) {
+        var tableId = select.getAttribute("data-table");
+        var table = document.getElementById(tableId);
+        if (!table) return;
+        select.addEventListener("change", function () {
+            if (!select.value) return;
+            var parts = select.value.split(":");
+            var colIndex = parseInt(parts[0]);
+            var dir = parts[1];
+            var tbody = table.querySelector("tbody");
+            var rows = Array.from(tbody.querySelectorAll("tr:not(.add-guest-row)"));
+            rows.sort(function (a, b) {
+                var cellA = a.cells[colIndex], cellB = b.cells[colIndex];
+                if (!cellA || !cellB) return 0;
+                var valA, valB;
+                var cbA = cellA.querySelector("input[type=checkbox]");
+                var cbB = cellB.querySelector("input[type=checkbox]");
+                var selA = cellA.querySelector("select");
+                var selB = cellB.querySelector("select");
+                if (cbA && cbB) {
+                    valA = cbA.checked ? "1" : "0";
+                    valB = cbB.checked ? "1" : "0";
+                } else if (selA && selB) {
+                    valA = selA.value.toLowerCase();
+                    valB = selB.value.toLowerCase();
+                } else {
+                    valA = cellA.textContent.trim().toLowerCase();
+                    valB = cellB.textContent.trim().toLowerCase();
+                }
+                if (valA < valB) return dir === "asc" ? -1 : 1;
+                if (valA > valB) return dir === "asc" ? 1 : -1;
+                return 0;
+            });
+            rows.forEach(function (row) { tbody.appendChild(row); });
+        });
+    });
+
     function filterTable(table) {
         var tableId = table.id;
         var searchInput = document.querySelector('.search-input[data-table="' + tableId + '"]');
@@ -1221,8 +1259,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (firstInput && !row.querySelector(".badge-me")) {
                             var badge = document.createElement("span");
                             badge.className = "badge-me";
-                            badge.textContent = "(me)";
+                            badge.textContent = "me";
                             firstInput.parentNode.appendChild(badge);
+                            positionMeBadge(firstInput);
                         }
                         btn.textContent = "\u2713 This is me";
                     } else {
@@ -1234,6 +1273,31 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     }
+
+    // ── Position "me" badges right after first name text ──────────────────────
+    function positionMeBadge(input) {
+        var badge = input.parentNode.querySelector(".badge-me");
+        if (!badge) return;
+        var canvas = document.createElement("canvas");
+        var ctx = canvas.getContext("2d");
+        var style = getComputedStyle(input);
+        ctx.font = style.fontSize + " " + style.fontFamily;
+        var textWidth = ctx.measureText(input.value).width;
+        var paddingLeft = parseFloat(style.paddingLeft) || 0;
+        badge.style.left = (paddingLeft + textWidth + 4) + "px";
+    }
+
+    // Position all existing badges on load
+    document.querySelectorAll(".badge-me").forEach(function (badge) {
+        var input = badge.parentNode.querySelector(".ge-first");
+        if (input) positionMeBadge(input);
+    });
+
+    // Reposition badge when name changes
+    document.querySelectorAll(".ge-first").forEach(function (input) {
+        input.addEventListener("input", function () { positionMeBadge(input); });
+        input.addEventListener("blur", function () { positionMeBadge(input); });
+    });
 
     // ── New Event modal ──────────────────────────────────────────────────────
     var newEventBtn = document.getElementById("open-new-event-btn");
