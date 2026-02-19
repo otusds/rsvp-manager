@@ -673,6 +673,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var total = document.querySelectorAll("#invitations-table tbody tr:not(.add-guest-row) .row-select").length;
             selectAllCheckbox.checked = count > 0 && count === total;
         }
+        updateStickyOffsets();
     }
 
     function attachRowSelectListener(checkbox) {
@@ -999,6 +1000,42 @@ document.addEventListener("DOMContentLoaded", function () {
         hamburgerOverlay.addEventListener("click", closeHamburger);
     }
 
+    // ── Back-link navigation for Guest Database ────────────────────────────
+    var backLink = document.getElementById("back-link");
+    var guestsTable = document.getElementById("guests-table");
+    if (!guestsTable) {
+        // Not on guest DB — store current page info for back navigation
+        var h1 = document.querySelector("h1");
+        if (h1) {
+            sessionStorage.setItem("guestDbBackLabel", h1.textContent.trim());
+            sessionStorage.setItem("guestDbBackUrl", window.location.pathname);
+        }
+    } else if (backLink) {
+        // On guest DB — restore back link from stored info
+        var label = sessionStorage.getItem("guestDbBackLabel");
+        var url = sessionStorage.getItem("guestDbBackUrl");
+        if (label && url) {
+            backLink.textContent = "\u2190 " + label;
+            backLink.href = url;
+        }
+    }
+
+    // ── Sticky offsets for frozen headers ─────────────────────────────────
+    function updateStickyOffsets() {
+        document.querySelectorAll(".sticky-controls").forEach(function (el) {
+            var thTop = 52 + el.offsetHeight;
+            var sibling = el.nextElementSibling;
+            while (sibling) {
+                var table = sibling.tagName === "TABLE" ? sibling : sibling.querySelector("table");
+                if (table) {
+                    table.style.setProperty("--sticky-th-top", thTop + "px");
+                    break;
+                }
+                sibling = sibling.nextElementSibling;
+            }
+        });
+    }
+
     // ── Filter toggle buttons (home + guest list) ──────────────────────────
     function setupFilterToggle(btnId, panelId) {
         var btn = document.getElementById(btnId);
@@ -1008,11 +1045,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 var hidden = panel.style.display === "none";
                 panel.style.display = hidden ? "" : "none";
                 btn.classList.toggle("active", hidden);
+                updateStickyOffsets();
             });
         }
     }
     setupFilterToggle("toggle-filters-btn", "event-filters");
     setupFilterToggle("gl-toggle-filters-btn", "gl-filters");
+    updateStickyOffsets();
+    window.addEventListener("resize", updateStickyOffsets);
 
     // ── Page 3-dot menu ─────────────────────────────────────────────────────
     var pageMenuBtn = document.getElementById("page-menu-btn");

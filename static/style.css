@@ -234,12 +234,25 @@ h2 {
 
 .kebab-menu-search input::placeholder { color: #8e8e93; }
 
+/* ── Sticky controls (frozen headers for long lists) ──────────────────────── */
+.sticky-controls {
+    position: sticky;
+    top: 52px;
+    z-index: 15;
+    background: #f2f2f7;
+    padding-bottom: 0.25rem;
+}
+
 /* ── Tables ────────────────────────────────────────────────────────────────── */
 .table-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     border-radius: 12px;
     box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
+}
+
+.table-scroll-sticky {
+    overflow-x: clip;
 }
 
 table {
@@ -266,6 +279,12 @@ th {
     letter-spacing: 0.04em;
     position: sticky;
     top: 0;
+}
+
+.table-scroll-sticky th {
+    top: var(--sticky-th-top, 52px);
+    background: #fafafa;
+    z-index: 10;
 }
 
 th:first-child { border-radius: 12px 0 0 0; }

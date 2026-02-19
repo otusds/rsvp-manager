@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 
+{% block logo %}<a href="{{ url_for('home') }}" class="logo back-link" id="back-link">&larr; All Events</a>{% endblock %}
+
 {% block content %}
+<div class="sticky-controls">
 <div class="header-row">
     <h1>Guest Database</h1>
     <div class="btn-group">
@@ -36,8 +39,11 @@
         <option value="gender-asc">Gender</option>
     </select>
 </div>
+{% endif %}
+</div>
 
-<div class="table-scroll">
+{% if guests %}
+<div class="table-scroll table-scroll-sticky">
 <table id="guests-table" class="sortable">
     <thead>
         <tr>
