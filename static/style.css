@@ -1391,10 +1391,17 @@ td.center, th.center { text-align: center; }
     .summary-table th { font-size: 0.62rem; padding: 0.3rem 0.35rem; }
     .summary-table td { font-size: 0.78rem; padding: 0.3rem 0.35rem; }
 
+    .detail-overlay {
+        background: #f2f2f7;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        align-items: stretch;
+    }
     .detail-card {
         max-width: 100%;
-        border-radius: 14px 14px 0 0;
-        max-height: 90vh;
+        max-height: 100%;
+        border-radius: 0;
+        box-shadow: none;
     }
 
     .detail-name-input { font-size: 0.95rem; }
