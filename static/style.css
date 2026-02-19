@@ -1418,6 +1418,11 @@ td.center, th.center { text-align: center; }
     textarea {
         font-size: 16px !important;
     }
+    /* Keep inline table selects at table font size */
+    .status-select,
+    .inline-select {
+        font-size: 0.82rem !important;
+    }
 }
 
 /* ── Color-coded status selects ───────────────────────────────────────────── */

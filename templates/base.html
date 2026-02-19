@@ -8,7 +8,7 @@
 </head>
 <body>
     <nav>
-        <a href="{{ url_for('home') }}" class="logo">RSVP Manager</a>
+        {% block logo %}<a href="{{ url_for('home') }}" class="logo">RSVP Manager</a>{% endblock %}
         {% if current_user.is_authenticated %}
         <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu">
             <span></span><span></span><span></span>

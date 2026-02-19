@@ -293,8 +293,8 @@ document.addEventListener("DOMContentLoaded", function () {
             return '<span class="status-not-sent">Not Sent</span>';
         }
         return '<select class="inline-select status-select" data-inv-id="' + invId + '">' +
-            '<option value="Pending"' + (status === "Pending" ? " selected" : "") + '>Pending</option>' +
             '<option value="Attending"' + (status === "Attending" ? " selected" : "") + '>Attending</option>' +
+            '<option value="Pending"' + (status === "Pending" ? " selected" : "") + '>Pending</option>' +
             '<option value="Declined"' + (status === "Declined" ? " selected" : "") + '>Declined</option>' +
             '</select>';
     }
@@ -687,6 +687,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!action) return;
             var rows = getSelectedRows();
             if (rows.length === 0) return;
+            if (action === "remove" && !confirm("Remove " + rows.length + " guest(s) from this event?")) return;
 
             var promises = rows.map(function (row) {
                 var invId = row.getAttribute("data-inv-id");
@@ -749,6 +750,16 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (sel) { sel.value = newStatus; colorStatusSelect(sel); }
                         row.setAttribute("data-date-responded", data.date_responded || "");
                         row.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
+                    });
+                } else if (action === "remove") {
+                    return fetch("/invitation/" + invId + "/delete", {
+                        method: "POST",
+                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    }).then(function (res) { return res.json(); }).then(function (data) {
+                        if (data.ok) {
+                            if (currentDetailRow === row) closeDetail();
+                            row.remove();
+                        }
                     });
                 }
                 return Promise.resolve();
@@ -1261,7 +1272,26 @@ document.addEventListener("DOMContentLoaded", function () {
             input.addEventListener("blur", function () { saveGuestName(input); });
         });
 
+        var isMobile = window.matchMedia("(max-width: 600px)").matches;
+
+        function abbreviateGender(select) {
+            if (!isMobile) return;
+            Array.from(select.options).forEach(function (opt) {
+                if (opt.value === "Male") opt.textContent = "M";
+                else if (opt.value === "Female") opt.textContent = "F";
+            });
+        }
+        function expandGender(select) {
+            Array.from(select.options).forEach(function (opt) {
+                if (opt.value === "Male") opt.textContent = "Male";
+                else if (opt.value === "Female") opt.textContent = "Female";
+            });
+        }
+
         guestsTable.querySelectorAll(".ge-gender").forEach(function (select) {
+            abbreviateGender(select);
+            select.addEventListener("focus", function () { expandGender(select); });
+            select.addEventListener("blur", function () { abbreviateGender(select); });
             select.addEventListener("change", function () {
                 var guestId = select.getAttribute("data-guest-id");
                 var row = select.closest("tr");
