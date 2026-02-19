@@ -157,8 +157,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else {
                     var selA = cellA.querySelector("select");
                     var selB = cellB.querySelector("select");
-                    valA = selA ? selA.value.toLowerCase() : cellA.textContent.trim().toLowerCase();
-                    valB = selB ? selB.value.toLowerCase() : cellB.textContent.trim().toLowerCase();
+                    var inpA = cellA.querySelector("input");
+                    var inpB = cellB.querySelector("input");
+                    valA = selA ? selA.value.toLowerCase() : inpA ? inpA.value.toLowerCase() : cellA.textContent.trim().toLowerCase();
+                    valB = selB ? selB.value.toLowerCase() : inpB ? inpB.value.toLowerCase() : cellB.textContent.trim().toLowerCase();
                 }
                 if (valA < valB) return dir === "asc" ? -1 : 1;
                 if (valA > valB) return dir === "asc" ? 1 : -1;
