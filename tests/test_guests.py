@@ -1,5 +1,5 @@
 """Tests for guest routes: list, add, edit, delete, inline APIs."""
-from app import db, Guest
+from app import db, Guest, Invitation
 from datetime import datetime
 
 
@@ -36,7 +36,7 @@ class TestDeleteGuest:
         r = logged_in_client.post(f"/guest/{sample_guest}/delete")
         assert r.status_code == 302
         with test_app.app_context():
-            assert Guest.query.get(sample_guest) is None
+            assert db.session.get(Guest,sample_guest) is None
 
     def test_delete_guest_other_user(self, logged_in_client, test_app, user2):
         with test_app.app_context():
@@ -49,14 +49,13 @@ class TestDeleteGuest:
         r = logged_in_client.post(f"/guest/{gid}/delete")
         assert r.status_code == 302
         with test_app.app_context():
-            assert Guest.query.get(gid) is not None  # not deleted
+            assert db.session.get(Guest,gid) is not None  # not deleted
 
     def test_delete_cascades_invitations(self, logged_in_client, sample_invitation, sample_guest, test_app):
-        from app import Invitation
         r = logged_in_client.post(f"/guest/{sample_guest}/delete")
         assert r.status_code == 302
         with test_app.app_context():
-            assert Invitation.query.get(sample_invitation) is None
+            assert db.session.get(Invitation, sample_invitation) is None
 
     def test_delete_nonexistent(self, logged_in_client):
         r = logged_in_client.post("/guest/99999/delete")
@@ -72,7 +71,7 @@ class TestGuestNameAPI:
         assert data["ok"] is True
         assert data["full_name"] == "Bob Jones"
         with test_app.app_context():
-            g = Guest.query.get(sample_guest)
+            g = db.session.get(Guest,sample_guest)
             assert g.first_name == "Bob"
             assert g.date_edited is not None
 
@@ -97,7 +96,7 @@ class TestGuestNameAPI:
             json={"first_name": "O'Brien", "last_name": "Müller-Schmidt"})
         assert r.status_code == 200
         with test_app.app_context():
-            g = Guest.query.get(sample_guest)
+            g = db.session.get(Guest,sample_guest)
             assert g.first_name == "O'Brien"
 
 
@@ -107,7 +106,7 @@ class TestGuestGenderAPI:
             json={"gender": "Male"})
         assert r.status_code == 200
         with test_app.app_context():
-            g = Guest.query.get(sample_guest)
+            g = db.session.get(Guest,sample_guest)
             assert g.gender == "Male"
 
     def test_update_gender_other_user(self, logged_in_client, test_app, user2):
@@ -126,7 +125,7 @@ class TestGuestGenderAPI:
             json={"gender": "InvalidGender"})
         assert r.status_code == 200
         with test_app.app_context():
-            g = Guest.query.get(sample_guest)
+            g = db.session.get(Guest,sample_guest)
             assert g.gender == "InvalidGender"
 
 
@@ -136,7 +135,7 @@ class TestGuestNotesAPI:
             json={"notes": "Updated notes"})
         assert r.status_code == 200
         with test_app.app_context():
-            g = Guest.query.get(sample_guest)
+            g = db.session.get(Guest,sample_guest)
             assert g.notes == "Updated notes"
 
     def test_update_notes_very_long(self, logged_in_client, sample_guest, test_app):
@@ -145,7 +144,7 @@ class TestGuestNotesAPI:
             json={"notes": long_notes})
         assert r.status_code == 200
         with test_app.app_context():
-            g = Guest.query.get(sample_guest)
+            g = db.session.get(Guest,sample_guest)
             assert len(g.notes) == 10000
 
 
@@ -157,19 +156,19 @@ class TestGuestIsMeAPI:
         data = r.get_json()
         assert data["is_me"] is True
         with test_app.app_context():
-            g = Guest.query.get(sample_guest)
+            g = db.session.get(Guest,sample_guest)
             assert g.is_me is True
 
     def test_unset_is_me(self, logged_in_client, sample_guest, test_app):
         with test_app.app_context():
-            g = Guest.query.get(sample_guest)
+            g = db.session.get(Guest,sample_guest)
             g.is_me = True
             db.session.commit()
         r = logged_in_client.post(f"/api/guest/{sample_guest}/is-me",
             json={"is_me": False})
         assert r.status_code == 200
         with test_app.app_context():
-            g = Guest.query.get(sample_guest)
+            g = db.session.get(Guest,sample_guest)
             assert g.is_me is False
 
     def test_is_me_clears_previous(self, logged_in_client, test_app, user):
@@ -183,8 +182,8 @@ class TestGuestIsMeAPI:
             json={"is_me": True})
         assert r.status_code == 200
         with test_app.app_context():
-            assert Guest.query.get(g1_id).is_me is False
-            assert Guest.query.get(g2_id).is_me is True
+            assert db.session.get(Guest,g1_id).is_me is False
+            assert db.session.get(Guest,g2_id).is_me is True
 
 
 class TestBulkCreateGuests:

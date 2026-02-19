@@ -90,14 +90,14 @@ class TestBulkAdd:
         logged_in_client.post(f"/api/event/{sample_event}/bulk-add",
             json={"guest_ids": [gid]})
         with test_app.app_context():
-            e = Event.query.get(sample_event)
+            e = db.session.get(Event,sample_event)
             assert e.date_edited is not None
 
     def test_bulk_add_no_update_if_none_added(self, logged_in_client, sample_event, test_app):
         logged_in_client.post(f"/api/event/{sample_event}/bulk-add",
             json={"guest_ids": []})
         with test_app.app_context():
-            e = Event.query.get(sample_event)
+            e = db.session.get(Event,sample_event)
             assert e.date_edited is None
 
 

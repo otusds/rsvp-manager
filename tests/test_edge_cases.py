@@ -40,7 +40,7 @@ class TestEdgeCases:
             json={"notes": long_notes})
         assert r.status_code == 200
         with test_app.app_context():
-            e = Event.query.get(sample_event)
+            e = db.session.get(Event,sample_event)
             assert len(e.notes) == 10000
 
     def test_unicode_in_event_name(self, logged_in_client, test_app):
@@ -80,7 +80,7 @@ class TestEdgeCases:
             assert r.status_code == 200
 
         with test_app.app_context():
-            inv = Invitation.query.get(sample_invitation)
+            inv = db.session.get(Invitation,sample_invitation)
             assert inv.status == "Pending"
 
     def test_duplicate_invitation_prevention(self, logged_in_client, sample_event,
@@ -115,7 +115,7 @@ class TestEdgeCases:
         r = logged_in_client.post(f"/event/{eid}/delete")
         assert r.status_code == 302
         with test_app.app_context():
-            assert Event.query.get(eid) is None
+            assert db.session.get(Event,eid) is None
             assert Invitation.query.filter_by(event_id=eid).count() == 0
 
     def test_rapid_send_toggle(self, logged_in_client, sample_invitation):

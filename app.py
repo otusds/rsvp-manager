@@ -42,12 +42,12 @@ class User(UserMixin, db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True, index=True)
     name = db.Column(db.String(200), nullable=False)
     event_type = db.Column(db.String(50), nullable=False, default="Other")
     location = db.Column(db.String(200), nullable=True, default="")
@@ -61,7 +61,7 @@ class Event(db.Model):
 
 class Guest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True, index=True)
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=True, default="")
     gender = db.Column(db.String(10), nullable=False)
@@ -80,13 +80,35 @@ class Guest(db.Model):
 
 class Invitation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False)
-    guest_id = db.Column(db.Integer, db.ForeignKey("guest.id"), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False, index=True)
+    guest_id = db.Column(db.Integer, db.ForeignKey("guest.id"), nullable=False, index=True)
     status = db.Column(db.String(20), nullable=False, default="Not Sent")
     channel = db.Column(db.String(50), nullable=True, default="")
     date_invited = db.Column(db.Date, nullable=True)
     date_responded = db.Column(db.Date, nullable=True)
     notes = db.Column(db.Text, nullable=True, default="")
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _get_owned_or_404(model, obj_id):
+    """Fetch a model instance by id; abort 404 if missing, 403 if wrong user."""
+    obj = db.session.get(model, obj_id)
+    if not obj:
+        abort(404)
+    if obj.user_id != current_user.id:
+        abort(403)
+    return obj
+
+
+def _get_owned_or_redirect(model, obj_id, redirect_to):
+    """Fetch a model instance; return (obj, None) or (None, redirect_response)."""
+    obj = db.session.get(model, obj_id)
+    if not obj or obj.user_id != current_user.id:
+        if not obj:
+            abort(404)
+        return None, redirect(url_for(redirect_to))
+    return obj, None
 
 
 # ── Auth routes ───────────────────────────────────────────────────────────────
@@ -209,18 +231,18 @@ def add_event():
 @app.route("/event/<int:event_id>")
 @login_required
 def event_detail(event_id):
-    event = Event.query.get_or_404(event_id)
-    if event.user_id != current_user.id:
-        return redirect(url_for("home"))
+    event, redir = _get_owned_or_redirect(Event, event_id, "home")
+    if redir:
+        return redir
     return render_template("event_detail.html", event=event, channels=CHANNELS, event_types=EVENT_TYPES)
 
 
 @app.route("/event/<int:event_id>/edit", methods=["POST"])
 @login_required
 def edit_event(event_id):
-    event = Event.query.get_or_404(event_id)
-    if event.user_id != current_user.id:
-        return redirect(url_for("home"))
+    event, redir = _get_owned_or_redirect(Event, event_id, "home")
+    if redir:
+        return redir
     try:
         event_date = date.fromisoformat(request.form["date"])
     except (ValueError, KeyError):
@@ -239,9 +261,9 @@ def edit_event(event_id):
 @app.route("/event/<int:event_id>/delete", methods=["POST"])
 @login_required
 def delete_event(event_id):
-    event = Event.query.get_or_404(event_id)
-    if event.user_id != current_user.id:
-        return redirect(url_for("home"))
+    event, redir = _get_owned_or_redirect(Event, event_id, "home")
+    if redir:
+        return redir
     db.session.delete(event)
     db.session.commit()
     return redirect(url_for("home"))
@@ -279,9 +301,9 @@ def add_guest():
 @app.route("/guest/<int:guest_id>/edit", methods=["POST"])
 @login_required
 def edit_guest(guest_id):
-    guest = Guest.query.get_or_404(guest_id)
-    if guest.user_id != current_user.id:
-        return redirect(url_for("guests"))
+    guest, redir = _get_owned_or_redirect(Guest, guest_id, "guests")
+    if redir:
+        return redir
     is_me = bool(request.form.get("is_me"))
     if is_me and not guest.is_me:
         Guest.query.filter_by(user_id=current_user.id, is_me=True).update({"is_me": False})
@@ -298,9 +320,9 @@ def edit_guest(guest_id):
 @app.route("/guest/<int:guest_id>/delete", methods=["POST"])
 @login_required
 def delete_guest(guest_id):
-    guest = Guest.query.get_or_404(guest_id)
-    if guest.user_id != current_user.id:
-        return redirect(url_for("guests"))
+    guest, redir = _get_owned_or_redirect(Guest, guest_id, "guests")
+    if redir:
+        return redir
     db.session.delete(guest)
     db.session.commit()
     return redirect(url_for("guests"))
@@ -311,7 +333,9 @@ def delete_guest(guest_id):
 @app.route("/invitation/<int:invitation_id>/send", methods=["POST"])
 @login_required
 def toggle_send_invitation(invitation_id):
-    invitation = Invitation.query.get_or_404(invitation_id)
+    invitation = db.session.get(Invitation, invitation_id)
+    if not invitation:
+        abort(404)
     if invitation.event.user_id != current_user.id:
         abort(403)
     if invitation.status == "Not Sent":
@@ -335,7 +359,9 @@ def toggle_send_invitation(invitation_id):
 @app.route("/invitation/<int:invitation_id>/update", methods=["POST"])
 @login_required
 def update_invitation(invitation_id):
-    invitation = Invitation.query.get_or_404(invitation_id)
+    invitation = db.session.get(Invitation, invitation_id)
+    if not invitation:
+        abort(404)
     if invitation.event.user_id != current_user.id:
         abort(403)
     new_status = request.form.get("status")
@@ -361,7 +387,9 @@ def update_invitation(invitation_id):
 @app.route("/invitation/<int:invitation_id>/delete", methods=["POST"])
 @login_required
 def remove_invitation(invitation_id):
-    invitation = Invitation.query.get_or_404(invitation_id)
+    invitation = db.session.get(Invitation, invitation_id)
+    if not invitation:
+        abort(404)
     if invitation.event.user_id != current_user.id:
         abort(403)
     event_id = invitation.event_id
@@ -408,9 +436,7 @@ def bulk_create_guests():
 @app.route("/api/guest/<int:guest_id>/gender", methods=["POST"])
 @login_required
 def update_guest_gender(guest_id):
-    guest = Guest.query.get_or_404(guest_id)
-    if guest.user_id != current_user.id:
-        abort(403)
+    guest = _get_owned_or_404(Guest, guest_id)
     data = request.get_json()
     guest.gender = data.get("gender", guest.gender)
     guest.date_edited = datetime.now()
@@ -421,9 +447,7 @@ def update_guest_gender(guest_id):
 @app.route("/api/guest/<int:guest_id>/name", methods=["POST"])
 @login_required
 def update_guest_name(guest_id):
-    guest = Guest.query.get_or_404(guest_id)
-    if guest.user_id != current_user.id:
-        abort(403)
+    guest = _get_owned_or_404(Guest, guest_id)
     data = request.get_json()
     guest.first_name = data.get("first_name", guest.first_name)
     guest.last_name = data.get("last_name", guest.last_name or "")
@@ -435,9 +459,7 @@ def update_guest_name(guest_id):
 @app.route("/api/guest/<int:guest_id>/notes", methods=["POST"])
 @login_required
 def update_guest_notes(guest_id):
-    guest = Guest.query.get_or_404(guest_id)
-    if guest.user_id != current_user.id:
-        abort(403)
+    guest = _get_owned_or_404(Guest, guest_id)
     data = request.get_json()
     guest.notes = data.get("notes", "")
     guest.date_edited = datetime.now()
@@ -448,9 +470,7 @@ def update_guest_notes(guest_id):
 @app.route("/api/guest/<int:guest_id>/is-me", methods=["POST"])
 @login_required
 def update_guest_is_me(guest_id):
-    guest = Guest.query.get_or_404(guest_id)
-    if guest.user_id != current_user.id:
-        abort(403)
+    guest = _get_owned_or_404(Guest, guest_id)
     data = request.get_json()
     is_me = data.get("is_me", False)
     if is_me and not guest.is_me:
@@ -464,7 +484,9 @@ def update_guest_is_me(guest_id):
 @app.route("/api/invitation/<int:invitation_id>/field", methods=["POST"])
 @login_required
 def update_invitation_field(invitation_id):
-    invitation = Invitation.query.get_or_404(invitation_id)
+    invitation = db.session.get(Invitation, invitation_id)
+    if not invitation:
+        abort(404)
     if invitation.event.user_id != current_user.id:
         abort(403)
     data = request.get_json()
@@ -484,9 +506,7 @@ def update_invitation_field(invitation_id):
 @app.route("/api/event/<int:event_id>/notes", methods=["POST"])
 @login_required
 def update_event_notes(event_id):
-    event = Event.query.get_or_404(event_id)
-    if event.user_id != current_user.id:
-        abort(403)
+    event = _get_owned_or_404(Event, event_id)
     data = request.get_json()
     event.notes = data.get("notes", "")
     event.date_edited = datetime.now()
@@ -497,9 +517,7 @@ def update_event_notes(event_id):
 @app.route("/api/event/<int:event_id>/available-guests")
 @login_required
 def api_available_guests(event_id):
-    event = Event.query.get_or_404(event_id)
-    if event.user_id != current_user.id:
-        abort(403)
+    event = _get_owned_or_404(Event, event_id)
     invited_ids = {inv.guest_id for inv in event.invitations}
     all_guests = Guest.query.filter_by(user_id=current_user.id).order_by(Guest.first_name, Guest.last_name).all()
     result = []
@@ -514,9 +532,7 @@ def api_available_guests(event_id):
 @app.route("/api/event/<int:event_id>/bulk-add", methods=["POST"])
 @login_required
 def bulk_add_guests(event_id):
-    event = Event.query.get_or_404(event_id)
-    if event.user_id != current_user.id:
-        abort(403)
+    event = _get_owned_or_404(Event, event_id)
     data = request.get_json()
     guest_ids = data.get("guest_ids", [])
     invited_ids = {inv.guest_id for inv in event.invitations}
@@ -524,7 +540,7 @@ def bulk_add_guests(event_id):
     for gid in guest_ids:
         if gid in invited_ids:
             continue
-        guest = Guest.query.get(gid)
+        guest = db.session.get(Guest, gid)
         if not guest or guest.user_id != current_user.id:
             continue
         inv = Invitation(event_id=event_id, guest_id=gid, status="Not Sent")
@@ -544,9 +560,7 @@ def bulk_add_guests(event_id):
 @app.route("/api/event/<int:event_id>/bulk-create-and-invite", methods=["POST"])
 @login_required
 def bulk_create_and_invite(event_id):
-    event = Event.query.get_or_404(event_id)
-    if event.user_id != current_user.id:
-        abort(403)
+    event = _get_owned_or_404(Event, event_id)
     data = request.get_json()
     guests_data = data.get("guests", [])
     added = []
@@ -637,9 +651,7 @@ def export_guests():
 @app.route("/export/event/<int:event_id>")
 @login_required
 def export_event_guests(event_id):
-    event = Event.query.get_or_404(event_id)
-    if event.user_id != current_user.id:
-        abort(403)
+    event = _get_owned_or_404(Event, event_id)
     wb = Workbook()
     ws = _styled_sheet(wb, event.name[:31],
                        ["Last Name", "First Name", "Gender", "Sent", "Channel",
@@ -812,6 +824,10 @@ with app.app_context():
             "ALTER TABLE guest ADD COLUMN date_edited TIMESTAMP",
             "ALTER TABLE event ADD COLUMN date_edited TIMESTAMP",
             "ALTER TABLE event ADD COLUMN target_attendees INTEGER",
+            "CREATE INDEX IF NOT EXISTS ix_event_user_id ON event (user_id)",
+            "CREATE INDEX IF NOT EXISTS ix_guest_user_id ON guest (user_id)",
+            "CREATE INDEX IF NOT EXISTS ix_invitation_event_id ON invitation (event_id)",
+            "CREATE INDEX IF NOT EXISTS ix_invitation_guest_id ON invitation (guest_id)",
         ]:
             try:
                 conn.execute(db.text("SAVEPOINT sp"))

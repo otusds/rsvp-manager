@@ -55,7 +55,7 @@ class TestEventNotesAPI:
             json={"notes": "New notes"})
         assert r.status_code == 200
         with test_app.app_context():
-            e = Event.query.get(sample_event)
+            e = db.session.get(Event,sample_event)
             assert e.notes == "New notes"
             assert e.date_edited is not None
 
@@ -74,7 +74,7 @@ class TestEventNotesAPI:
             json={"notes": ""})
         assert r.status_code == 200
         with test_app.app_context():
-            e = Event.query.get(sample_event)
+            e = db.session.get(Event,sample_event)
             assert e.notes == ""
 
 

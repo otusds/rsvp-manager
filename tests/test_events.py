@@ -1,5 +1,5 @@
 """Tests for event routes: home, add, edit, delete, detail."""
-from app import db, Event, Guest
+from app import db, Event, Guest, Invitation
 from datetime import date
 
 
@@ -133,7 +133,7 @@ class TestEditEvent:
         })
         assert r.status_code == 302
         with test_app.app_context():
-            e = Event.query.get(sample_event)
+            e = db.session.get(Event,sample_event)
             assert e.name == "Updated Event"
             assert e.event_type == "Weekend"
             assert e.target_attendees == 50
@@ -153,7 +153,7 @@ class TestEditEvent:
         })
         assert r.status_code == 302
         with test_app.app_context():
-            e = Event.query.get(eid)
+            e = db.session.get(Event,eid)
             assert e.name == "Other Event"  # unchanged
 
     def test_edit_nonexistent_event(self, logged_in_client):
@@ -175,7 +175,7 @@ class TestEditEvent:
         })
         assert r.status_code == 302
         with test_app.app_context():
-            e = Event.query.get(sample_event)
+            e = db.session.get(Event,sample_event)
             assert e.target_attendees is None
 
 
@@ -184,7 +184,7 @@ class TestDeleteEvent:
         r = logged_in_client.post(f"/event/{sample_event}/delete")
         assert r.status_code == 302
         with test_app.app_context():
-            assert Event.query.get(sample_event) is None
+            assert db.session.get(Event,sample_event) is None
 
     def test_delete_event_other_user(self, logged_in_client, test_app, user2):
         with test_app.app_context():
@@ -198,14 +198,13 @@ class TestDeleteEvent:
         r = logged_in_client.post(f"/event/{eid}/delete")
         assert r.status_code == 302
         with test_app.app_context():
-            assert Event.query.get(eid) is not None  # not deleted
+            assert db.session.get(Event,eid) is not None  # not deleted
 
     def test_delete_cascades_invitations(self, logged_in_client, sample_invitation, sample_event, test_app):
         r = logged_in_client.post(f"/event/{sample_event}/delete")
         assert r.status_code == 302
         with test_app.app_context():
-            from app import Invitation
-            assert Invitation.query.get(sample_invitation) is None
+            assert db.session.get(Invitation, sample_invitation) is None
 
     def test_delete_nonexistent(self, logged_in_client):
         r = logged_in_client.post("/event/99999/delete")

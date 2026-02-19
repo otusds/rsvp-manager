@@ -274,6 +274,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
+    function handleFetchError(err) {
+        console.error("Request failed:", err);
+    }
+
     function escapeHtml(str) {
         var div = document.createElement("div");
         div.textContent = str;
@@ -397,7 +401,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 var newSel = statusCell.querySelector(".status-select");
                 if (newSel) { attachStatusListener(newSel); colorStatusSelect(newSel); }
                 refreshSummary();
-            });
+            })
+            .catch(handleFetchError);
         });
     }
 
@@ -421,7 +426,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 row.setAttribute("data-date-responded", data.date_responded || "");
                 row.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
                 refreshSummary();
-            });
+            })
+            .catch(handleFetchError);
         });
     }
 
@@ -437,7 +443,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ field: "notes", value: input.value })
-                });
+                }).catch(handleFetchError);
             }, 400);
         });
     }
@@ -461,7 +467,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     refreshSummary();
                     updateBatchCount();
                 }
-            });
+            })
+            .catch(handleFetchError);
         });
     }
 
@@ -543,7 +550,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     var tagHTML = genderTag ? " " + genderTag.outerHTML : "";
                     nameCell.innerHTML = escapeHtml(data.full_name) + tagHTML;
                 }
-            });
+            })
+            .catch(handleFetchError);
         }
         document.getElementById("detail-first-name").addEventListener("blur", saveDetailName);
         document.getElementById("detail-last-name").addEventListener("blur", saveDetailName);
@@ -566,7 +574,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (genderTag) genderTag.textContent = newGender === "Male" ? "(M)" : newGender === "Female" ? "(F)" : "";
                     refreshSummary();
                 }
-            });
+            })
+            .catch(handleFetchError);
         });
 
         // Sent toggle (syncs with table checkbox)
@@ -614,7 +623,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 currentDetailRow.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
                 document.getElementById("detail-date-responded").textContent = data.date_responded || "\u2014";
                 refreshSummary();
-            });
+            })
+            .catch(handleFetchError);
         });
 
         // Notes change (syncs with table input)
@@ -628,7 +638,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ field: "notes", value: newNotes })
-            });
+            }).catch(handleFetchError);
         });
     }
 
@@ -776,7 +786,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (cb) cb.checked = false;
                 });
                 updateBatchCount();
-            });
+            }).catch(handleFetchError);
         });
     }
 
@@ -819,7 +829,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         saveIndicator.style.opacity = "1";
                         setTimeout(function () { saveIndicator.style.opacity = "0"; }, 1500);
                     }
-                });
+                })
+                .catch(handleFetchError);
             }, 500);
         });
     }
@@ -946,7 +957,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                     refreshSummary();
                     addGuestOverlay.style.display = "none";
-                });
+                })
+                .catch(handleFetchError);
             } else {
                 // Guest DB page: create guests only, reload to get inline-edit rows
                 fetch("/api/guests/bulk-create", {
@@ -958,7 +970,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(function (data) {
                     if (data.added.length > 0) location.reload();
                     else addGuestOverlay.style.display = "none";
-                });
+                })
+                .catch(handleFetchError);
             }
         });
     }
@@ -1156,7 +1169,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     guestDbSearchInput.value = "";
                     applyGuestDbFilters();
                     guestDbSearchInput.focus();
-                });
+                })
+                .catch(handleFetchError);
         });
 
         guestDbClose.addEventListener("click", function () { guestDbOverlay.style.display = "none"; });
@@ -1188,7 +1202,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
                 refreshSummary();
                 guestDbOverlay.style.display = "none";
-            });
+            })
+            .catch(handleFetchError);
         });
     }
 
@@ -1272,7 +1287,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ first_name: firstName, last_name: lastName })
-            });
+            }).catch(handleFetchError);
         }
 
         guestsTable.querySelectorAll(".ge-first, .ge-last").forEach(function (input) {
@@ -1307,7 +1322,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ gender: select.value })
-                });
+                }).catch(handleFetchError);
             });
         });
 
@@ -1321,7 +1336,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ notes: input.value.trim() })
-                    });
+                    }).catch(handleFetchError);
                 }, 500);
             });
         });
@@ -1363,7 +1378,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         btn.textContent = "This is me";
                     }
                     btn.closest(".kebab-menu").classList.remove("open");
-                });
+                })
+                .catch(handleFetchError);
             });
         });
     }

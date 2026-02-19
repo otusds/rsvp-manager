@@ -28,7 +28,7 @@ class TestToggleSend:
         logged_in_client.post(f"/invitation/{sample_invitation}/send",
             headers={"X-Requested-With": "XMLHttpRequest"})
         with test_app.app_context():
-            e = Event.query.get(sample_event)
+            e = db.session.get(Event,sample_event)
             assert e.date_edited is not None
 
     def test_send_other_user(self, logged_in_client, test_app, user2):
@@ -122,7 +122,7 @@ class TestRemoveInvitation:
         data = r.get_json()
         assert data["ok"] is True
         with test_app.app_context():
-            assert Invitation.query.get(sample_invitation) is None
+            assert db.session.get(Invitation,sample_invitation) is None
 
     def test_remove_other_user(self, logged_in_client, test_app, user2):
         with test_app.app_context():
@@ -147,7 +147,7 @@ class TestRemoveInvitation:
         logged_in_client.post(f"/invitation/{sample_invitation}/delete",
             headers={"X-Requested-With": "XMLHttpRequest"})
         with test_app.app_context():
-            e = Event.query.get(sample_event)
+            e = db.session.get(Event,sample_event)
             assert e.date_edited is not None
 
 
@@ -157,7 +157,7 @@ class TestInvitationFieldAPI:
             json={"field": "channel", "value": "WhatsApp"})
         assert r.status_code == 200
         with test_app.app_context():
-            inv = Invitation.query.get(sample_invitation)
+            inv = db.session.get(Invitation,sample_invitation)
             assert inv.channel == "WhatsApp"
 
     def test_update_notes(self, logged_in_client, sample_invitation, test_app):
@@ -165,7 +165,7 @@ class TestInvitationFieldAPI:
             json={"field": "notes", "value": "Updated note"})
         assert r.status_code == 200
         with test_app.app_context():
-            inv = Invitation.query.get(sample_invitation)
+            inv = db.session.get(Invitation,sample_invitation)
             assert inv.notes == "Updated note"
 
     def test_update_invalid_field(self, logged_in_client, sample_invitation):
