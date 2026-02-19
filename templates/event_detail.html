@@ -151,7 +151,7 @@
 <div class="collapsible section">
     <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
         <span class="collapse-icon">▼</span>
-        <h2 style="margin-bottom:0">Guest List</h2>
+        <h2 id="guest-list-heading" style="margin-bottom:0">Guest List ({{ event.invitations|length }})</h2>
     </div>
     <div class="collapsible-body">
         <div class="guest-list-controls">
@@ -195,11 +195,11 @@
             </select>
             <select class="sort-select" id="gl-sort" data-table="invitations-table">
                 <option value="">Sort by...</option>
-                <option value="1:asc">Name A-Z</option>
-                <option value="1:desc">Name Z-A</option>
-                <option value="2:asc">Sent first</option>
-                <option value="2:desc">Not sent first</option>
-                <option value="3:asc">Status A-Z</option>
+                <option value="1:text">First Name</option>
+                <option value="1:last">Last Name</option>
+                <option value="1:gender">Gender</option>
+                <option value="2:check">Sent</option>
+                <option value="3:text">Status</option>
             </select>
         </div>
 

@@ -16,35 +16,52 @@ document.addEventListener("DOMContentLoaded", function () {
         select.addEventListener("change", function () { filterTable(table); });
     });
 
-    // Sort-by dropdowns
+    // Sort-by dropdowns (toggles direction on re-select)
     document.querySelectorAll(".sort-select[data-table]").forEach(function (select) {
         var tableId = select.getAttribute("data-table");
         var table = document.getElementById(tableId);
         if (!table) return;
+        var lastSortKey = "";
+        var sortDir = "asc";
         select.addEventListener("change", function () {
             if (!select.value) return;
             var parts = select.value.split(":");
             var colIndex = parseInt(parts[0]);
-            var dir = parts[1];
+            var sortType = parts[1]; // text, last, gender, check
+            var sortKey = select.value;
+            // Toggle direction if same field sorted again
+            if (sortKey === lastSortKey) {
+                sortDir = sortDir === "asc" ? "desc" : "asc";
+            } else {
+                sortDir = "asc";
+                lastSortKey = sortKey;
+            }
+            var dir = sortDir;
+            // Reset dropdown to placeholder so re-selecting same option fires change
+            setTimeout(function () { select.selectedIndex = 0; }, 0);
             var tbody = table.querySelector("tbody");
             var rows = Array.from(tbody.querySelectorAll("tr:not(.add-guest-row)"));
             rows.sort(function (a, b) {
-                var cellA = a.cells[colIndex], cellB = b.cells[colIndex];
-                if (!cellA || !cellB) return 0;
                 var valA, valB;
-                var cbA = cellA.querySelector("input[type=checkbox]");
-                var cbB = cellB.querySelector("input[type=checkbox]");
-                var selA = cellA.querySelector("select");
-                var selB = cellB.querySelector("select");
-                if (cbA && cbB) {
-                    valA = cbA.checked ? "1" : "0";
-                    valB = cbB.checked ? "1" : "0";
-                } else if (selA && selB) {
-                    valA = selA.value.toLowerCase();
-                    valB = selB.value.toLowerCase();
+                if (sortType === "gender") {
+                    valA = (a.getAttribute("data-gender") || "").toLowerCase();
+                    valB = (b.getAttribute("data-gender") || "").toLowerCase();
+                } else if (sortType === "last") {
+                    var nameA = (a.cells[colIndex] ? a.cells[colIndex].textContent.trim() : "").replace(/\s*\([MF]\)\s*$/, "");
+                    var nameB = (b.cells[colIndex] ? b.cells[colIndex].textContent.trim() : "").replace(/\s*\([MF]\)\s*$/, "");
+                    valA = nameA.split(" ").slice(1).join(" ").toLowerCase() || nameA.toLowerCase();
+                    valB = nameB.split(" ").slice(1).join(" ").toLowerCase() || nameB.toLowerCase();
+                } else if (sortType === "check") {
+                    var cbA = a.cells[colIndex] && a.cells[colIndex].querySelector("input[type=checkbox]");
+                    var cbB = b.cells[colIndex] && b.cells[colIndex].querySelector("input[type=checkbox]");
+                    valA = cbA && cbA.checked ? "1" : "0";
+                    valB = cbB && cbB.checked ? "1" : "0";
                 } else {
-                    valA = cellA.textContent.trim().toLowerCase();
-                    valB = cellB.textContent.trim().toLowerCase();
+                    var cellA = a.cells[colIndex], cellB = b.cells[colIndex];
+                    var selA = cellA && cellA.querySelector("select");
+                    var selB = cellB && cellB.querySelector("select");
+                    valA = selA ? selA.value.toLowerCase() : (cellA ? cellA.textContent.trim().toLowerCase() : "");
+                    valB = selB ? selB.value.toLowerCase() : (cellB ? cellB.textContent.trim().toLowerCase() : "");
                 }
                 if (valA < valB) return dir === "asc" ? -1 : 1;
                 if (valA > valB) return dir === "asc" ? 1 : -1;
@@ -53,14 +70,15 @@ document.addEventListener("DOMContentLoaded", function () {
             rows.forEach(function (row) { tbody.appendChild(row); });
 
             // Sync header arrows with dropdown sort
+            var thIndex = sortType === "gender" ? 1 : colIndex;
             var ths = table.querySelectorAll("th");
             ths.forEach(function (h) {
                 h.classList.remove("sort-asc", "sort-desc");
                 h.removeAttribute("data-dir");
             });
-            if (ths[colIndex]) {
-                ths[colIndex].classList.add(dir === "asc" ? "sort-asc" : "sort-desc");
-                ths[colIndex].setAttribute("data-dir", dir);
+            if (ths[thIndex]) {
+                ths[thIndex].classList.add(dir === "asc" ? "sort-asc" : "sort-desc");
+                ths[thIndex].setAttribute("data-dir", dir);
             }
         });
     });
@@ -245,6 +263,10 @@ document.addEventListener("DOMContentLoaded", function () {
             var invVal = document.getElementById("invited-bar-value");
             if (invVal) invVal.textContent = invited + " invited";
         }
+
+        // Update guest list heading count
+        var glHeading = document.getElementById("guest-list-heading");
+        if (glHeading) glHeading.textContent = "Guest List (" + rows.length + ")";
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
