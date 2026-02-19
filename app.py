@@ -26,7 +26,7 @@ login_manager.login_view = "login"
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-EVENT_TYPES = ["Dinner", "Party", "Wedding", "Corporate", "Conference", "Ceremony", "Other"]
+EVENT_TYPES = ["Dinner", "Party", "Weekend", "Hunt", "Corporate", "Other"]
 CHANNELS = ["WhatsApp", "Email", "Call", "Live", "SMS", "Other"]
 
 
@@ -672,8 +672,8 @@ def seed(user_id):
         Event(user_id=user_id, name="Annual Gala Dinner", event_type="Dinner", location="Grand Hotel, New York", date=date(2026, 4, 12), date_created=today, notes="Black tie event", target_attendees=10),
         Event(user_id=user_id, name="Team Building Retreat", event_type="Corporate", location="Lakehouse Resort, Vermont", date=date(2026, 5, 20), date_created=today, notes="Outdoor activities planned", target_attendees=6),
         Event(user_id=user_id, name="Summer Garden Party", event_type="Party", location="Riverside Park, Boston", date=date(2026, 7, 4), date_created=today, notes="Casual dress code"),
-        Event(user_id=user_id, name="Sarah & Tom Wedding", event_type="Wedding", location="Meadow Estate, Napa Valley", date=date(2026, 8, 22), date_created=today, notes="Ceremony at 3pm, reception follows", target_attendees=15),
-        Event(user_id=user_id, name="Product Launch", event_type="Conference", location="Tech Hub, San Francisco", date=date(2026, 9, 15), date_created=today, notes="Press invited", target_attendees=4),
+        Event(user_id=user_id, name="Lake House Weekend", event_type="Weekend", location="Lakehouse Resort, Vermont", date=date(2026, 8, 22), date_created=today, notes="Arrive Friday evening, depart Sunday", target_attendees=15),
+        Event(user_id=user_id, name="Fall Pheasant Hunt", event_type="Hunt", location="Highland Estate, Montana", date=date(2026, 9, 15), date_created=today, notes="Bring warm layers", target_attendees=4),
     ]
     db.session.add_all(events)
     db.session.flush()
@@ -767,7 +767,7 @@ def seed(user_id):
         Invitation(event_id=events[5].id, guest_id=guests[8].id, status="Declined", channel="Call", date_invited=date(2026, 4, 1), date_responded=date(2026, 4, 7), notes="Health reasons"),
         Invitation(event_id=events[5].id, guest_id=guests[16].id, status="Attending", channel="Email", date_invited=date(2026, 4, 8), date_responded=date(2026, 4, 10)),
         Invitation(event_id=events[5].id, guest_id=guests[22].id, status="Not Sent"),
-        # Sarah & Tom Wedding — 14 guests, target 15
+        # Lake House Weekend — 14 guests, target 15
         Invitation(event_id=events[6].id, guest_id=guests[0].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 5)),
         Invitation(event_id=events[6].id, guest_id=guests[2].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 3)),
         Invitation(event_id=events[6].id, guest_id=guests[4].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 4)),
@@ -780,13 +780,13 @@ def seed(user_id):
         Invitation(event_id=events[6].id, guest_id=guests[18].id, status="Not Sent"),
         Invitation(event_id=events[6].id, guest_id=guests[20].id, status="Attending", channel="SMS", date_invited=date(2026, 5, 10), date_responded=date(2026, 5, 14), notes="Bringing plus one"),
         Invitation(event_id=events[6].id, guest_id=guests[22].id, status="Pending", channel="Email", date_invited=date(2026, 5, 10)),
-        Invitation(event_id=events[6].id, guest_id=guests[23].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 2), notes="Official photographer"),
+        Invitation(event_id=events[6].id, guest_id=guests[23].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 2), notes="Bringing kayak"),
         Invitation(event_id=events[6].id, guest_id=guests[24].id, status="Attending", channel="WhatsApp", date_invited=date(2026, 5, 10), date_responded=date(2026, 5, 13)),
-        # Product Launch — 6 guests, target 4
+        # Fall Pheasant Hunt — 6 guests, target 4
         Invitation(event_id=events[7].id, guest_id=guests[5].id, status="Not Sent"),
         Invitation(event_id=events[7].id, guest_id=guests[7].id, status="Not Sent"),
         Invitation(event_id=events[7].id, guest_id=guests[9].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 3)),
-        Invitation(event_id=events[7].id, guest_id=guests[11].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 2), notes="Keynote speaker"),
+        Invitation(event_id=events[7].id, guest_id=guests[11].id, status="Attending", channel="Email", date_invited=date(2026, 5, 1), date_responded=date(2026, 5, 2), notes="Bringing own gear"),
         Invitation(event_id=events[7].id, guest_id=guests[17].id, status="Attending", channel="Call", date_invited=date(2026, 5, 5), date_responded=date(2026, 5, 8)),
         Invitation(event_id=events[7].id, guest_id=guests[23].id, status="Pending", channel="Email", date_invited=date(2026, 5, 10)),
     ]

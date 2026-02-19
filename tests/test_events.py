@@ -127,7 +127,7 @@ class TestAddEvent:
 class TestEditEvent:
     def test_edit_event(self, logged_in_client, sample_event, test_app):
         r = logged_in_client.post(f"/event/{sample_event}/edit", data={
-            "name": "Updated Event", "event_type": "Wedding",
+            "name": "Updated Event", "event_type": "Weekend",
             "location": "New Loc", "date": "2026-09-01",
             "notes": "Updated notes", "target_attendees": "50"
         })
@@ -135,7 +135,7 @@ class TestEditEvent:
         with test_app.app_context():
             e = Event.query.get(sample_event)
             assert e.name == "Updated Event"
-            assert e.event_type == "Wedding"
+            assert e.event_type == "Weekend"
             assert e.target_attendees == 50
             assert e.date_edited is not None
 

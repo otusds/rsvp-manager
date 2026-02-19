@@ -867,10 +867,9 @@ td select {
 
 .badge-dinner     { background: #af52de; }
 .badge-party      { background: #ff9500; }
-.badge-wedding    { background: #ff2d55; }
+.badge-weekend    { background: #34c759; }
+.badge-hunt       { background: #ff2d55; }
 .badge-corporate  { background: #007aff; }
-.badge-conference { background: #5ac8fa; color: #1c1c1e; }
-.badge-ceremony   { background: #ff3b30; }
 .badge-other      { background: #8e8e93; }
 
 .status-pending {
