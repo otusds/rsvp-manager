@@ -252,17 +252,6 @@ h2 {
     box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
 }
 
-/* Scrollable table wrapper — th sticks at top:0 inside this container */
-.sticky-table-wrap {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 12px;
-    box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
-}
-
-table.sticky-table {
-    border-radius: 12px 12px 0 0;
-}
 
 table {
     width: 100%;
@@ -290,11 +279,6 @@ th {
     top: 0;
 }
 
-table.sticky-table th {
-    top: 0;
-    background: #fafafa;
-    z-index: 10;
-}
 
 th:first-child { border-radius: 12px 0 0 0; }
 th:last-child { border-radius: 0 12px 0 0; }
