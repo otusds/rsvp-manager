@@ -251,8 +251,9 @@ h2 {
     box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
 }
 
-.table-scroll-sticky {
-    overflow-x: clip;
+/* Sticky tables: no wrapper, so th sticks to viewport */
+table.sticky-table {
+    box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
 }
 
 table {
@@ -281,7 +282,7 @@ th {
     top: 0;
 }
 
-.table-scroll-sticky th {
+table.sticky-table th {
     top: var(--sticky-th-top, 52px);
     background: #fafafa;
     z-index: 10;

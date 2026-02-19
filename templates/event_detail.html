@@ -222,8 +222,7 @@
         </div>
         </div>
 
-        <div class="table-scroll table-scroll-sticky">
-        <table id="invitations-table" class="sortable" data-event-id="{{ event.id }}">
+        <table id="invitations-table" class="sortable sticky-table" data-event-id="{{ event.id }}">
             <thead>
                 <tr>
                     <th class="center col-check col-multiselect" style="display:none"><input type="checkbox" id="select-all"></th>
@@ -278,7 +277,6 @@
                 {% endfor %}
             </tbody>
         </table>
-        </div>
     </div>
 </div>
 
