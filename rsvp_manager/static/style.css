@@ -414,6 +414,7 @@ th.sort-desc::after { content: "\2193\FE0E"; opacity: 0.7; }
 .modal-form { padding: 0; background: transparent; box-shadow: none; }
 .detail-card-body:has(.modal-form) { background: white; border-radius: 0 0 14px 14px; }
 .modal-form label { font-size: 0.78rem; color: #8e8e93; margin-bottom: 0.25rem; }
+.modal-form .form-field > .ios-toggle { margin-top: 0.25rem; margin-bottom: 0; }
 .modal-form .form-actions { margin-top: 1rem; }
 
 .form-row {
@@ -1002,13 +1003,6 @@ td.center, th.center { text-align: center; }
 
 .gender-tag { color: #8e8e93; font-size: 0.78rem; }
 
-.inline-edit-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    position: relative;
-}
-
 .inline-edit {
     flex: 1;
     min-width: 0;
@@ -1122,24 +1116,69 @@ td.center, th.center { text-align: center; }
     box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
 }
 
-/* ── "Me" badge ───────────────────────────────────────────────────────────── */
-.badge-me {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #ff9500;
-    color: white;
-    font-size: 0.6rem;
-    padding: 0.05rem 0.3rem;
-    border-radius: 4px;
-    font-weight: 700;
-    pointer-events: none;
-    white-space: nowrap;
-}
-.inline-edit-cell .ge-first:focus ~ .badge-me {
-    display: none;
+/* ── "Me" row highlight ───────────────────────────────────────────────────── */
+tr[data-is-me="true"] td {
+    background: rgba(0, 122, 255, 0.06);
 }
 
+/* ── Guest Detail meta section ────────────────────────────────────────────── */
+.guest-detail-meta {
+    padding: 0.75rem 0 0;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    margin-top: 0.75rem;
+}
+.guest-detail-summary {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+.guest-detail-summary .stat {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 0.25rem;
+    background: rgba(0,0,0,0.03);
+    border-radius: 8px;
+}
+.stat-value { font-size: 1.1rem; font-weight: 600; color: #1c1c1e; }
+.stat-color-attending { color: #248a3d; }
+.stat-color-pending { color: #c77c00; }
+.stat-color-declined { color: #d70015; }
+.stat-label { font-size: 0.7rem; color: #8e8e93; margin-top: 0.15rem; }
+.guest-detail-section-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.5rem;
+}
+.guest-detail-inv-list { margin-top: 0.5rem; }
+.guest-detail-inv-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.guest-detail-inv-item:last-child { border-bottom: none; }
+.guest-detail-inv-event { font-size: 0.85rem; color: #1c1c1e; }
+.status-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+.status-tag-attending { background: rgba(52,199,89,0.12); color: #248a3d; }
+.status-tag-pending { background: rgba(255,149,0,0.12); color: #c77c00; }
+.status-tag-declined { background: rgba(255,59,48,0.12); color: #d70015; }
+.guest-detail-dates { font-size: 0.75rem; color: #8e8e93; margin-top: 0.5rem; }
+.inv-detail-datetime {
+    font-size: 0.82rem;
+    color: #8e8e93;
+    display: block;
+    margin-top: 0.25rem;
+}
 /* ── Include-me toggle ────────────────────────────────────────────────────── */
 .checkbox-row {
     display: flex;
@@ -1478,6 +1517,7 @@ td.center, th.center { text-align: center; }
     .form { padding: 1.25rem; }
 
     .form-row { flex-direction: column; gap: 0.5rem; }
+    .modal-form .form-row { flex-direction: row; gap: 0.75rem; }
 
     .batch-bar { font-size: 0.8rem; padding: 0.4rem 0.6rem; }
 

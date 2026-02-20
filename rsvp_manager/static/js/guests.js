@@ -37,10 +37,6 @@ document.addEventListener("DOMContentLoaded", function () {
         var key = parts[0], dir = parts[1];
 
         rows.sort(function (a, b) {
-            var aMe = a.getAttribute("data-is-me") === "true" ? 1 : 0;
-            var bMe = b.getAttribute("data-is-me") === "true" ? 1 : 0;
-            if (aMe !== bMe) return bMe - aMe;
-
             var valA, valB;
             if (key === "created") {
                 valA = a.getAttribute("data-created") || "";
@@ -101,18 +97,6 @@ document.addEventListener("DOMContentLoaded", function () {
             if (opt.value === "Male") opt.textContent = "Male";
             else if (opt.value === "Female") opt.textContent = "Female";
         });
-    }
-
-    function positionMeBadge(input) {
-        var badge = input.parentNode.querySelector(".badge-me");
-        if (!badge) return;
-        var canvas = document.createElement("canvas");
-        var ctx = canvas.getContext("2d");
-        var style = getComputedStyle(input);
-        ctx.font = style.fontSize + " " + style.fontFamily;
-        var textWidth = ctx.measureText(input.value).width;
-        var paddingLeft = parseFloat(style.paddingLeft) || 0;
-        badge.style.left = (paddingLeft + textWidth + 4) + "px";
     }
 
     // ── Initialize listeners on a guest row ───────────────────────────────
@@ -180,57 +164,15 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        // "This is me" button
-        var isMeBtn = row.querySelector(".ge-is-me-btn");
-        if (isMeBtn) {
-            isMeBtn.addEventListener("click", function () {
-                var guestId = isMeBtn.getAttribute("data-guest-id");
-                var wasMe = row.getAttribute("data-is-me") === "true";
-                var newVal = !wasMe;
-                window.fetchWithCsrf("/api/v1/guests/" + guestId, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ is_me: newVal })
-                })
-                .then(function (res) { return res.json(); })
-                .then(function (resp) {
-                    var data = resp.data;
-                    guestsTable.querySelectorAll("tr[data-is-me='true']").forEach(function (r) {
-                        r.setAttribute("data-is-me", "false");
-                        var badge = r.querySelector(".badge-me");
-                        if (badge) badge.remove();
-                        var meBtn = r.querySelector(".ge-is-me-btn");
-                        if (meBtn) meBtn.textContent = "This is me";
-                    });
-                    if (data.is_me) {
-                        row.setAttribute("data-is-me", "true");
-                        var firstInput = row.querySelector(".ge-first");
-                        if (firstInput && !row.querySelector(".badge-me")) {
-                            var badge = document.createElement("span");
-                            badge.className = "badge-me";
-                            badge.textContent = "me";
-                            firstInput.parentNode.appendChild(badge);
-                            positionMeBadge(firstInput);
-                        }
-                        isMeBtn.textContent = "\u2713 This is me";
-                    } else {
-                        row.setAttribute("data-is-me", "false");
-                        isMeBtn.textContent = "This is me";
-                    }
-                    isMeBtn.closest(".kebab-menu").classList.remove("open");
-                })
-                .catch(window.handleFetchError);
+        // Guest detail button
+        var detailBtn = row.querySelector(".ge-detail-btn");
+        if (detailBtn) {
+            detailBtn.addEventListener("click", function () {
+                detailBtn.closest(".kebab-menu").classList.remove("open");
+                openGuestDetail(detailBtn.getAttribute("data-guest-id"), row);
             });
         }
 
-        // Badge positioning
-        var firstInput = row.querySelector(".ge-first");
-        var badge = row.querySelector(".badge-me");
-        if (firstInput && badge) positionMeBadge(firstInput);
-        if (firstInput) {
-            firstInput.addEventListener("input", function () { positionMeBadge(firstInput); });
-            firstInput.addEventListener("blur", function () { positionMeBadge(firstInput); });
-        }
     }
 
     // Initialize all existing rows
@@ -284,6 +226,130 @@ document.addEventListener("DOMContentLoaded", function () {
             if (scrollBottom >= docHeight - 200) {
                 loadMoreGuests();
             }
+        });
+    }
+
+    // ── Guest Detail overlay ─────────────────────────────────────────────
+
+    var gdOverlay = document.getElementById("guest-detail-overlay");
+    var gdClose = document.getElementById("guest-detail-close");
+    var gdForm = document.getElementById("guest-detail-form");
+    var gdMeta = document.getElementById("gd-meta");
+    var gdActiveRow = null;
+
+    function formatDate(iso) {
+        if (!iso) return "—";
+        var d = new Date(iso);
+        return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    }
+
+    function statusClass(status) {
+        if (status === "Attending") return "status-tag-attending";
+        if (status === "Pending") return "status-tag-pending";
+        if (status === "Declined") return "status-tag-declined";
+        return "";
+    }
+
+    function openGuestDetail(guestId, row) {
+        gdActiveRow = row;
+        window.fetchWithCsrf("/api/v1/guests/" + guestId)
+            .then(function (res) { return res.json(); })
+            .then(function (resp) {
+                var g = resp.data;
+                document.getElementById("gd-guest-id").value = g.id;
+                document.getElementById("gd-first").value = g.first_name;
+                document.getElementById("gd-last").value = g.last_name;
+                document.getElementById("gd-gender").value = g.gender;
+                document.getElementById("gd-notes").value = g.notes;
+                document.getElementById("gd-is-me").checked = g.is_me;
+
+                var s = g.invitation_summary;
+                var html =
+                    '<div class="guest-detail-section-title">Invitation Summary</div>' +
+                    '<div class="guest-detail-summary">' +
+                        '<div class="stat"><div class="stat-value">' + s.invited + '</div><div class="stat-label">Invited</div></div>' +
+                        '<div class="stat"><div class="stat-value stat-color-attending">' + s.attending + '</div><div class="stat-label stat-color-attending">Attending</div></div>' +
+                        '<div class="stat"><div class="stat-value stat-color-pending">' + s.pending + '</div><div class="stat-label stat-color-pending">Pending</div></div>' +
+                        '<div class="stat"><div class="stat-value stat-color-declined">' + s.declined + '</div><div class="stat-label stat-color-declined">Declined</div></div>' +
+                    '</div>';
+
+                if (g.invitations && g.invitations.length > 0) {
+                    html += '<div class="guest-detail-inv-list">';
+                    g.invitations.forEach(function (inv) {
+                        var eventLabel = window.escapeHtml(inv.event_name);
+                        if (inv.event_date) eventLabel += ' (' + window.escapeHtml(inv.event_date) + ')';
+                        html += '<div class="guest-detail-inv-item">' +
+                            '<span class="guest-detail-inv-event">' + eventLabel + '</span>' +
+                            '<span class="status-tag ' + statusClass(inv.status) + '">' + window.escapeHtml(inv.status) + '</span>' +
+                            '</div>';
+                    });
+                    html += '</div>';
+                }
+
+                html += '<div class="guest-detail-dates">' +
+                    'Created: ' + formatDate(g.date_created) + '<br>' +
+                    'Last edited: ' + formatDate(g.date_edited) +
+                    '</div>';
+
+                gdMeta.innerHTML = html;
+                gdOverlay.style.display = "flex";
+                document.getElementById("gd-first").focus();
+            })
+            .catch(window.handleFetchError);
+    }
+
+    if (gdOverlay) {
+        gdClose.addEventListener("click", function () {
+            gdOverlay.style.display = "none";
+        });
+        gdOverlay.addEventListener("click", function (e) {
+            if (e.target === gdOverlay) gdOverlay.style.display = "none";
+        });
+
+        gdForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var guestId = document.getElementById("gd-guest-id").value;
+            var firstName = document.getElementById("gd-first").value.trim();
+            var lastName = document.getElementById("gd-last").value.trim();
+            var gender = document.getElementById("gd-gender").value;
+            var notes = document.getElementById("gd-notes").value.trim();
+            var isMe = document.getElementById("gd-is-me").checked;
+            if (!firstName) return;
+
+            window.fetchWithCsrf("/api/v1/guests/" + guestId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ first_name: firstName, last_name: lastName, gender: gender, notes: notes, is_me: isMe })
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (resp) {
+                var data = resp.data;
+                // Update the table row
+                if (gdActiveRow) {
+                    var firstInput = gdActiveRow.querySelector(".ge-first");
+                    var lastInput = gdActiveRow.querySelector(".ge-last");
+                    var genderSelect = gdActiveRow.querySelector(".ge-gender");
+                    var notesInput = gdActiveRow.querySelector(".ge-notes");
+                    if (firstInput) firstInput.value = firstName;
+                    if (lastInput) lastInput.value = lastName;
+                    if (genderSelect) genderSelect.value = gender;
+                    if (notesInput) notesInput.value = notes;
+                    gdActiveRow.setAttribute("data-first", firstName.toLowerCase());
+                    gdActiveRow.setAttribute("data-last", lastName.toLowerCase());
+                    gdActiveRow.setAttribute("data-gender", gender);
+                    // Update is_me highlighting
+                    guestsTable.querySelectorAll("tr[data-is-me='true']").forEach(function (r) {
+                        r.setAttribute("data-is-me", "false");
+                    });
+                    if (data.is_me) {
+                        gdActiveRow.setAttribute("data-is-me", "true");
+                    } else {
+                        gdActiveRow.setAttribute("data-is-me", "false");
+                    }
+                }
+                gdOverlay.style.display = "none";
+            })
+            .catch(window.handleFetchError);
         });
     }
 

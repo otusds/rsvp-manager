@@ -31,7 +31,7 @@
         <div class="event-info-details">
             <div class="event-info-row">
                 <span class="event-info-label">Event Date</span>
-                <span class="event-info-value">{{ event.date.strftime('%B %d, %Y') }}</span>
+                <span class="event-info-value">{{ event.date.strftime('%d %B %Y') }}</span>
             </div>
             {% if event.location %}
             <div class="event-info-row">
@@ -54,12 +54,12 @@
             {% if event.date_created %}
             <div class="event-info-row">
                 <span class="event-info-label">Date Created</span>
-                <span class="event-info-value">{{ event.date_created.strftime('%B %d, %Y') }}</span>
+                <span class="event-info-value">{{ event.date_created.strftime('%d %B %Y') }}</span>
             </div>
             {% endif %}
             <div class="event-info-row">
                 <span class="event-info-label">Last Edited</span>
-                <span class="event-info-value">{{ event.date_edited.strftime('%B %d, %Y at %I:%M %p') if event.date_edited else '—' }}</span>
+                <span class="event-info-value">{{ event.date_edited.strftime('%d %B %Y at %H:%M') if event.date_edited else '—' }}</span>
             </div>
         </div>
         <div class="event-details-notes">
@@ -239,9 +239,9 @@
                 <tr data-inv-id="{{ inv.id }}" data-guest-id="{{ inv.guest.id }}"
                     data-gender="{{ inv.guest.gender }}"
                     data-sent="{{ 'true' if inv.status != 'Not Sent' else 'false' }}"
-                    data-date-invited="{{ inv.date_invited.strftime('%b %d, %Y') if inv.date_invited else '' }}"
+                    data-date-invited="{{ inv.date_invited.strftime('%d %b %Y') if inv.date_invited else '' }}"
                     data-date-invited-iso="{{ inv.date_invited.isoformat() if inv.date_invited else '' }}"
-                    data-date-responded="{{ inv.date_responded.strftime('%b %d, %Y') if inv.date_responded else '' }}"
+                    data-date-responded="{{ inv.date_responded.strftime('%d %b %Y') if inv.date_responded else '' }}"
                     data-date-responded-iso="{{ inv.date_responded.isoformat() if inv.date_responded else '' }}">
                     <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
                     <td class="guest-name-cell">{{ inv.guest.full_name }} <span class="gender-tag">{{ '(M)' if inv.guest.gender == 'Male' else '(F)' if inv.guest.gender == 'Female' else '' }}</span></td>
@@ -269,7 +269,8 @@
                         <div class="kebab-wrapper">
                             <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>
                             <div class="kebab-menu">
-                                <button type="button" class="edit-btn">Edit</button>
+                                <button type="button" class="inv-guest-detail-btn" data-guest-id="{{ inv.guest.id }}">Guest detail</button>
+                                <button type="button" class="edit-btn">Invitation detail</button>
                                 <button type="button" class="kebab-danger remove-btn" data-inv-id="{{ inv.id }}">Remove</button>
                             </div>
                         </div>
@@ -358,51 +359,71 @@
     </div>
 </div>
 
-<!-- Detail / Edit card modal -->
+<!-- Invitation Detail modal -->
 <div class="detail-overlay" id="detail-overlay" style="display:none">
     <div class="detail-card">
         <div class="detail-card-header">
-            <div class="detail-name-form">
-                <input type="text" class="detail-name-input" id="detail-first-name" placeholder="First name">
-                <input type="text" class="detail-name-input" id="detail-last-name" placeholder="Last name">
-            </div>
+            <span class="modal-title">Invitation Detail</span>
             <button type="button" class="detail-close" id="detail-close">&times;</button>
         </div>
         <div class="detail-card-body">
-            <div class="detail-row">
-                <span class="detail-label">Gender</span>
-                <select id="detail-gender">
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                </select>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">Sent</span>
-                <label class="ios-toggle">
-                    <input type="checkbox" id="detail-sent-toggle">
-                    <span class="ios-toggle-slider"></span>
-                </label>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">Invited On</span>
-                <span id="detail-date-invited" class="detail-value"></span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">RSVP Status</span>
-                <select id="detail-status">
-                    <option value="Attending">Attending</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Declined">Declined</option>
-                </select>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">Responded On</span>
-                <span id="detail-date-responded" class="detail-value"></span>
-            </div>
-            <div class="detail-row detail-row-full">
-                <span class="detail-label">Invite Notes</span>
-                <textarea id="detail-notes" placeholder="Invite note..."></textarea>
-            </div>
+            <form class="form modal-form" id="inv-detail-form">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="detail-first-name">First Name</label>
+                        <input type="text" id="detail-first-name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="detail-last-name">Last Name</label>
+                        <input type="text" id="detail-last-name">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="detail-gender">Gender</label>
+                        <select id="detail-gender">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Invitation Sent</label>
+                        <label class="ios-toggle">
+                            <input type="checkbox" id="detail-sent-toggle">
+                            <span class="ios-toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="form-field">
+                        <label>Sent on</label>
+                        <span class="inv-detail-datetime" id="detail-date-invited"></span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>RSVP Status</label>
+                        <select id="detail-status">
+                            <option value="Attending">Attending</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Declined">Declined</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>RSVP received on</label>
+                        <span class="inv-detail-datetime" id="detail-date-responded"></span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="detail-notes">Invitation Notes</label>
+                        <textarea id="detail-notes" rows="3" placeholder="Invite note..."></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -458,6 +479,57 @@
                     <button type="submit" class="btn">Save</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Guest Detail overlay -->
+<div class="detail-overlay" id="guest-detail-overlay" style="display:none">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <span class="modal-title">Guest Detail</span>
+            <button type="button" class="detail-close" id="guest-detail-close">&times;</button>
+        </div>
+        <div class="detail-card-body">
+            <form class="form modal-form" id="guest-detail-form">
+                <input type="hidden" id="gd-guest-id">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="gd-first">First Name</label>
+                        <input type="text" id="gd-first" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="gd-last">Last Name</label>
+                        <input type="text" id="gd-last">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="gd-gender">Gender</label>
+                        <select id="gd-gender">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>This is me</label>
+                        <label class="ios-toggle">
+                            <input type="checkbox" id="gd-is-me">
+                            <span class="ios-toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="gd-notes">Notes</label>
+                        <textarea id="gd-notes" rows="3" placeholder="Add notes about guest"></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save</button>
+                </div>
+            </form>
+            <div class="guest-detail-meta" id="gd-meta"></div>
         </div>
     </div>
 </div>

@@ -94,4 +94,55 @@
         </div>
     </div>
 </div>
+
+<!-- Guest Detail overlay -->
+<div class="detail-overlay" id="guest-detail-overlay" style="display:none">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <span class="modal-title">Guest Detail</span>
+            <button type="button" class="detail-close" id="guest-detail-close">&times;</button>
+        </div>
+        <div class="detail-card-body">
+            <form class="form modal-form" id="guest-detail-form">
+                <input type="hidden" id="gd-guest-id">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="gd-first">First Name</label>
+                        <input type="text" id="gd-first" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="gd-last">Last Name</label>
+                        <input type="text" id="gd-last">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="gd-gender">Gender</label>
+                        <select id="gd-gender">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>This is me</label>
+                        <label class="ios-toggle">
+                            <input type="checkbox" id="gd-is-me">
+                            <span class="ios-toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="gd-notes">Notes</label>
+                        <textarea id="gd-notes" rows="3" placeholder="Add notes about guest"></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save</button>
+                </div>
+            </form>
+            <div class="guest-detail-meta" id="gd-meta"></div>
+        </div>
+    </div>
+</div>
 {% endblock %}

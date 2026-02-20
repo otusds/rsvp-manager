@@ -359,7 +359,8 @@ document.addEventListener("DOMContentLoaded", function () {
             '<td><div class="kebab-wrapper">' +
             '<button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>' +
             '<div class="kebab-menu">' +
-            '<button type="button" class="edit-btn">Edit</button>' +
+            '<button type="button" class="inv-guest-detail-btn" data-guest-id="' + data.guest_id + '">Guest detail</button>' +
+            '<button type="button" class="edit-btn">Invitation detail</button>' +
             '<button type="button" class="kebab-danger remove-btn" data-inv-id="' + data.invitation_id + '">Remove</button>' +
             '</div></div></td>';
 
@@ -369,6 +370,7 @@ document.addEventListener("DOMContentLoaded", function () {
         attachInvNotesListener(tr.querySelector(".inv-notes-input"));
         attachRemoveListener(tr.querySelector(".remove-btn"));
         attachEditListener(tr.querySelector(".edit-btn"));
+        attachGuestDetailListener(tr.querySelector(".inv-guest-detail-btn"));
         attachKebabListener(tr.querySelector(".kebab-btn"));
         attachRowSelectListener(tr.querySelector(".row-select"));
 
@@ -522,8 +524,10 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("detail-sent-toggle").checked = isSent;
 
         // Dates
-        document.getElementById("detail-date-invited").textContent = row.getAttribute("data-date-invited") || "\u2014";
-        document.getElementById("detail-date-responded").textContent = row.getAttribute("data-date-responded") || "\u2014";
+        var invitedDate = row.getAttribute("data-date-invited") || "";
+        document.getElementById("detail-date-invited").textContent = invitedDate || "\u2014";
+        var respondedDate = row.getAttribute("data-date-responded") || "";
+        document.getElementById("detail-date-responded").textContent = respondedDate || "\u2014";
 
         // Status
         var statusSelect = document.getElementById("detail-status");
@@ -535,6 +539,7 @@ document.addEventListener("DOMContentLoaded", function () {
             statusSelect.value = "Pending";
             statusSelect.disabled = true;
         }
+        colorStatusSelect(statusSelect);
 
         // Notes
         var notesInput = row.cells[4] && row.cells[4].querySelector(".inv-notes-input");
@@ -622,7 +627,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else {
                     statusSelect.disabled = true;
                     document.getElementById("detail-date-invited").textContent = "\u2014";
+                    document.getElementById("detail-date-responded").textContent = "\u2014";
                 }
+                colorStatusSelect(statusSelect);
             }, 300);
         });
 
@@ -631,6 +638,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!currentDetailRow) return;
             var invId = currentDetailRow.getAttribute("data-inv-id");
             var newStatus = this.value;
+            colorStatusSelect(this);
             var tableSelect = currentDetailRow.cells[3].querySelector(".status-select");
             if (tableSelect) { tableSelect.value = newStatus; colorStatusSelect(tableSelect); }
             fetchWithCsrf("/api/v1/invitations/" + invId, {
@@ -663,6 +671,50 @@ document.addEventListener("DOMContentLoaded", function () {
                 body: JSON.stringify({ notes: newNotes })
             }).catch(handleFetchError);
         });
+
+        // Save button (form submit)
+        document.getElementById("inv-detail-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            if (!currentDetailRow) return;
+
+            var guestId = currentDetailRow.getAttribute("data-guest-id");
+            var invId = currentDetailRow.getAttribute("data-inv-id");
+            var newFirst = document.getElementById("detail-first-name").value.trim();
+            var newLast = document.getElementById("detail-last-name").value.trim();
+            var newGender = document.getElementById("detail-gender").value;
+            var newNotes = document.getElementById("detail-notes").value.trim();
+            if (!newFirst) return;
+
+            var guestSave = fetchWithCsrf("/api/v1/guests/" + guestId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ first_name: newFirst, last_name: newLast, gender: newGender })
+            }).then(function (res) { return res.json(); }).then(function (resp) {
+                if (resp.status === "success" && currentDetailRow) {
+                    var nameCell = currentDetailRow.cells[1];
+                    var genderTag = nameCell.querySelector(".gender-tag");
+                    var tagHTML = genderTag ? " " + genderTag.outerHTML : "";
+                    nameCell.innerHTML = escapeHtml(resp.data.full_name) + tagHTML;
+                    var gt = nameCell.querySelector(".gender-tag");
+                    if (gt) gt.textContent = newGender === "Male" ? "(M)" : newGender === "Female" ? "(F)" : "";
+                    currentDetailRow.setAttribute("data-gender", newGender);
+                }
+            });
+
+            var invSave = fetchWithCsrf("/api/v1/invitations/" + invId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ notes: newNotes })
+            }).then(function () {
+                var tableInput = currentDetailRow.cells[4] && currentDetailRow.cells[4].querySelector(".inv-notes-input");
+                if (tableInput) tableInput.value = newNotes;
+            });
+
+            Promise.all([guestSave, invSave]).then(function () {
+                refreshSummary();
+                closeDetail();
+            }).catch(handleFetchError);
+        });
     }
 
     // ── Attach edit button listeners ──────────────────────────────────────────
@@ -672,6 +724,131 @@ document.addEventListener("DOMContentLoaded", function () {
             openDetail(btn.closest("tr"));
         });
     }
+
+    // ── Guest Detail overlay (from invitation kebab) ───────────────────────
+
+    var gdOverlay = document.getElementById("guest-detail-overlay");
+    var gdClose = document.getElementById("guest-detail-close");
+    var gdForm = document.getElementById("guest-detail-form");
+    var gdMeta = document.getElementById("gd-meta");
+    var gdActiveRow = null;
+
+    function formatGdDate(iso) {
+        if (!iso) return "\u2014";
+        var d = new Date(iso);
+        return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    }
+
+    function gdStatusClass(status) {
+        if (status === "Attending") return "status-tag-attending";
+        if (status === "Pending") return "status-tag-pending";
+        if (status === "Declined") return "status-tag-declined";
+        return "";
+    }
+
+    function openGuestDetail(guestId, row) {
+        gdActiveRow = row;
+        fetchWithCsrf("/api/v1/guests/" + guestId)
+            .then(function (res) { return res.json(); })
+            .then(function (resp) {
+                var g = resp.data;
+                document.getElementById("gd-guest-id").value = g.id;
+                document.getElementById("gd-first").value = g.first_name;
+                document.getElementById("gd-last").value = g.last_name;
+                document.getElementById("gd-gender").value = g.gender;
+                document.getElementById("gd-notes").value = g.notes;
+                var isMeEl = document.getElementById("gd-is-me");
+                if (isMeEl) isMeEl.checked = g.is_me;
+
+                var s = g.invitation_summary;
+                var html =
+                    '<div class="guest-detail-section-title">Invitation Summary</div>' +
+                    '<div class="guest-detail-summary">' +
+                        '<div class="stat"><div class="stat-value">' + s.invited + '</div><div class="stat-label">Invited</div></div>' +
+                        '<div class="stat"><div class="stat-value stat-color-attending">' + s.attending + '</div><div class="stat-label stat-color-attending">Attending</div></div>' +
+                        '<div class="stat"><div class="stat-value stat-color-pending">' + s.pending + '</div><div class="stat-label stat-color-pending">Pending</div></div>' +
+                        '<div class="stat"><div class="stat-value stat-color-declined">' + s.declined + '</div><div class="stat-label stat-color-declined">Declined</div></div>' +
+                    '</div>';
+
+                if (g.invitations && g.invitations.length > 0) {
+                    html += '<div class="guest-detail-inv-list">';
+                    g.invitations.forEach(function (inv) {
+                        var eventLabel = escapeHtml(inv.event_name);
+                        if (inv.event_date) eventLabel += ' (' + escapeHtml(inv.event_date) + ')';
+                        html += '<div class="guest-detail-inv-item">' +
+                            '<span class="guest-detail-inv-event">' + eventLabel + '</span>' +
+                            '<span class="status-tag ' + gdStatusClass(inv.status) + '">' + escapeHtml(inv.status) + '</span>' +
+                            '</div>';
+                    });
+                    html += '</div>';
+                }
+
+                html += '<div class="guest-detail-dates">' +
+                    'Created: ' + formatGdDate(g.date_created) + '<br>' +
+                    'Last edited: ' + formatGdDate(g.date_edited) +
+                    '</div>';
+
+                gdMeta.innerHTML = html;
+                gdOverlay.style.display = "flex";
+                document.getElementById("gd-first").focus();
+            })
+            .catch(handleFetchError);
+    }
+
+    function attachGuestDetailListener(btn) {
+        if (!btn) return;
+        btn.addEventListener("click", function () {
+            var guestId = btn.getAttribute("data-guest-id");
+            var row = btn.closest("tr");
+            btn.closest(".kebab-menu").classList.remove("open");
+            openGuestDetail(guestId, row);
+        });
+    }
+
+    if (gdOverlay) {
+        gdClose.addEventListener("click", function () {
+            gdOverlay.style.display = "none";
+        });
+        gdOverlay.addEventListener("click", function (e) {
+            if (e.target === gdOverlay) gdOverlay.style.display = "none";
+        });
+
+        gdForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var guestId = document.getElementById("gd-guest-id").value;
+            var firstName = document.getElementById("gd-first").value.trim();
+            var lastName = document.getElementById("gd-last").value.trim();
+            var gender = document.getElementById("gd-gender").value;
+            var notes = document.getElementById("gd-notes").value.trim();
+            var isMe = document.getElementById("gd-is-me").checked;
+            if (!firstName) return;
+
+            fetchWithCsrf("/api/v1/guests/" + guestId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ first_name: firstName, last_name: lastName, gender: gender, notes: notes, is_me: isMe })
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (resp) {
+                if (gdActiveRow) {
+                    var displayName = lastName ? firstName + " " + lastName : firstName;
+                    var nameCell = gdActiveRow.cells[1];
+                    var genderTag = nameCell.querySelector(".gender-tag");
+                    var tagText = gender === "Male" ? "(M)" : gender === "Female" ? "(F)" : "";
+                    if (genderTag) {
+                        genderTag.textContent = tagText;
+                    }
+                    nameCell.childNodes[0].textContent = displayName + " ";
+                    gdActiveRow.setAttribute("data-gender", gender);
+                    refreshSummary();
+                }
+                gdOverlay.style.display = "none";
+            })
+            .catch(handleFetchError);
+        });
+    }
+
+    document.querySelectorAll(".inv-guest-detail-btn").forEach(attachGuestDetailListener);
 
     // ── Batch select ─────────────────────────────────────────────────────────
 
@@ -1268,11 +1445,6 @@ document.addEventListener("DOMContentLoaded", function () {
             var key = parts[0], dir = parts[1];
 
             rows.sort(function (a, b) {
-                // "Me" rows always on top
-                var aMe = a.getAttribute("data-is-me") === "true" ? 1 : 0;
-                var bMe = b.getAttribute("data-is-me") === "true" ? 1 : 0;
-                if (aMe !== bMe) return bMe - aMe;
-
                 var valA, valB;
                 if (key === "created") {
                     valA = a.getAttribute("data-created") || "";
@@ -1386,74 +1558,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        guestsTable.querySelectorAll(".ge-is-me-btn").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-                var guestId = btn.getAttribute("data-guest-id");
-                var row = btn.closest("tr");
-                var wasMe = row.getAttribute("data-is-me") === "true";
-                var newVal = !wasMe;
-                fetchWithCsrf("/api/v1/guests/" + guestId, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ is_me: newVal })
-                })
-                .then(function (res) { return res.json(); })
-                .then(function (resp) {
-                    var data = resp.data;
-                    // Clear old "Me" badges
-                    guestsTable.querySelectorAll("tr[data-is-me='true']").forEach(function (r) {
-                        r.setAttribute("data-is-me", "false");
-                        var badge = r.querySelector(".badge-me");
-                        if (badge) badge.remove();
-                        var meBtn = r.querySelector(".ge-is-me-btn");
-                        if (meBtn) meBtn.textContent = "This is me";
-                    });
-                    if (data.is_me) {
-                        row.setAttribute("data-is-me", "true");
-                        var firstInput = row.querySelector(".ge-first");
-                        if (firstInput && !row.querySelector(".badge-me")) {
-                            var badge = document.createElement("span");
-                            badge.className = "badge-me";
-                            badge.textContent = "me";
-                            firstInput.parentNode.appendChild(badge);
-                            positionMeBadge(firstInput);
-                        }
-                        btn.textContent = "\u2713 This is me";
-                    } else {
-                        row.setAttribute("data-is-me", "false");
-                        btn.textContent = "This is me";
-                    }
-                    btn.closest(".kebab-menu").classList.remove("open");
-                })
-                .catch(handleFetchError);
-            });
-        });
     }
-
-    // ── Position "me" badges right after first name text ──────────────────────
-    function positionMeBadge(input) {
-        var badge = input.parentNode.querySelector(".badge-me");
-        if (!badge) return;
-        var canvas = document.createElement("canvas");
-        var ctx = canvas.getContext("2d");
-        var style = getComputedStyle(input);
-        ctx.font = style.fontSize + " " + style.fontFamily;
-        var textWidth = ctx.measureText(input.value).width;
-        var paddingLeft = parseFloat(style.paddingLeft) || 0;
-        badge.style.left = (paddingLeft + textWidth + 4) + "px";
-    }
-
-    // Position all existing badges on load
-    document.querySelectorAll(".badge-me").forEach(function (badge) {
-        var input = badge.parentNode.querySelector(".ge-first");
-        if (input) positionMeBadge(input);
-    });
-
-    // Reposition badge when name changes
-    document.querySelectorAll(".ge-first").forEach(function (input) {
-        input.addEventListener("input", function () { positionMeBadge(input); });
-        input.addEventListener("blur", function () { positionMeBadge(input); });
-    });
 
     // ── New Event modal ──────────────────────────────────────────────────────
     var newEventBtn = document.getElementById("open-new-event-btn");

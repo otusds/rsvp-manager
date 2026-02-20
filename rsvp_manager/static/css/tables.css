@@ -142,13 +142,6 @@ td.center, th.center { text-align: center; }
 
 .gender-tag { color: #8e8e93; font-size: 0.78rem; }
 
-.inline-edit-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    position: relative;
-}
-
 .inline-edit {
     flex: 1;
     min-width: 0;

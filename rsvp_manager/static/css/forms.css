@@ -61,6 +61,7 @@
 .modal-form { padding: 0; background: transparent; box-shadow: none; }
 .detail-card-body:has(.modal-form) { background: white; border-radius: 0 0 14px 14px; }
 .modal-form label { font-size: 0.78rem; color: #8e8e93; margin-bottom: 0.25rem; }
+.modal-form .form-field > .ios-toggle { margin-top: 0.25rem; margin-bottom: 0; }
 .modal-form .form-actions { margin-top: 1rem; }
 
 .form-row {

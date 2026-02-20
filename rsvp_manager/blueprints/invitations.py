@@ -13,7 +13,7 @@ def toggle_send_invitation(invitation_id):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify(
             status=invitation.status,
-            date_invited=invitation.date_invited.strftime("%b %d, %Y") if invitation.date_invited else "",
+            date_invited=invitation.date_invited.strftime("%d %b %Y") if invitation.date_invited else "",
             date_invited_iso=invitation.date_invited.isoformat() if invitation.date_invited else "",
         )
     return redirect(url_for("events.event_detail", event_id=invitation.event_id))
@@ -30,7 +30,7 @@ def update_invitation(invitation_id):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify(
             status=invitation.status,
-            date_responded=invitation.date_responded.strftime("%b %d, %Y") if invitation.date_responded else "",
+            date_responded=invitation.date_responded.strftime("%d %b %Y") if invitation.date_responded else "",
             date_responded_iso=invitation.date_responded.isoformat() if invitation.date_responded else "",
         )
     return redirect(url_for("events.event_detail", event_id=invitation.event_id))

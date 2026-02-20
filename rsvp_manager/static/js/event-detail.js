@@ -148,7 +148,8 @@ document.addEventListener("DOMContentLoaded", function () {
             '<td><div class="kebab-wrapper">' +
             '<button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>' +
             '<div class="kebab-menu">' +
-            '<button type="button" class="edit-btn">Edit</button>' +
+            '<button type="button" class="inv-guest-detail-btn" data-guest-id="' + data.guest_id + '">Guest detail</button>' +
+            '<button type="button" class="edit-btn">Invitation detail</button>' +
             '<button type="button" class="kebab-danger remove-btn" data-inv-id="' + data.invitation_id + '">Remove</button>' +
             '</div></div></td>';
 
@@ -158,6 +159,7 @@ document.addEventListener("DOMContentLoaded", function () {
         attachInvNotesListener(tr.querySelector(".inv-notes-input"));
         attachRemoveListener(tr.querySelector(".remove-btn"));
         attachEditListener(tr.querySelector(".edit-btn"));
+        attachGuestDetailListener(tr.querySelector(".inv-guest-detail-btn"));
         window.attachKebabListener(tr.querySelector(".kebab-btn"));
         attachRowSelectListener(tr.querySelector(".row-select"));
 
@@ -284,8 +286,11 @@ document.addEventListener("DOMContentLoaded", function () {
         var isSent = sentCheckbox && sentCheckbox.checked;
         document.getElementById("detail-sent-toggle").checked = isSent;
 
-        document.getElementById("detail-date-invited").textContent = row.getAttribute("data-date-invited") || "\u2014";
-        document.getElementById("detail-date-responded").textContent = row.getAttribute("data-date-responded") || "\u2014";
+        var invitedDate = row.getAttribute("data-date-invited") || "";
+        document.getElementById("detail-date-invited").textContent = invitedDate || "\u2014";
+
+        var respondedDate = row.getAttribute("data-date-responded") || "";
+        document.getElementById("detail-date-responded").textContent = respondedDate || "\u2014";
 
         var statusSelect = document.getElementById("detail-status");
         var statusText = getRowStatus(row);
@@ -296,6 +301,7 @@ document.addEventListener("DOMContentLoaded", function () {
             statusSelect.value = "Pending";
             statusSelect.disabled = true;
         }
+        window.colorStatusSelect(statusSelect);
 
         var notesInput = row.cells[4] && row.cells[4].querySelector(".inv-notes-input");
         document.getElementById("detail-notes").value = notesInput ? notesInput.value : "";
@@ -376,12 +382,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (toggle.checked) {
                     statusSelect.value = "Pending";
                     statusSelect.disabled = false;
-                    document.getElementById("detail-date-invited").textContent =
-                        currentDetailRow.getAttribute("data-date-invited") || "\u2014";
+                    var invDate = currentDetailRow.getAttribute("data-date-invited") || "";
+                    document.getElementById("detail-date-invited").textContent = invDate || "\u2014";
                 } else {
                     statusSelect.disabled = true;
                     document.getElementById("detail-date-invited").textContent = "\u2014";
+                    document.getElementById("detail-date-responded").textContent = "\u2014";
                 }
+                window.colorStatusSelect(statusSelect);
             }, 300);
         });
 
@@ -390,6 +398,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!currentDetailRow) return;
             var invId = currentDetailRow.getAttribute("data-inv-id");
             var newStatus = this.value;
+            window.colorStatusSelect(this);
             var tableSelect = currentDetailRow.cells[3].querySelector(".status-select");
             if (tableSelect) { tableSelect.value = newStatus; window.colorStatusSelect(tableSelect); }
             window.fetchWithCsrf("/api/v1/invitations/" + invId, {
@@ -422,6 +431,52 @@ document.addEventListener("DOMContentLoaded", function () {
                 body: JSON.stringify({ notes: newNotes })
             }).catch(window.handleFetchError);
         });
+
+        // Save button (form submit)
+        document.getElementById("inv-detail-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            if (!currentDetailRow) return;
+
+            var guestId = currentDetailRow.getAttribute("data-guest-id");
+            var invId = currentDetailRow.getAttribute("data-inv-id");
+            var newFirst = document.getElementById("detail-first-name").value.trim();
+            var newLast = document.getElementById("detail-last-name").value.trim();
+            var newGender = document.getElementById("detail-gender").value;
+            var newNotes = document.getElementById("detail-notes").value.trim();
+            if (!newFirst) return;
+
+            // Save guest fields
+            var guestSave = window.fetchWithCsrf("/api/v1/guests/" + guestId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ first_name: newFirst, last_name: newLast, gender: newGender })
+            }).then(function (res) { return res.json(); }).then(function (resp) {
+                if (resp.status === "success" && currentDetailRow) {
+                    var nameCell = currentDetailRow.cells[1];
+                    var genderTag = nameCell.querySelector(".gender-tag");
+                    var tagHTML = genderTag ? " " + genderTag.outerHTML : "";
+                    nameCell.innerHTML = window.escapeHtml(resp.data.full_name) + tagHTML;
+                    var gt = nameCell.querySelector(".gender-tag");
+                    if (gt) gt.textContent = newGender === "Male" ? "(M)" : newGender === "Female" ? "(F)" : "";
+                    currentDetailRow.setAttribute("data-gender", newGender);
+                }
+            });
+
+            // Save invitation notes
+            var invSave = window.fetchWithCsrf("/api/v1/invitations/" + invId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ notes: newNotes })
+            }).then(function () {
+                var tableInput = currentDetailRow.cells[4] && currentDetailRow.cells[4].querySelector(".inv-notes-input");
+                if (tableInput) tableInput.value = newNotes;
+            });
+
+            Promise.all([guestSave, invSave]).then(function () {
+                window.refreshSummary();
+                closeDetail();
+            }).catch(window.handleFetchError);
+        });
     }
 
     // ── Attach edit button listeners ──────────────────────────────────────────
@@ -431,6 +486,131 @@ document.addEventListener("DOMContentLoaded", function () {
             openDetail(btn.closest("tr"));
         });
     }
+
+    // ── Guest Detail overlay (from invitation kebab) ───────────────────────
+
+    var gdOverlay = document.getElementById("guest-detail-overlay");
+    var gdClose = document.getElementById("guest-detail-close");
+    var gdForm = document.getElementById("guest-detail-form");
+    var gdMeta = document.getElementById("gd-meta");
+    var gdActiveRow = null;
+
+    function formatDate(iso) {
+        if (!iso) return "\u2014";
+        var d = new Date(iso);
+        return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    }
+
+    function statusClass(status) {
+        if (status === "Attending") return "status-tag-attending";
+        if (status === "Pending") return "status-tag-pending";
+        if (status === "Declined") return "status-tag-declined";
+        return "";
+    }
+
+    function openGuestDetail(guestId, row) {
+        gdActiveRow = row;
+        window.fetchWithCsrf("/api/v1/guests/" + guestId)
+            .then(function (res) { return res.json(); })
+            .then(function (resp) {
+                var g = resp.data;
+                document.getElementById("gd-guest-id").value = g.id;
+                document.getElementById("gd-first").value = g.first_name;
+                document.getElementById("gd-last").value = g.last_name;
+                document.getElementById("gd-gender").value = g.gender;
+                document.getElementById("gd-notes").value = g.notes;
+                document.getElementById("gd-is-me").checked = g.is_me;
+
+                var s = g.invitation_summary;
+                var html =
+                    '<div class="guest-detail-section-title">Invitation Summary</div>' +
+                    '<div class="guest-detail-summary">' +
+                        '<div class="stat"><div class="stat-value">' + s.invited + '</div><div class="stat-label">Invited</div></div>' +
+                        '<div class="stat"><div class="stat-value stat-color-attending">' + s.attending + '</div><div class="stat-label stat-color-attending">Attending</div></div>' +
+                        '<div class="stat"><div class="stat-value stat-color-pending">' + s.pending + '</div><div class="stat-label stat-color-pending">Pending</div></div>' +
+                        '<div class="stat"><div class="stat-value stat-color-declined">' + s.declined + '</div><div class="stat-label stat-color-declined">Declined</div></div>' +
+                    '</div>';
+
+                if (g.invitations && g.invitations.length > 0) {
+                    html += '<div class="guest-detail-inv-list">';
+                    g.invitations.forEach(function (inv) {
+                        var eventLabel = window.escapeHtml(inv.event_name);
+                        if (inv.event_date) eventLabel += ' (' + window.escapeHtml(inv.event_date) + ')';
+                        html += '<div class="guest-detail-inv-item">' +
+                            '<span class="guest-detail-inv-event">' + eventLabel + '</span>' +
+                            '<span class="status-tag ' + statusClass(inv.status) + '">' + window.escapeHtml(inv.status) + '</span>' +
+                            '</div>';
+                    });
+                    html += '</div>';
+                }
+
+                html += '<div class="guest-detail-dates">' +
+                    'Created: ' + formatDate(g.date_created) + '<br>' +
+                    'Last edited: ' + formatDate(g.date_edited) +
+                    '</div>';
+
+                gdMeta.innerHTML = html;
+                gdOverlay.style.display = "flex";
+                document.getElementById("gd-first").focus();
+            })
+            .catch(window.handleFetchError);
+    }
+
+    function attachGuestDetailListener(btn) {
+        if (!btn) return;
+        btn.addEventListener("click", function () {
+            var guestId = btn.getAttribute("data-guest-id");
+            var row = btn.closest("tr");
+            btn.closest(".kebab-menu").classList.remove("open");
+            openGuestDetail(guestId, row);
+        });
+    }
+
+    if (gdOverlay) {
+        gdClose.addEventListener("click", function () {
+            gdOverlay.style.display = "none";
+        });
+        gdOverlay.addEventListener("click", function (e) {
+            if (e.target === gdOverlay) gdOverlay.style.display = "none";
+        });
+
+        gdForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var guestId = document.getElementById("gd-guest-id").value;
+            var firstName = document.getElementById("gd-first").value.trim();
+            var lastName = document.getElementById("gd-last").value.trim();
+            var gender = document.getElementById("gd-gender").value;
+            var notes = document.getElementById("gd-notes").value.trim();
+            var isMe = document.getElementById("gd-is-me").checked;
+            if (!firstName) return;
+
+            window.fetchWithCsrf("/api/v1/guests/" + guestId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ first_name: firstName, last_name: lastName, gender: gender, notes: notes, is_me: isMe })
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (resp) {
+                if (gdActiveRow) {
+                    var displayName = lastName ? firstName + " " + lastName : firstName;
+                    var nameCell = gdActiveRow.cells[1];
+                    var genderTag = nameCell.querySelector(".gender-tag");
+                    var tagText = gender === "Male" ? "(M)" : gender === "Female" ? "(F)" : "";
+                    if (genderTag) {
+                        genderTag.textContent = tagText;
+                    }
+                    nameCell.childNodes[0].textContent = displayName + " ";
+                    gdActiveRow.setAttribute("data-gender", gender);
+                    window.refreshSummary();
+                }
+                gdOverlay.style.display = "none";
+            })
+            .catch(window.handleFetchError);
+        });
+    }
+
+    // ── Attach all guest detail listeners ─────────────────────────────────
+    document.querySelectorAll(".inv-guest-detail-btn").forEach(attachGuestDetailListener);
 
     // ── Batch select ─────────────────────────────────────────────────────────
 

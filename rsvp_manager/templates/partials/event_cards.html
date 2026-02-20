@@ -17,7 +17,7 @@
     </div>
     <div class="event-row-right">
         <span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span>
-        <span class="event-row-date">{{ event.date.strftime('%b %d, %Y') }}</span>
+        <span class="event-row-date">{{ event.date.strftime('%d %b %Y') }}</span>
     </div>
     <div class="event-row-stats">
         <span class="stat">{{ total }} invited</span>

@@ -11,7 +11,7 @@ GUESTS_PER_PAGE = 50
 
 def get_user_guests(user_id, page=1):
     return Guest.query.filter_by(user_id=user_id).order_by(
-        Guest.is_me.desc(), Guest.last_name, Guest.first_name
+        Guest.last_name, Guest.first_name
     ).paginate(page=page, per_page=GUESTS_PER_PAGE, error_out=False)
 
 

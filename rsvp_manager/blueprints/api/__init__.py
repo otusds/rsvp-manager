@@ -71,6 +71,18 @@ def serialize_event(event):
 
 
 def serialize_guest(guest):
+    attending = sum(1 for inv in guest.invitations if inv.status == "Attending")
+    pending = sum(1 for inv in guest.invitations if inv.status == "Pending")
+    declined = sum(1 for inv in guest.invitations if inv.status == "Declined")
+    invited = attending + pending + declined
+    invitations = []
+    for inv in guest.invitations:
+        if inv.status != "Not Sent":
+            invitations.append({
+                "event_name": inv.event.name,
+                "event_date": inv.event.date.strftime("%d/%m/%Y") if inv.event.date else "",
+                "status": inv.status,
+            })
     return {
         "id": guest.id,
         "first_name": guest.first_name,
@@ -80,6 +92,14 @@ def serialize_guest(guest):
         "notes": guest.notes or "",
         "full_name": guest.full_name,
         "date_created": guest.date_created.isoformat() if guest.date_created else None,
+        "date_edited": guest.date_edited.isoformat() if guest.date_edited else None,
+        "invitation_summary": {
+            "invited": invited,
+            "attending": attending,
+            "pending": pending,
+            "declined": declined,
+        },
+        "invitations": invitations,
     }
 
 
@@ -91,9 +111,9 @@ def serialize_invitation(inv):
         "status": inv.status,
         "channel": inv.channel or "",
         "notes": inv.notes or "",
-        "date_invited": inv.date_invited.strftime("%b %d, %Y") if inv.date_invited else "",
+        "date_invited": inv.date_invited.strftime("%d %b %Y") if inv.date_invited else "",
         "date_invited_iso": inv.date_invited.isoformat() if inv.date_invited else "",
-        "date_responded": inv.date_responded.strftime("%b %d, %Y") if inv.date_responded else "",
+        "date_responded": inv.date_responded.strftime("%d %b %Y") if inv.date_responded else "",
         "date_responded_iso": inv.date_responded.isoformat() if inv.date_responded else "",
         "guest": {
             "id": inv.guest.id,
@@ -116,9 +136,9 @@ def serialize_invitation_brief(inv):
         "status": inv.status,
         "channel": inv.channel or "",
         "notes": inv.notes or "",
-        "date_invited": inv.date_invited.strftime("%b %d, %Y") if inv.date_invited else "",
+        "date_invited": inv.date_invited.strftime("%d %b %Y") if inv.date_invited else "",
         "date_invited_iso": inv.date_invited.isoformat() if inv.date_invited else "",
-        "date_responded": inv.date_responded.strftime("%b %d, %Y") if inv.date_responded else "",
+        "date_responded": inv.date_responded.strftime("%d %b %Y") if inv.date_responded else "",
         "date_responded_iso": inv.date_responded.isoformat() if inv.date_responded else "",
     }
 
