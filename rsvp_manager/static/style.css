@@ -489,7 +489,7 @@ td select {
 .guest-list-controls .search-input { flex: 1; min-width: 120px; }
 
 /* ── Past events section ──────────────────────────────────────────────────── */
-.past-events-section { margin-top: 1.5rem; }
+.past-events-section { margin-top: 1.5rem; display: none; }
 
 .past-events-toggle {
     display: flex; align-items: center; gap: 0.5rem; cursor: pointer;
@@ -499,6 +499,8 @@ td select {
 
 .past-events-toggle .collapse-icon { transition: transform 0.2s; font-size: 0.7rem; }
 .past-events-toggle.open .collapse-icon { transform: rotate(90deg); }
+
+#past-event-grid { display: none; }
 
 .past-events-count {
     font-size: 0.78rem; font-weight: 500;
@@ -510,12 +512,24 @@ td select {
 
 .guest-db-search { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(0,0,0,0.06); }
 
+.guest-db-search-row {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.guest-db-search-row input {
+    flex: 1;
+}
+
 .guest-db-search input {
     width: 100%; padding: 0.45rem 0.7rem; border: 1px solid rgba(0,0,0,0.1);
     border-radius: 10px; font-size: 0.88rem; background: rgba(118,118,128,0.08); font-family: inherit;
 }
 
 .guest-db-search input:focus { outline: none; border-color: #007aff; box-shadow: 0 0 0 3px rgba(0,122,255,0.15); }
+
+#guest-db-filters { margin-top: 0.4rem; }
 
 .guest-db-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
@@ -539,6 +553,12 @@ td select {
     padding: 0.75rem 1rem; border-top: 1px solid rgba(0,0,0,0.06);
     background: white; border-radius: 0 0 14px 14px;
     display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem;
+}
+
+.modal-hint {
+    font-size: 0.72rem;
+    color: #aeaeb2;
+    font-weight: 400;
 }
 
 /* ── Add New Guest modal table ────────────────────────────────────────────── */
@@ -596,11 +616,21 @@ td select {
     -webkit-tap-highlight-color: transparent;
 }
 
+.collapsible-header h2 {
+    margin-bottom: 0;
+    flex: 1;
+}
+
 .collapse-icon {
     transition: transform 0.2s;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 0.7rem;
     color: #8e8e93;
+    line-height: 1;
+    width: 1em;
+    height: 1em;
 }
 
 .collapsible.collapsed .collapse-icon { transform: rotate(-90deg); }
@@ -917,6 +947,7 @@ td select {
 /* ── Checkbox & status ─────────────────────────────────────────────────────── */
 td.center, th.center { text-align: center; }
 .col-check { width: 36px; }
+.col-multiselect { display: none; }
 
 .sent-checkbox {
     width: 18px;
@@ -1162,7 +1193,7 @@ td.center, th.center { text-align: center; }
     background: rgba(0,0,0,0.25);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    display: flex;
+    display: none;
     align-items: flex-end;
     justify-content: center;
     z-index: 200;
@@ -1187,6 +1218,11 @@ td.center, th.center { text-align: center; }
     background: white;
     border-radius: 14px 14px 0 0;
     border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.modal-title {
+    font-weight: 600;
+    font-size: 1.05rem;
 }
 
 .detail-name-form {
@@ -1334,7 +1370,7 @@ td.center, th.center { text-align: center; }
 
 /* ── Batch bar ────────────────────────────────────────────────────────────── */
 .batch-bar {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;

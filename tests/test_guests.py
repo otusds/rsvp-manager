@@ -47,7 +47,7 @@ class TestDeleteGuest:
             db.session.commit()
             gid = other_guest.id
         r = logged_in_client.post(f"/guest/{gid}/delete")
-        assert r.status_code == 302
+        assert r.status_code == 403
         with test_app.app_context():
             assert db.session.get(Guest,gid) is not None  # not deleted
 
@@ -120,13 +120,13 @@ class TestGuestGenderAPI:
         assert r.status_code == 403
 
     def test_update_gender_arbitrary_value(self, logged_in_client, sample_guest, test_app):
-        # No validation — any string is accepted
+        # Validation rejects invalid gender values
         r = logged_in_client.post(f"/api/guest/{sample_guest}/gender",
             json={"gender": "InvalidGender"})
-        assert r.status_code == 200
+        assert r.status_code == 400
         with test_app.app_context():
             g = db.session.get(Guest,sample_guest)
-            assert g.gender == "InvalidGender"
+            assert g.gender == "Female"  # unchanged
 
 
 class TestGuestNotesAPI:

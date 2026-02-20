@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block logo %}<a href="{{ url_for('home') }}" class="logo back-link">&larr; All Events</a>{% endblock %}
+{% block logo %}<a href="{{ url_for('events.home') }}" class="logo back-link">&larr; All Events</a>{% endblock %}
 
 {% block content %}
 <div class="header-row">
@@ -9,18 +9,19 @@
 
 <!-- Event Details -->
 <div class="collapsible section collapsed">
-    <div class="collapsible-header" onclick="if(event.target.closest('.kebab-wrapper'))return;this.parentElement.classList.toggle('collapsed')">
+    <div class="collapsible-header">
         <span class="collapse-icon">▼</span>
-        <h2 style="margin-bottom:0;flex:1">Event Details</h2>
-        <div class="kebab-wrapper" style="margin-left:auto">
+        <h2>Event Details</h2>
+        <div class="kebab-wrapper">
             <button type="button" class="icon-btn" id="page-menu-btn" aria-label="More">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
             </button>
             <div class="kebab-menu kebab-menu-right" id="page-menu">
                 <button type="button" id="open-edit-event-btn">Edit Event</button>
-                <a href="{{ url_for('export_event_guests', event_id=event.id) }}">Export to Excel</a>
-                <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" class="inline"
-                      onsubmit="return confirm('Delete this event and all its invitations?');">
+                <a href="{{ url_for('exports.export_event_guests', event_id=event.id) }}">Export to Excel</a>
+                <form method="POST" action="{{ url_for('events.delete_event', event_id=event.id) }}" class="inline"
+                      data-confirm="Delete this event and all its invitations?">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="kebab-danger">Delete Event</button>
                 </form>
             </div>
@@ -75,9 +76,9 @@
 {% set male_inv = all_inv|selectattr('guest.gender', 'equalto', 'Male')|list %}
 {% set female_inv = all_inv|selectattr('guest.gender', 'equalto', 'Female')|list %}
 <div class="collapsible section">
-    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
+    <div class="collapsible-header">
         <span class="collapse-icon">▼</span>
-        <h2 style="margin-bottom:0">Attendance Summary</h2>
+        <h2>Attendance Summary</h2>
     </div>
     <div class="collapsible-body">
         {% set att_count = all_inv|selectattr('status', 'equalto', 'Attending')|list|length %}
@@ -151,9 +152,9 @@
 
 <!-- Guest List -->
 <div class="collapsible section">
-    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
+    <div class="collapsible-header">
         <span class="collapse-icon">▼</span>
-        <h2 id="guest-list-heading" style="margin-bottom:0">Guest List ({{ event.invitations|length }})</h2>
+        <h2 id="guest-list-heading">Guest List ({{ event.invitations|length }})</h2>
     </div>
     <div class="collapsible-body">
         <div class="sticky-controls">
@@ -177,7 +178,7 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
                 </button>
                 <div class="kebab-menu kebab-menu-right">
-                    <a href="{{ url_for('export_event_guests', event_id=event.id) }}">Export to Excel</a>
+                    <a href="{{ url_for('exports.export_event_guests', event_id=event.id) }}">Export to Excel</a>
                     <button type="button" id="toggle-multiselect-btn">Multi-Select</button>
                 </div>
             </div>
@@ -282,9 +283,9 @@
 
 <!-- Seating Plan -->
 <div class="collapsible section collapsed">
-    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
+    <div class="collapsible-header">
         <span class="collapse-icon">▼</span>
-        <h2 style="margin-bottom:0">Seating Plan</h2>
+        <h2>Seating Plan</h2>
     </div>
     <div class="collapsible-body">
         <p class="empty" style="padding:1.5rem 1rem;">In development</p>
@@ -295,17 +296,17 @@
 <div class="detail-overlay" id="guest-db-overlay" style="display:none">
     <div class="detail-card guest-db-card">
         <div class="detail-card-header">
-            <span style="font-weight:600;font-size:1.05rem">Add from Guest Database</span>
+            <span class="modal-title">Add from Guest Database</span>
             <button type="button" class="detail-close" id="guest-db-close">&times;</button>
         </div>
         <div class="guest-db-search">
-            <div style="display:flex;gap:0.4rem;align-items:center">
-                <input type="search" id="guest-db-search-input" placeholder="Search guests..." style="flex:1">
+            <div class="guest-db-search-row">
+                <input type="search" id="guest-db-search-input" placeholder="Search guests...">
                 <button type="button" class="icon-btn" id="guest-db-filter-btn" title="Filters">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
                 </button>
             </div>
-            <div class="table-controls" id="guest-db-filters" style="display:none;margin-top:0.4rem">
+            <div class="table-controls" id="guest-db-filters" style="display:none">
                 <select class="filter-select" id="guest-db-gender-filter">
                     <option value="">All Genders</option>
                     <option value="Male">Male</option>
@@ -333,7 +334,7 @@
 <div class="detail-overlay" id="add-guest-overlay" style="display:none">
     <div class="detail-card guest-db-card">
         <div class="detail-card-header">
-            <span style="font-weight:600;font-size:1.05rem">Add New Guests</span>
+            <span class="modal-title">Add New Guests</span>
             <button type="button" class="detail-close" id="add-guest-close">&times;</button>
         </div>
         <div class="add-guest-table-wrapper">
@@ -351,7 +352,7 @@
             </table>
         </div>
         <div class="guest-db-footer">
-            <span style="font-size:0.78rem;color:#8e8e93">Press Enter to add another guest</span>
+            <span class="modal-hint">Press Enter to add another guest</span>
             <button type="button" class="btn" id="add-guest-save-btn">Save</button>
         </div>
     </div>
@@ -409,11 +410,12 @@
 <div class="detail-overlay" id="edit-event-overlay" style="display:none">
     <div class="detail-card">
         <div class="detail-card-header">
-            <span style="font-weight:600;font-size:1.05rem">Edit Event</span>
+            <span class="modal-title">Edit Event</span>
             <button type="button" class="detail-close" id="edit-event-close">&times;</button>
         </div>
         <div class="detail-card-body">
-            <form method="POST" action="{{ url_for('edit_event', event_id=event.id) }}" class="form modal-form">
+            <form method="POST" action="{{ url_for('events.edit_event', event_id=event.id) }}" class="form modal-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ee-name">Event Name</label>

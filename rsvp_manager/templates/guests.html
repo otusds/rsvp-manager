@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block logo %}<a href="{{ url_for('home') }}" class="logo back-link" id="back-link">&larr; All Events</a>{% endblock %}
+{% block logo %}<a href="{{ url_for('events.home') }}" class="logo back-link" id="back-link">&larr; All Events</a>{% endblock %}
 
 {% block content %}
 <div class="sticky-controls">
@@ -19,7 +19,7 @@
                 <div class="kebab-menu-search">
                     <input type="search" id="guest-search" placeholder="Search guests...">
                 </div>
-                <a href="{{ url_for('export_guests') }}">Export to Excel</a>
+                <a href="{{ url_for('exports.export_guests') }}">Export to Excel</a>
             </div>
         </div>
     </div>
@@ -75,8 +75,9 @@
                     <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>
                     <div class="kebab-menu">
                         <button type="button" class="ge-is-me-btn" data-guest-id="{{ guest.id }}">{{ '✓ This is me' if guest.is_me else 'This is me' }}</button>
-                        <form method="POST" action="{{ url_for('delete_guest', guest_id=guest.id) }}" class="inline"
-                              onsubmit="return confirm('Delete this guest? They will also be removed from all events.');">
+                        <form method="POST" action="{{ url_for('guests.delete_guest', guest_id=guest.id) }}" class="inline"
+                              data-confirm="Delete this guest? They will also be removed from all events.">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="kebab-danger">Delete</button>
                         </form>
                     </div>
@@ -96,7 +97,7 @@
 <div class="detail-overlay" id="add-guest-overlay" style="display:none">
     <div class="detail-card guest-db-card">
         <div class="detail-card-header">
-            <span style="font-weight:600;font-size:1.05rem">Add New Guests</span>
+            <span class="modal-title">Add New Guests</span>
             <button type="button" class="detail-close" id="add-guest-close">&times;</button>
         </div>
         <div class="add-guest-table-wrapper">
@@ -114,7 +115,7 @@
             </table>
         </div>
         <div class="guest-db-footer">
-            <span style="font-size:0.78rem;color:#8e8e93">Press Enter to add another guest</span>
+            <span class="modal-hint">Press Enter to add another guest</span>
             <button type="button" class="btn" id="add-guest-save-btn">Save</button>
         </div>
     </div>

@@ -1,17 +1,14 @@
 import pytest
-from app import app, db, User, Event, Guest, Invitation
+from app import db, User, Event, Guest, Invitation
+from rsvp_manager import create_app
+from rsvp_manager.config import TestConfig
 from werkzeug.security import generate_password_hash
 from datetime import date, datetime
 
 
 @pytest.fixture()
 def test_app():
-    app.config["TESTING"] = True
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"  # in-memory
-    app.config["SECRET_KEY"] = "test-secret"
-    app.config["WTF_CSRF_ENABLED"] = False
-    app.config["SERVER_NAME"] = "localhost"
-
+    app = create_app(TestConfig)
     with app.app_context():
         db.create_all()
         yield app

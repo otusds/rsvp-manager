@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <h1>403 — Forbidden</h1>
+    <p>You don't have permission to access this resource.</p>
+    <a href="{{ url_for('events.home') }}" class="btn">Back to Events</a>
+</div>
+{% endblock %}

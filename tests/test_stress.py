@@ -132,7 +132,7 @@ class TestEditGuest:
         r = logged_in_client.post(f"/guest/{gid}/edit", data={
             "first_name": "Hacked", "gender": "Male"
         })
-        assert r.status_code == 302
+        assert r.status_code == 403
         with test_app.app_context():
             assert db.session.get(Guest,gid).first_name == "Other"  # unchanged
 
@@ -319,12 +319,11 @@ class TestAddEventEdgeCases:
             "name": "Neg Target", "event_type": "Dinner",
             "date": "2026-08-01", "target_attendees": "-5"
         })
-        # Negative integer converts fine via request.form.get(..., type=int)
+        # Negative target is treated as None by validation
         assert r.status_code == 302
         with test_app.app_context():
             e = Event.query.filter_by(name="Neg Target").first()
-            # -5 is truthy so `or None` doesn't kick in
-            assert e.target_attendees == -5
+            assert e.target_attendees is None
 
 
 # ── Seed data idempotency ───────────────────────────────────────────────────
@@ -366,7 +365,7 @@ class TestCrossUserIsolation:
             db.session.commit()
             eid = e.id
         r = logged_in_client.get(f"/event/{eid}")
-        assert r.status_code == 302  # redirected, not shown
+        assert r.status_code == 403
 
     def test_cannot_export_other_users_event(self, logged_in_client, test_app, user2):
         with test_app.app_context():
@@ -396,7 +395,7 @@ class TestCrossUserIsolation:
             db.session.commit()
             gid = g.id
         r = logged_in_client.post(f"/guest/{gid}/delete")
-        assert r.status_code == 302
+        assert r.status_code == 403
         with test_app.app_context():
             assert db.session.get(Guest,gid) is not None
 

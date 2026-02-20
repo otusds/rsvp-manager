@@ -1,5 +1,32 @@
 document.addEventListener("DOMContentLoaded", function () {
 
+    // ── CSRF helper ─────────────────────────────────────────────────────────
+    var csrfToken = (document.querySelector('meta[name="csrf-token"]') || {}).getAttribute
+        ? document.querySelector('meta[name="csrf-token"]').getAttribute("content") || ""
+        : "";
+
+    function fetchWithCsrf(url, options) {
+        options = options || {};
+        options.headers = options.headers || {};
+        options.headers["X-CSRFToken"] = csrfToken;
+        return fetch(url, options);
+    }
+
+    // ── Collapsible sections ────────────────────────────────────────────────
+    document.querySelectorAll(".collapsible-header").forEach(function (header) {
+        header.addEventListener("click", function (e) {
+            if (e.target.closest(".kebab-wrapper")) return;
+            header.parentElement.classList.toggle("collapsed");
+        });
+    });
+
+    // ── Confirm dialogs ─────────────────────────────────────────────────────
+    document.querySelectorAll("form[data-confirm]").forEach(function (form) {
+        form.addEventListener("submit", function (e) {
+            if (!confirm(form.getAttribute("data-confirm"))) e.preventDefault();
+        });
+    });
+
     // ── Table search ─────────────────────────────────────────────────────────
     document.querySelectorAll(".search-input[data-table]").forEach(function (input) {
         var tableId = input.getAttribute("data-table");
@@ -310,7 +337,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var displayName = data.last_name ? data.first_name + " " + data.last_name : data.first_name;
         var isSent = data.status !== "Not Sent";
         var multiCol = document.querySelector(".col-multiselect");
-        var multiShow = multiCol && multiCol.style.display !== "none" ? "" : "none";
+        var multiShow = multiCol && multiCol.style.display !== "none" ? "table-cell" : "none";
 
         var tr = document.createElement("tr");
         tr.setAttribute("data-inv-id", data.invitation_id);
@@ -377,7 +404,7 @@ document.addEventListener("DOMContentLoaded", function () {
         checkbox.addEventListener("change", function () {
             var invId = checkbox.getAttribute("data-inv-id");
             var row = checkbox.closest("tr");
-            fetch("/invitation/" + invId + "/send", {
+            fetchWithCsrf("/invitation/" + invId + "/send", {
                 method: "POST",
                 headers: { "X-Requested-With": "XMLHttpRequest" }
             })
@@ -416,7 +443,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var row = select.closest("tr");
             var formData = new FormData();
             formData.append("status", select.value);
-            fetch("/invitation/" + invId + "/update", {
+            fetchWithCsrf("/invitation/" + invId + "/update", {
                 method: "POST",
                 headers: { "X-Requested-With": "XMLHttpRequest" },
                 body: formData
@@ -439,7 +466,7 @@ document.addEventListener("DOMContentLoaded", function () {
             clearTimeout(timer);
             timer = setTimeout(function () {
                 var invId = input.getAttribute("data-inv-id");
-                fetch("/api/invitation/" + invId + "/field", {
+                fetchWithCsrf("/api/invitation/" + invId + "/field", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ field: "notes", value: input.value })
@@ -454,7 +481,7 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.addEventListener("click", function () {
             if (!confirm("Remove this guest from the event?")) return;
             var invId = btn.getAttribute("data-inv-id");
-            fetch("/invitation/" + invId + "/delete", {
+            fetchWithCsrf("/invitation/" + invId + "/delete", {
                 method: "POST",
                 headers: { "X-Requested-With": "XMLHttpRequest" }
             })
@@ -537,7 +564,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var newFirst = document.getElementById("detail-first-name").value.trim();
             var newLast = document.getElementById("detail-last-name").value.trim();
             if (!newFirst) return;
-            fetch("/api/guest/" + guestId + "/name", {
+            fetchWithCsrf("/api/guest/" + guestId + "/name", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ first_name: newFirst, last_name: newLast })
@@ -561,7 +588,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!currentDetailRow) return;
             var guestId = currentDetailRow.getAttribute("data-guest-id");
             var newGender = this.value;
-            fetch("/api/guest/" + guestId + "/gender", {
+            fetchWithCsrf("/api/guest/" + guestId + "/gender", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ gender: newGender })
@@ -611,7 +638,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (tableSelect) { tableSelect.value = newStatus; colorStatusSelect(tableSelect); }
             var formData = new FormData();
             formData.append("status", newStatus);
-            fetch("/invitation/" + invId + "/update", {
+            fetchWithCsrf("/invitation/" + invId + "/update", {
                 method: "POST",
                 headers: { "X-Requested-With": "XMLHttpRequest" },
                 body: formData
@@ -634,7 +661,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var newNotes = this.value;
             var tableInput = currentDetailRow.cells[4] && currentDetailRow.cells[4].querySelector(".inv-notes-input");
             if (tableInput) tableInput.value = newNotes;
-            fetch("/api/invitation/" + invId + "/field", {
+            fetchWithCsrf("/api/invitation/" + invId + "/field", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ field: "notes", value: newNotes })
@@ -708,7 +735,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 var isSent = checkbox && checkbox.checked;
 
                 if (action === "send" && !isSent) {
-                    return fetch("/invitation/" + invId + "/send", {
+                    return fetchWithCsrf("/invitation/" + invId + "/send", {
                         method: "POST",
                         headers: { "X-Requested-With": "XMLHttpRequest" }
                     }).then(function (res) { return res.json(); }).then(function (data) {
@@ -721,7 +748,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         attachStatusListener(statusCell.querySelector(".status-select"));
                     });
                 } else if (action === "unsend" && isSent) {
-                    return fetch("/invitation/" + invId + "/send", {
+                    return fetchWithCsrf("/invitation/" + invId + "/send", {
                         method: "POST",
                         headers: { "X-Requested-With": "XMLHttpRequest" }
                     }).then(function (res) { return res.json(); }).then(function () {
@@ -737,7 +764,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     var newStatus = action.charAt(0).toUpperCase() + action.slice(1);
                     // If not yet sent, send first then update status
                     var sendFirst = !isSent
-                        ? fetch("/invitation/" + invId + "/send", {
+                        ? fetchWithCsrf("/invitation/" + invId + "/send", {
                             method: "POST",
                             headers: { "X-Requested-With": "XMLHttpRequest" }
                           }).then(function (res) { return res.json(); }).then(function (data) {
@@ -753,7 +780,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     return sendFirst.then(function () {
                         var formData = new FormData();
                         formData.append("status", newStatus);
-                        return fetch("/invitation/" + invId + "/update", {
+                        return fetchWithCsrf("/invitation/" + invId + "/update", {
                             method: "POST",
                             headers: { "X-Requested-With": "XMLHttpRequest" },
                             body: formData
@@ -765,7 +792,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         row.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
                     });
                 } else if (action === "remove") {
-                    return fetch("/invitation/" + invId + "/delete", {
+                    return fetchWithCsrf("/invitation/" + invId + "/delete", {
                         method: "POST",
                         headers: { "X-Requested-With": "XMLHttpRequest" }
                     }).then(function (res) { return res.json(); }).then(function (data) {
@@ -819,7 +846,7 @@ document.addEventListener("DOMContentLoaded", function () {
             clearTimeout(notesTimer);
             notesTimer = setTimeout(function () {
                 var evId = eventNotesArea.getAttribute("data-event-id");
-                fetch("/api/event/" + evId + "/notes", {
+                fetchWithCsrf("/api/event/" + evId + "/notes", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ notes: eventNotesArea.value })
@@ -943,7 +970,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (eventId) {
                 // Event page: create guests and add as invitations
-                fetch("/api/event/" + eventId + "/bulk-create-and-invite", {
+                fetchWithCsrf("/api/event/" + eventId + "/bulk-create-and-invite", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ guests: guests })
@@ -961,7 +988,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .catch(handleFetchError);
             } else {
                 // Guest DB page: create guests only, reload to get inline-edit rows
-                fetch("/api/guests/bulk-create", {
+                fetchWithCsrf("/api/guests/bulk-create", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ guests: guests })
@@ -1026,7 +1053,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (btn && panel) {
             btn.addEventListener("click", function () {
                 var hidden = panel.style.display === "none";
-                panel.style.display = hidden ? "" : "none";
+                panel.style.display = hidden ? "flex" : "none";
                 btn.classList.toggle("active", hidden);
             });
         }
@@ -1065,7 +1092,7 @@ document.addEventListener("DOMContentLoaded", function () {
         toggleMultiBtn.addEventListener("click", function () {
             var cols = document.querySelectorAll(".col-multiselect");
             var showing = cols.length > 0 && cols[0].style.display !== "none";
-            cols.forEach(function (el) { el.style.display = showing ? "none" : ""; });
+            cols.forEach(function (el) { el.style.display = showing ? "none" : "table-cell"; });
             // Close the kebab menu
             var menu = toggleMultiBtn.closest(".kebab-menu");
             if (menu) menu.classList.remove("open");
@@ -1151,7 +1178,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var menu = selectFromDbBtn.closest(".kebab-menu");
             if (menu) menu.classList.remove("open");
             if (!eventId) return;
-            fetch("/api/event/" + eventId + "/available-guests")
+            fetchWithCsrf("/api/event/" + eventId + "/available-guests")
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     guestDbList.innerHTML = "";
@@ -1208,7 +1235,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             if (ids.length === 0) { guestDbOverlay.style.display = "none"; return; }
 
-            fetch("/api/event/" + eventId + "/bulk-add", {
+            fetchWithCsrf("/api/event/" + eventId + "/bulk-add", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ guest_ids: ids })
@@ -1303,7 +1330,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!firstName) return;
             row.setAttribute("data-first", firstName.toLowerCase());
             row.setAttribute("data-last", lastName.toLowerCase());
-            fetch("/api/guest/" + guestId + "/name", {
+            fetchWithCsrf("/api/guest/" + guestId + "/name", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ first_name: firstName, last_name: lastName })
@@ -1338,7 +1365,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 var guestId = select.getAttribute("data-guest-id");
                 var row = select.closest("tr");
                 row.setAttribute("data-gender", select.value);
-                fetch("/api/guest/" + guestId + "/gender", {
+                fetchWithCsrf("/api/guest/" + guestId + "/gender", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ gender: select.value })
@@ -1352,7 +1379,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 clearTimeout(timer);
                 timer = setTimeout(function () {
                     var guestId = input.getAttribute("data-guest-id");
-                    fetch("/api/guest/" + guestId + "/notes", {
+                    fetchWithCsrf("/api/guest/" + guestId + "/notes", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ notes: input.value.trim() })
@@ -1367,7 +1394,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 var row = btn.closest("tr");
                 var wasMe = row.getAttribute("data-is-me") === "true";
                 var newVal = !wasMe;
-                fetch("/api/guest/" + guestId + "/is-me", {
+                fetchWithCsrf("/api/guest/" + guestId + "/is-me", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ is_me: newVal })
@@ -1538,7 +1565,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (pastSection) {
             if (pastCards.length > 0) {
-                pastSection.style.display = "";
+                pastSection.style.display = "block";
                 pastCount.textContent = pastCards.length;
                 pastCards.forEach(function (c) { pastGrid.appendChild(c); });
             } else {
@@ -1547,13 +1574,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         var totalVisible = futureCards.length + pastCards.length;
-        if (noResults) noResults.style.display = totalVisible === 0 ? "" : "none";
+        if (noResults) noResults.style.display = totalVisible === 0 ? "block" : "none";
     }
 
     if (pastToggle) {
         pastToggle.addEventListener("click", function () {
             var isOpen = pastToggle.classList.toggle("open");
-            pastGrid.style.display = isOpen ? "" : "none";
+            pastGrid.style.display = isOpen ? "flex" : "none";
         });
     }
 

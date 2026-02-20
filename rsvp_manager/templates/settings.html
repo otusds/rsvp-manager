@@ -9,10 +9,13 @@
     <h2>Sample Data</h2>
     <p class="settings-desc">Load demo events and guests to explore the app, or reset your account back to the original sample data.</p>
     <div class="settings-actions">
-        <form method="POST" action="{{ url_for('load_sample_data') }}">
+        <form method="POST" action="{{ url_for('settings.load_sample_data') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn">Load Sample Data</button>
         </form>
-        <form method="POST" action="{{ url_for('reset_sample_data') }}" onsubmit="return confirm('This will delete ALL your events, guests and invitations, then load fresh sample data. Continue?')">
+        <form method="POST" action="{{ url_for('settings.reset_sample_data') }}"
+              data-confirm="This will delete ALL your events, guests and invitations, then load fresh sample data. Continue?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-danger">Reset to Sample Data</button>
         </form>
     </div>

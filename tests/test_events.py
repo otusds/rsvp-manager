@@ -103,8 +103,8 @@ class TestAddEvent:
         r = logged_in_client.post("/event/add", data={
             "name": long_name, "event_type": "Dinner", "date": "2026-08-01"
         })
-        # Should succeed (db.String(200) may truncate silently or error)
-        assert r.status_code in (302, 500)
+        # Validation rejects names > 200 chars
+        assert r.status_code == 400
 
     def test_add_event_special_chars(self, logged_in_client, test_app):
         r = logged_in_client.post("/event/add", data={
@@ -151,7 +151,7 @@ class TestEditEvent:
         r = logged_in_client.post(f"/event/{eid}/edit", data={
             "name": "Hacked", "event_type": "Party", "date": "2026-07-01"
         })
-        assert r.status_code == 302
+        assert r.status_code == 403
         with test_app.app_context():
             e = db.session.get(Event,eid)
             assert e.name == "Other Event"  # unchanged
@@ -196,7 +196,7 @@ class TestDeleteEvent:
             db.session.commit()
             eid = other_event.id
         r = logged_in_client.post(f"/event/{eid}/delete")
-        assert r.status_code == 302
+        assert r.status_code == 403
         with test_app.app_context():
             assert db.session.get(Event,eid) is not None  # not deleted
 
@@ -227,7 +227,7 @@ class TestEventDetail:
             db.session.commit()
             eid = other_event.id
         r = logged_in_client.get(f"/event/{eid}")
-        assert r.status_code == 302  # redirects to home
+        assert r.status_code == 403
 
     def test_event_detail_nonexistent(self, logged_in_client):
         r = logged_in_client.get("/event/99999")

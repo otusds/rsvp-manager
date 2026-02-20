@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <h1>400 — Bad Request</h1>
+    <p>The request could not be understood.</p>
+    <a href="{{ url_for('events.home') }}" class="btn">Back to Events</a>
+</div>
+{% endblock %}

@@ -17,7 +17,7 @@
                 <div class="kebab-menu-search">
                     <input type="search" id="event-search" placeholder="Search events...">
                 </div>
-                <a href="{{ url_for('export_events') }}">Export to Excel</a>
+                <a href="{{ url_for('exports.export_events') }}">Export to Excel</a>
             </div>
         </div>
     </div>
@@ -50,7 +50,7 @@
     {% for event in events %}
     {% set attending = event.invitations|selectattr('status', 'equalto', 'Attending')|list|length %}
     {% set total = event.invitations|length %}
-    <a href="{{ url_for('event_detail', event_id=event.id) }}" class="event-row-card"
+    <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="event-row-card"
        data-name="{{ event.name|lower }}"
        data-type="{{ event.event_type }}"
        data-date="{{ event.date.isoformat() }}"
@@ -101,11 +101,12 @@
 <div class="detail-overlay" id="new-event-overlay" style="display:none">
     <div class="detail-card">
         <div class="detail-card-header">
-            <span style="font-weight:600;font-size:1.05rem">New Event</span>
+            <span class="modal-title">New Event</span>
             <button type="button" class="detail-close" id="new-event-close">&times;</button>
         </div>
         <div class="detail-card-body">
-            <form method="POST" action="{{ url_for('add_event') }}" class="form modal-form" id="new-event-form">
+            <form method="POST" action="{{ url_for('events.add_event') }}" class="form modal-form" id="new-event-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ne-name">Event Name</label>
