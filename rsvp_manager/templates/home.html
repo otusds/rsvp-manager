@@ -46,42 +46,8 @@
     </select>
 </div>
 
-<div class="event-list" id="event-grid">
-    {% for event in events %}
-    {% set attending = event.invitations|selectattr('status', 'equalto', 'Attending')|list|length %}
-    {% set total = event.invitations|length %}
-    <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="event-row-card"
-       data-name="{{ event.name|lower }}"
-       data-type="{{ event.event_type }}"
-       data-date="{{ event.date.isoformat() }}"
-       data-created="{{ event.date_created.isoformat() if event.date_created else '' }}"
-       data-location="{{ (event.location or '')|lower }}"
-       data-guests="{{ total }}"
-       data-past="{{ 'true' if event.date < today_date else 'false' }}">
-        <div class="event-row-left">
-            <span class="event-row-name">{{ event.name }}</span>
-            {% if event.location %}
-            <span class="event-row-location">{{ event.location }}</span>
-            {% endif %}
-        </div>
-        <div class="event-row-right">
-            <span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span>
-            <span class="event-row-date">{{ event.date.strftime('%b %d, %Y') }}</span>
-        </div>
-        <div class="event-row-stats">
-            <span class="stat">{{ total }} invited</span>
-            <span class="stat stat-attending">{{ attending }} attending</span>
-        </div>
-        {% if event.target_attendees %}
-        <div class="event-row-progress">
-            <div class="progress-bar-mini">
-                <div class="progress-bar-mini-fill{% if attending > event.target_attendees %} over-target{% endif %}" style="width: {{ [((attending / event.target_attendees) * 100)|round|int, 100]|min }}%"></div>
-            </div>
-            <span class="progress-bar-mini-value{% if attending > event.target_attendees %} over-target{% elif attending == event.target_attendees %} at-target{% endif %}">{% if attending > event.target_attendees %}⚠ {% elif attending == event.target_attendees %}✓ {% endif %}{{ attending }}/{{ event.target_attendees }}</span>
-        </div>
-        {% endif %}
-    </a>
-    {% endfor %}
+<div class="event-list" id="event-grid" data-page="{{ pagination.page }}" data-pages="{{ pagination.pages }}">
+    {% include "partials/event_cards.html" %}
 </div>
 
 <div class="past-events-section" id="past-events-section" style="display:none">
@@ -94,6 +60,10 @@
 </div>
 
 <p class="empty" id="no-results" style="display:none;">No events match your filters.</p>
+
+<div class="scroll-loader" id="scroll-loader" style="display:none">
+    <div class="scroll-spinner"></div>
+</div>
 {% else %}
 <p class="empty">No events yet. Create your first event!</p>
 {% endif %}

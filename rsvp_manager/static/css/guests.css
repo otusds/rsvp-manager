@@ -1,0 +1,22 @@
+/* ── Guest list controls bar ──────────────────────────────────────────────── */
+.guest-list-controls { display: flex; gap: 0.4rem; margin-bottom: 0.6rem; align-items: center; }
+.guest-list-controls .search-input { flex: 1; min-width: 120px; }
+
+/* ── Past events section ──────────────────────────────────────────────────── */
+.past-events-section { margin-top: 1.5rem; display: none; }
+
+.past-events-toggle {
+    display: flex; align-items: center; gap: 0.5rem; cursor: pointer;
+    padding: 0.5rem 0; font-size: 0.92rem; font-weight: 600; color: #8e8e93;
+    -webkit-tap-highlight-color: transparent; user-select: none;
+}
+
+.past-events-toggle .collapse-icon { transition: transform 0.2s; font-size: 0.7rem; }
+.past-events-toggle.open .collapse-icon { transform: rotate(90deg); }
+
+#past-event-grid { display: none; }
+
+.past-events-count {
+    font-size: 0.78rem; font-weight: 500;
+    background: rgba(118,118,128,0.12); padding: 0.1rem 0.45rem; border-radius: 10px;
+}

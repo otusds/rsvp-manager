@@ -1,0 +1,31 @@
+{% for guest in guests %}
+<tr data-guest-id="{{ guest.id }}"
+    data-gender="{{ guest.gender }}"
+    data-first="{{ guest.first_name|lower }}"
+    data-last="{{ (guest.last_name or '')|lower }}"
+    data-created="{{ guest.date_created.isoformat() if guest.date_created else '' }}"
+    data-is-me="{{ 'true' if guest.is_me else 'false' }}">
+    <td class="inline-edit-cell"><input type="text" class="inline-edit ge-first" value="{{ guest.first_name }}" data-guest-id="{{ guest.id }}">{% if guest.is_me %}<span class="badge-me">me</span>{% endif %}</td>
+    <td><input type="text" class="inline-edit ge-last" value="{{ guest.last_name or '' }}" data-guest-id="{{ guest.id }}"></td>
+    <td>
+        <select class="inline-select ge-gender" data-guest-id="{{ guest.id }}">
+            <option value="Male"{{ ' selected' if guest.gender == 'Male' }}>Male</option>
+            <option value="Female"{{ ' selected' if guest.gender == 'Female' }}>Female</option>
+        </select>
+    </td>
+    <td class="col-hide-mobile"><input type="text" class="inline-edit ge-notes" value="{{ guest.notes or '' }}" placeholder="Add notes about guest" data-guest-id="{{ guest.id }}"></td>
+    <td>
+        <div class="kebab-wrapper">
+            <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>
+            <div class="kebab-menu">
+                <button type="button" class="ge-is-me-btn" data-guest-id="{{ guest.id }}">{{ '✓ This is me' if guest.is_me else 'This is me' }}</button>
+                <form method="POST" action="{{ url_for('guests.delete_guest', guest_id=guest.id) }}" class="inline"
+                      data-confirm="Delete this guest? They will also be removed from all events.">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="kebab-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </td>
+</tr>
+{% endfor %}

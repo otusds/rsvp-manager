@@ -404,12 +404,14 @@ document.addEventListener("DOMContentLoaded", function () {
         checkbox.addEventListener("change", function () {
             var invId = checkbox.getAttribute("data-inv-id");
             var row = checkbox.closest("tr");
-            fetchWithCsrf("/invitation/" + invId + "/send", {
-                method: "POST",
-                headers: { "X-Requested-With": "XMLHttpRequest" }
+            fetchWithCsrf("/api/v1/invitations/" + invId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ toggle_send: true })
             })
             .then(function (res) { return res.json(); })
-            .then(function (data) {
+            .then(function (resp) {
+                var data = resp.data;
                 var statusCell = row.cells[3];
                 if (data.status === "Not Sent") {
                     checkbox.checked = false;
@@ -441,15 +443,14 @@ document.addEventListener("DOMContentLoaded", function () {
             colorStatusSelect(select);
             var invId = select.getAttribute("data-inv-id");
             var row = select.closest("tr");
-            var formData = new FormData();
-            formData.append("status", select.value);
-            fetchWithCsrf("/invitation/" + invId + "/update", {
-                method: "POST",
-                headers: { "X-Requested-With": "XMLHttpRequest" },
-                body: formData
+            fetchWithCsrf("/api/v1/invitations/" + invId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: select.value })
             })
             .then(function (res) { return res.json(); })
-            .then(function (data) {
+            .then(function (resp) {
+                var data = resp.data;
                 row.setAttribute("data-date-responded", data.date_responded || "");
                 row.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
                 refreshSummary();
@@ -466,10 +467,10 @@ document.addEventListener("DOMContentLoaded", function () {
             clearTimeout(timer);
             timer = setTimeout(function () {
                 var invId = input.getAttribute("data-inv-id");
-                fetchWithCsrf("/api/invitation/" + invId + "/field", {
-                    method: "POST",
+                fetchWithCsrf("/api/v1/invitations/" + invId, {
+                    method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ field: "notes", value: input.value })
+                    body: JSON.stringify({ notes: input.value })
                 }).catch(handleFetchError);
             }, 400);
         });
@@ -481,13 +482,9 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.addEventListener("click", function () {
             if (!confirm("Remove this guest from the event?")) return;
             var invId = btn.getAttribute("data-inv-id");
-            fetchWithCsrf("/invitation/" + invId + "/delete", {
-                method: "POST",
-                headers: { "X-Requested-With": "XMLHttpRequest" }
-            })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                if (data.ok) {
+            fetchWithCsrf("/api/v1/invitations/" + invId, { method: "DELETE" })
+            .then(function (res) {
+                if (res.ok) {
                     var row = btn.closest("tr");
                     if (currentDetailRow === row) closeDetail();
                     row.remove();
@@ -564,18 +561,18 @@ document.addEventListener("DOMContentLoaded", function () {
             var newFirst = document.getElementById("detail-first-name").value.trim();
             var newLast = document.getElementById("detail-last-name").value.trim();
             if (!newFirst) return;
-            fetchWithCsrf("/api/guest/" + guestId + "/name", {
-                method: "POST",
+            fetchWithCsrf("/api/v1/guests/" + guestId, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ first_name: newFirst, last_name: newLast })
             })
             .then(function (res) { return res.json(); })
-            .then(function (data) {
-                if (data.ok && currentDetailRow) {
+            .then(function (resp) {
+                if (resp.status === "success" && currentDetailRow) {
                     var nameCell = currentDetailRow.cells[1];
                     var genderTag = nameCell.querySelector(".gender-tag");
                     var tagHTML = genderTag ? " " + genderTag.outerHTML : "";
-                    nameCell.innerHTML = escapeHtml(data.full_name) + tagHTML;
+                    nameCell.innerHTML = escapeHtml(resp.data.full_name) + tagHTML;
                 }
             })
             .catch(handleFetchError);
@@ -588,8 +585,8 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!currentDetailRow) return;
             var guestId = currentDetailRow.getAttribute("data-guest-id");
             var newGender = this.value;
-            fetchWithCsrf("/api/guest/" + guestId + "/gender", {
-                method: "POST",
+            fetchWithCsrf("/api/v1/guests/" + guestId, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ gender: newGender })
             })
@@ -636,16 +633,15 @@ document.addEventListener("DOMContentLoaded", function () {
             var newStatus = this.value;
             var tableSelect = currentDetailRow.cells[3].querySelector(".status-select");
             if (tableSelect) { tableSelect.value = newStatus; colorStatusSelect(tableSelect); }
-            var formData = new FormData();
-            formData.append("status", newStatus);
-            fetchWithCsrf("/invitation/" + invId + "/update", {
-                method: "POST",
-                headers: { "X-Requested-With": "XMLHttpRequest" },
-                body: formData
+            fetchWithCsrf("/api/v1/invitations/" + invId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: newStatus })
             })
             .then(function (res) { return res.json(); })
-            .then(function (data) {
+            .then(function (resp) {
                 if (!currentDetailRow) return;
+                var data = resp.data;
                 currentDetailRow.setAttribute("data-date-responded", data.date_responded || "");
                 currentDetailRow.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
                 document.getElementById("detail-date-responded").textContent = data.date_responded || "\u2014";
@@ -661,10 +657,10 @@ document.addEventListener("DOMContentLoaded", function () {
             var newNotes = this.value;
             var tableInput = currentDetailRow.cells[4] && currentDetailRow.cells[4].querySelector(".inv-notes-input");
             if (tableInput) tableInput.value = newNotes;
-            fetchWithCsrf("/api/invitation/" + invId + "/field", {
-                method: "POST",
+            fetchWithCsrf("/api/v1/invitations/" + invId, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ field: "notes", value: newNotes })
+                body: JSON.stringify({ notes: newNotes })
             }).catch(handleFetchError);
         });
     }
@@ -735,10 +731,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 var isSent = checkbox && checkbox.checked;
 
                 if (action === "send" && !isSent) {
-                    return fetchWithCsrf("/invitation/" + invId + "/send", {
-                        method: "POST",
-                        headers: { "X-Requested-With": "XMLHttpRequest" }
-                    }).then(function (res) { return res.json(); }).then(function (data) {
+                    return fetchWithCsrf("/api/v1/invitations/" + invId, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ toggle_send: true })
+                    }).then(function (res) { return res.json(); }).then(function (resp) {
+                        var data = resp.data;
                         checkbox.checked = true;
                         row.setAttribute("data-sent", "true");
                         row.setAttribute("data-date-invited", data.date_invited);
@@ -748,9 +746,10 @@ document.addEventListener("DOMContentLoaded", function () {
                         attachStatusListener(statusCell.querySelector(".status-select"));
                     });
                 } else if (action === "unsend" && isSent) {
-                    return fetchWithCsrf("/invitation/" + invId + "/send", {
-                        method: "POST",
-                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    return fetchWithCsrf("/api/v1/invitations/" + invId, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ toggle_send: true })
                     }).then(function (res) { return res.json(); }).then(function () {
                         checkbox.checked = false;
                         row.setAttribute("data-sent", "false");
@@ -764,10 +763,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     var newStatus = action.charAt(0).toUpperCase() + action.slice(1);
                     // If not yet sent, send first then update status
                     var sendFirst = !isSent
-                        ? fetchWithCsrf("/invitation/" + invId + "/send", {
-                            method: "POST",
-                            headers: { "X-Requested-With": "XMLHttpRequest" }
-                          }).then(function (res) { return res.json(); }).then(function (data) {
+                        ? fetchWithCsrf("/api/v1/invitations/" + invId, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ toggle_send: true })
+                          }).then(function (res) { return res.json(); }).then(function (resp) {
+                            var data = resp.data;
                             checkbox.checked = true;
                             row.setAttribute("data-sent", "true");
                             row.setAttribute("data-date-invited", data.date_invited);
@@ -778,25 +779,22 @@ document.addEventListener("DOMContentLoaded", function () {
                           })
                         : Promise.resolve();
                     return sendFirst.then(function () {
-                        var formData = new FormData();
-                        formData.append("status", newStatus);
-                        return fetchWithCsrf("/invitation/" + invId + "/update", {
-                            method: "POST",
-                            headers: { "X-Requested-With": "XMLHttpRequest" },
-                            body: formData
+                        return fetchWithCsrf("/api/v1/invitations/" + invId, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ status: newStatus })
                         });
-                    }).then(function (res) { return res.json(); }).then(function (data) {
+                    }).then(function (res) { return res.json(); }).then(function (resp) {
+                        var data = resp.data;
                         var sel = row.cells[3].querySelector(".status-select");
                         if (sel) { sel.value = newStatus; colorStatusSelect(sel); }
                         row.setAttribute("data-date-responded", data.date_responded || "");
                         row.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
                     });
                 } else if (action === "remove") {
-                    return fetchWithCsrf("/invitation/" + invId + "/delete", {
-                        method: "POST",
-                        headers: { "X-Requested-With": "XMLHttpRequest" }
-                    }).then(function (res) { return res.json(); }).then(function (data) {
-                        if (data.ok) {
+                    return fetchWithCsrf("/api/v1/invitations/" + invId, { method: "DELETE" })
+                    .then(function (res) {
+                        if (res.ok) {
                             if (currentDetailRow === row) closeDetail();
                             row.remove();
                         }
@@ -846,8 +844,8 @@ document.addEventListener("DOMContentLoaded", function () {
             clearTimeout(notesTimer);
             notesTimer = setTimeout(function () {
                 var evId = eventNotesArea.getAttribute("data-event-id");
-                fetchWithCsrf("/api/event/" + evId + "/notes", {
-                    method: "POST",
+                fetchWithCsrf("/api/v1/events/" + evId, {
+                    method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ notes: eventNotesArea.value })
                 })
@@ -970,15 +968,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (eventId) {
                 // Event page: create guests and add as invitations
-                fetchWithCsrf("/api/event/" + eventId + "/bulk-create-and-invite", {
+                fetchWithCsrf("/api/v1/events/" + eventId + "/invitations/bulk-create", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ guests: guests })
                 })
                 .then(function (r) { return r.json(); })
-                .then(function (data) {
+                .then(function (resp) {
                     var tbody = document.querySelector("#invitations-table tbody");
-                    data.added.forEach(function (g) {
+                    resp.data.forEach(function (g) {
                         var tr = buildInvitationRow(g);
                         tbody.appendChild(tr);
                     });
@@ -988,14 +986,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 .catch(handleFetchError);
             } else {
                 // Guest DB page: create guests only, reload to get inline-edit rows
-                fetchWithCsrf("/api/guests/bulk-create", {
+                fetchWithCsrf("/api/v1/guests/bulk", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ guests: guests })
                 })
                 .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data.added.length > 0) location.reload();
+                .then(function (resp) {
+                    if (resp.data.length > 0) location.reload();
                     else addGuestOverlay.style.display = "none";
                 })
                 .catch(handleFetchError);
@@ -1178,11 +1176,11 @@ document.addEventListener("DOMContentLoaded", function () {
             var menu = selectFromDbBtn.closest(".kebab-menu");
             if (menu) menu.classList.remove("open");
             if (!eventId) return;
-            fetchWithCsrf("/api/event/" + eventId + "/available-guests")
+            fetchWithCsrf("/api/v1/events/" + eventId + "/available-guests")
                 .then(function (r) { return r.json(); })
-                .then(function (data) {
+                .then(function (resp) {
                     guestDbList.innerHTML = "";
-                    data.guests.forEach(function (g) {
+                    resp.data.forEach(function (g) {
                         var name = g.last_name ? g.first_name + " " + g.last_name : g.first_name;
                         var div = document.createElement("div");
                         div.className = "guest-db-item" + (g.already_invited ? " disabled" : "");
@@ -1235,15 +1233,15 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             if (ids.length === 0) { guestDbOverlay.style.display = "none"; return; }
 
-            fetchWithCsrf("/api/event/" + eventId + "/bulk-add", {
+            fetchWithCsrf("/api/v1/events/" + eventId + "/invitations/bulk", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ guest_ids: ids })
             })
             .then(function (r) { return r.json(); })
-            .then(function (data) {
+            .then(function (resp) {
                 var tbody = document.querySelector("#invitations-table tbody");
-                data.added.forEach(function (g) {
+                resp.data.forEach(function (g) {
                     var tr = buildInvitationRow(g);
                     tbody.appendChild(tr);
                 });
@@ -1330,8 +1328,8 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!firstName) return;
             row.setAttribute("data-first", firstName.toLowerCase());
             row.setAttribute("data-last", lastName.toLowerCase());
-            fetchWithCsrf("/api/guest/" + guestId + "/name", {
-                method: "POST",
+            fetchWithCsrf("/api/v1/guests/" + guestId, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ first_name: firstName, last_name: lastName })
             }).catch(handleFetchError);
@@ -1365,8 +1363,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 var guestId = select.getAttribute("data-guest-id");
                 var row = select.closest("tr");
                 row.setAttribute("data-gender", select.value);
-                fetchWithCsrf("/api/guest/" + guestId + "/gender", {
-                    method: "POST",
+                fetchWithCsrf("/api/v1/guests/" + guestId, {
+                    method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ gender: select.value })
                 }).catch(handleFetchError);
@@ -1379,8 +1377,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 clearTimeout(timer);
                 timer = setTimeout(function () {
                     var guestId = input.getAttribute("data-guest-id");
-                    fetchWithCsrf("/api/guest/" + guestId + "/notes", {
-                        method: "POST",
+                    fetchWithCsrf("/api/v1/guests/" + guestId, {
+                        method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ notes: input.value.trim() })
                     }).catch(handleFetchError);
@@ -1394,13 +1392,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 var row = btn.closest("tr");
                 var wasMe = row.getAttribute("data-is-me") === "true";
                 var newVal = !wasMe;
-                fetchWithCsrf("/api/guest/" + guestId + "/is-me", {
-                    method: "POST",
+                fetchWithCsrf("/api/v1/guests/" + guestId, {
+                    method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ is_me: newVal })
                 })
                 .then(function (res) { return res.json(); })
-                .then(function (data) {
+                .then(function (resp) {
+                    var data = resp.data;
                     // Clear old "Me" badges
                     guestsTable.querySelectorAll("tr[data-is-me='true']").forEach(function (r) {
                         r.setAttribute("data-is-me", "false");

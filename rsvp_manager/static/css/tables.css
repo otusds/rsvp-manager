@@ -1,0 +1,314 @@
+/* ── Tables ────────────────────────────────────────────────────────────────── */
+.table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
+}
+
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: white;
+    border-radius: 12px;
+    font-size: 0.88rem;
+}
+
+th, td {
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+
+th {
+    background: rgba(0,0,0,0.02);
+    font-weight: 600;
+    font-size: 0.73rem;
+    text-transform: uppercase;
+    color: #8e8e93;
+    letter-spacing: 0.04em;
+    position: sticky;
+    top: 0;
+}
+
+
+th:first-child { border-radius: 12px 0 0 0; }
+th:last-child { border-radius: 0 12px 0 0; }
+tr:last-child td { border-bottom: none; }
+
+/* ── Table controls ────────────────────────────────────────────────────────── */
+.table-controls {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    padding: 0.45rem 0.75rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    flex: 1;
+    min-width: 140px;
+    background: rgba(118,118,128,0.12);
+    color: #1c1c1e;
+    transition: box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    height: 14px;
+    width: 14px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%238e8e93'/%3E%3Cpath d='M5 5l6 6M11 5l-6 6' stroke='white' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+    cursor: pointer;
+}
+
+.search-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.2);
+}
+
+.search-input::placeholder { color: #8e8e93; }
+
+.filter-select,
+.sort-select {
+    padding: 0.45rem 1.6rem 0.45rem 0.6rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    background: rgba(118,118,128,0.12);
+    color: #1c1c1e;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%238e8e93' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.55rem center;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+}
+
+.filter-select:focus,
+.sort-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.2);
+}
+
+/* ── Sort indicators ───────────────────────────────────────────────────────── */
+th[data-sort] { cursor: pointer; user-select: none; position: relative; padding-right: 1.4rem; }
+th[data-sort]:hover { background: rgba(0,0,0,0.04); }
+th[data-sort]::after { content: "\2195\FE0E"; position: absolute; right: 0.3rem; opacity: 0.3; font-size: 0.85rem; top: 50%; transform: translateY(-50%); }
+th.sort-asc::after { content: "\2191\FE0E"; opacity: 0.7; }
+th.sort-desc::after { content: "\2193\FE0E"; opacity: 0.7; }
+
+/* ── Checkbox & status ─────────────────────────────────────────────────────── */
+td.center, th.center { text-align: center; }
+.col-check { width: 36px; }
+.col-multiselect { display: none; }
+
+.sent-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #34c759;
+}
+
+.status-not-sent {
+    color: #8e8e93;
+    font-style: italic;
+    font-size: 0.82rem;
+}
+
+
+.inline-input {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    width: 100%;
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.inline-input:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+}
+
+.gender-tag { color: #8e8e93; font-size: 0.78rem; }
+
+.inline-edit-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    position: relative;
+}
+
+.inline-edit {
+    flex: 1;
+    min-width: 0;
+    padding: 0.3rem 0.4rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    color: #1c1c1e;
+    background: transparent;
+    transition: border-color 0.15s, background 0.15s;
+    box-sizing: border-box;
+}
+.inline-edit:hover { border-color: rgba(0,0,0,0.1); }
+.inline-edit:focus {
+    outline: none;
+    border-color: #007aff;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+}
+.inline-edit::placeholder { color: #c7c7cc; }
+
+.inline-select {
+    padding: 0.3rem 1.3rem 0.3rem 0.4rem;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    background: white;
+    color: #1c1c1e;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%238e8e93' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.35rem center;
+    cursor: pointer;
+}
+
+/* Gender select: invisible until hovered/focused (like text inputs) */
+.inline-select.ge-gender {
+    border-color: transparent;
+    background: transparent;
+    background-image: none;
+    transition: border-color 0.15s, background 0.15s;
+}
+.inline-select.ge-gender:hover {
+    border-color: rgba(0,0,0,0.1);
+    background: white;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%238e8e93' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.35rem center;
+}
+.inline-select.ge-gender:focus {
+    outline: none;
+    border-color: #007aff;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%238e8e93' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.35rem center;
+}
+
+.inline-select:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── Color-coded status selects ───────────────────────────────────────────── */
+.status-select[value="Attending"],
+select.status-attending {
+    background-color: rgba(52,199,89,0.12);
+    color: #248a3d;
+    font-weight: 600;
+    border-color: rgba(52,199,89,0.2);
+}
+
+.status-select[value="Pending"],
+select.status-pending {
+    background-color: rgba(255,149,0,0.12);
+    color: #c77d00;
+    font-weight: 600;
+    border-color: rgba(255,149,0,0.2);
+}
+
+.status-select[value="Declined"],
+select.status-declined {
+    background-color: rgba(255,59,48,0.12);
+    color: #d70015;
+    font-weight: 600;
+    border-color: rgba(255,59,48,0.2);
+}
+
+/* ── Kebab (3-dot) menu ──────────────────────────────────────────────────── */
+.kebab-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.kebab-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.3rem 0.45rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: #8e8e93;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    letter-spacing: 1px;
+}
+
+.kebab-btn:hover { background: rgba(0,0,0,0.05); }
+.kebab-btn:active { background: rgba(0,0,0,0.08); }
+
+.kebab-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    min-width: 130px;
+    z-index: 50;
+    overflow: hidden;
+}
+
+.kebab-menu.open { display: block; }
+
+.kebab-menu-right {
+    right: 0;
+    left: auto;
+    min-width: 200px;
+}
+
+.kebab-menu a,
+.kebab-menu button {
+    display: block;
+    width: 100%;
+    padding: 0.55rem 0.9rem;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 0.85rem;
+    color: #1c1c1e;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.1s;
+    font-family: inherit;
+}
+
+.kebab-menu a:hover,
+.kebab-menu button:hover { background: rgba(0,0,0,0.04); }
+
+.kebab-menu .kebab-danger { color: #ff3b30; }
+
+/* ── Row select checkbox ──────────────────────────────────────────────────── */
+.row-select {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #007aff;
+}

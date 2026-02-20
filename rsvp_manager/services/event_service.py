@@ -4,8 +4,13 @@ from rsvp_manager.extensions import db
 from rsvp_manager.models import Event, Guest, Invitation, EVENT_TYPES
 
 
-def get_user_events(user_id):
-    return Event.query.filter_by(user_id=user_id).order_by(Event.date).all()
+EVENTS_PER_PAGE = 20
+
+
+def get_user_events(user_id, page=1):
+    return Event.query.filter_by(user_id=user_id).order_by(Event.date).paginate(
+        page=page, per_page=EVENTS_PER_PAGE, error_out=False
+    )
 
 
 def get_owned_event_or_404(event_id, user_id):

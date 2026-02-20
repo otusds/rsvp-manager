@@ -10,6 +10,12 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(200), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
+    api_token = db.Column(db.String(64), unique=True, nullable=True, index=True)
+    email_verified = db.Column(db.Boolean, default=False, nullable=False)
+    email_verification_token = db.Column(db.String(64), nullable=True)
+    email_verification_sent_at = db.Column(db.DateTime, nullable=True)
+    password_reset_token = db.Column(db.String(64), nullable=True)
+    password_reset_sent_at = db.Column(db.DateTime, nullable=True)
     events = db.relationship("Event", backref="user", cascade="all, delete-orphan")
     guests = db.relationship("Guest", backref="user", cascade="all, delete-orphan")
 

@@ -4,8 +4,10 @@ Flask==3.1.2
 flask-login==0.6.3
 flask-migrate==4.1.0
 flask-sqlalchemy==3.1.1
+flask-mail==0.10.0
 flask-wtf==1.2.2
 gunicorn==23.0.0
+sentry-sdk[flask]==2.22.0
 itsdangerous==2.2.0
 openpyxl==3.1.5
 psycopg2-binary==2.9.10

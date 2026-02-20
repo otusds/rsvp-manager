@@ -10,11 +10,17 @@ bp = Blueprint("events", __name__)
 @bp.route("/")
 @login_required
 def home():
-    events = event_service.get_user_events(current_user.id)
+    page = request.args.get("page", 1, type=int)
+    pagination = event_service.get_user_events(current_user.id, page=page)
+    if request.args.get("partial"):
+        return render_template(
+            "partials/event_cards.html", events=pagination.items,
+            today_date=date.today()
+        )
     me_exists = event_service.check_me_exists(current_user.id)
     return render_template(
-        "home.html", events=events, event_types=EVENT_TYPES,
-        today_date=date.today(), me_exists=me_exists
+        "home.html", events=pagination.items, event_types=EVENT_TYPES,
+        today_date=date.today(), me_exists=me_exists, pagination=pagination
     )
 
 

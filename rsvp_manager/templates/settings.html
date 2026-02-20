@@ -6,6 +6,22 @@
 </div>
 
 <div class="section">
+    <h2>Email</h2>
+    <p class="settings-desc">{{ current_user.email }}</p>
+    {% if current_user.email_verified %}
+    <p class="settings-desc" style="color: #2d8a4e;">Verified</p>
+    {% else %}
+    <p class="settings-desc" style="color: #b35900;">Not verified</p>
+    <div class="settings-actions">
+        <form method="POST" action="{{ url_for('auth.resend_verification') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-small">Resend Verification Email</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<div class="section">
     <h2>Sample Data</h2>
     <p class="settings-desc">Load demo events and guests to explore the app, or reset your account back to the original sample data.</p>
     <div class="settings-actions">
@@ -17,6 +33,25 @@
               data-confirm="This will delete ALL your events, guests and invitations, then load fresh sample data. Continue?">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-danger">Reset to Sample Data</button>
+        </form>
+    </div>
+</div>
+
+<div class="section">
+    <h2>API Token</h2>
+    <p class="settings-desc">Use this token to authenticate API requests with <code>Authorization: Bearer &lt;token&gt;</code>.</p>
+    {% if api_token %}
+    <div class="api-token-display">
+        <code id="api-token-value">{{ api_token }}</code>
+        <button type="button" class="btn btn-small" onclick="navigator.clipboard.writeText(document.getElementById('api-token-value').textContent)">Copy</button>
+    </div>
+    {% else %}
+    <p class="settings-desc">No token generated yet.</p>
+    {% endif %}
+    <div class="settings-actions">
+        <form method="POST" action="{{ url_for('settings.regenerate_token') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn">{{ 'Regenerate Token' if api_token else 'Generate Token' }}</button>
         </form>
     </div>
 </div>

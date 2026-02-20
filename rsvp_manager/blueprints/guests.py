@@ -8,8 +8,11 @@ bp = Blueprint("guests", __name__)
 @bp.route("/guests")
 @login_required
 def guests():
-    all_guests = guest_service.get_user_guests(current_user.id)
-    return render_template("guests.html", guests=all_guests)
+    page = request.args.get("page", 1, type=int)
+    pagination = guest_service.get_user_guests(current_user.id, page=page)
+    if request.args.get("partial"):
+        return render_template("partials/guest_rows.html", guests=pagination.items)
+    return render_template("guests.html", guests=pagination.items, pagination=pagination)
 
 
 @bp.route("/guest/add", methods=["POST"])

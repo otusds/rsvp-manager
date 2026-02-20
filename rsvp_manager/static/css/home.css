@@ -1,0 +1,159 @@
+/* ── Event list (1 card per row) ───────────────────────────────────────────── */
+.event-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.event-row-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 0 1rem;
+    background: white;
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    text-decoration: none;
+    color: #1c1c1e;
+    box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.event-row-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.event-row-card:active {
+    transform: translateY(0);
+    background: #f2f2f7;
+    box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
+}
+
+.event-row-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.event-row-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1c1c1e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.event-row-location {
+    font-size: 0.8rem;
+    color: #8e8e93;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.event-row-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.2rem;
+    flex-shrink: 0;
+}
+
+.event-row-date {
+    font-size: 0.78rem;
+    color: #8e8e93;
+    white-space: nowrap;
+}
+
+.event-row-stats {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+    margin-top: 0.3rem;
+    border-top: 1px solid rgba(0,0,0,0.04);
+}
+
+.stat {
+    font-size: 0.78rem;
+    color: #8e8e93;
+}
+
+.stat-attending { color: #34c759; font-weight: 600; }
+
+/* ── Type badges ───────────────────────────────────────────────────────────── */
+.badge {
+    display: inline-block;
+    padding: 0.12rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: white;
+    background: #8e8e93;
+    white-space: nowrap;
+}
+
+.badge-dinner     { background: #af52de; }
+.badge-party      { background: #ff9500; }
+.badge-weekend    { background: #34c759; }
+.badge-hunt       { background: #ff2d55; }
+.badge-corporate  { background: #007aff; }
+.badge-other      { background: #8e8e93; }
+
+.status-pending {
+    background: rgba(255,149,0,0.12);
+    color: #c77d00;
+}
+
+.status-attending {
+    background: rgba(52,199,89,0.12);
+    color: #248a3d;
+}
+
+.status-declined {
+    background: rgba(255,59,48,0.12);
+    color: #d70015;
+}
+
+/* ── Mini progress bar (event cards) ────────────────────────────────────── */
+.progress-bar-mini {
+    flex: 1;
+    height: 6px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar-mini-fill {
+    height: 100%;
+    background: #34c759;
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+.progress-bar-mini-fill.over-target { background: #ff9500; }
+
+/* ── Event card progress row ───────────────────────────────────────────── */
+.event-row-progress {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 0.35rem;
+}
+
+.progress-bar-mini-value {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #1c1c1e;
+    white-space: nowrap;
+}
+
+.progress-bar-mini-value.at-target { color: #248a3d; }
+.progress-bar-mini-value.over-target { color: #c77d00; }
