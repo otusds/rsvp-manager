@@ -1,0 +1,565 @@
+{% extends "base.html" %}
+
+{% block logo %}<a href="{{ url_for('events.home') }}" class="logo back-link">&larr; All Events</a>{% endblock %}
+
+{% block content %}
+<div class="header-row">
+    <h1>{{ event.name }}</h1>
+</div>
+
+<!-- Event Details -->
+<div class="collapsible section collapsed">
+    <div class="collapsible-header">
+        <span class="collapse-icon">▼</span>
+        <h2>Event Details</h2>
+        <div class="kebab-wrapper">
+            <button type="button" class="icon-btn" id="page-menu-btn" aria-label="More">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+            </button>
+            <div class="kebab-menu kebab-menu-right" id="page-menu">
+                <button type="button" id="open-edit-event-btn">Edit Event</button>
+                <a href="{{ url_for('exports.export_event_guests', event_id=event.id) }}">Export to Excel</a>
+                <form method="POST" action="{{ url_for('events.delete_event', event_id=event.id) }}" class="inline"
+                      data-confirm="Delete this event and all its invitations?">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="kebab-danger">Delete Event</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="collapsible-body">
+        <div class="event-info-details">
+            <div class="event-info-row">
+                <span class="event-info-label">Event Date</span>
+                <span class="event-info-value">{{ event.date.strftime('%d %B %Y') }}</span>
+            </div>
+            {% if event.location %}
+            <div class="event-info-row">
+                <span class="event-info-label">Location</span>
+                <span class="event-info-value">{{ event.location }}</span>
+            </div>
+            {% endif %}
+            <div class="event-info-row">
+                <span class="event-info-label">Event Type</span>
+                <span class="event-info-value">
+                    <span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span>
+                </span>
+            </div>
+            {% if event.target_attendees %}
+            <div class="event-info-row">
+                <span class="event-info-label">Target Attendees</span>
+                <span class="event-info-value">{{ event.target_attendees }}</span>
+            </div>
+            {% endif %}
+            {% if event.date_created %}
+            <div class="event-info-row">
+                <span class="event-info-label">Date Created</span>
+                <span class="event-info-value">{{ event.date_created.strftime('%d %B %Y') }}</span>
+            </div>
+            {% endif %}
+            <div class="event-info-row">
+                <span class="event-info-label">Last Edited</span>
+                <span class="event-info-value">{{ event.date_edited.strftime('%d %B %Y at %H:%M') if event.date_edited else '—' }}</span>
+            </div>
+        </div>
+        <div class="event-details-notes">
+            <span class="event-info-label">Event Notes</span>
+            <textarea id="event-notes" class="event-notes-textarea"
+                      data-event-id="{{ event.id }}" placeholder="Add event notes...">{{ event.notes or '' }}</textarea>
+            <span class="save-indicator" id="notes-save-indicator">Saved</span>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Summary -->
+{% set all_inv = event.invitations %}
+{% set male_inv = all_inv|selectattr('guest.gender', 'equalto', 'Male')|list %}
+{% set female_inv = all_inv|selectattr('guest.gender', 'equalto', 'Female')|list %}
+<div class="collapsible section">
+    <div class="collapsible-header">
+        <span class="collapse-icon">▼</span>
+        <h2>Attendance Summary</h2>
+    </div>
+    <div class="collapsible-body">
+        {% set att_count = all_inv|selectattr('status', 'equalto', 'Attending')|list|length %}
+        {% set pend_count = all_inv|selectattr('status', 'equalto', 'Pending')|list|length %}
+        {% set decl_count = all_inv|selectattr('status', 'equalto', 'Declined')|list|length %}
+        {% set invited_count = att_count + pend_count + decl_count %}
+        <div class="summary-bars" id="summary-bars" data-target="{{ event.target_attendees or 0 }}">
+            {% if event.target_attendees %}
+            {% set target_pct = [((att_count / event.target_attendees) * 100)|round|int, 100]|min if event.target_attendees else 0 %}
+            <div class="summary-bar-row" id="target-bar-row">
+                <span class="summary-bar-label">Attending vs Target</span>
+                <div class="summary-bar">
+                    <div class="summary-bar-segment bar-attending{% if att_count > event.target_attendees %} over-target{% endif %}" id="target-bar-fill"
+                         style="width: {{ target_pct }}%"><span>{{ target_pct }}%</span></div>
+                </div>
+                <span class="summary-bar-value{% if att_count > event.target_attendees %} over-target{% elif att_count == event.target_attendees %} at-target{% endif %}" id="target-bar-value">{% if att_count > event.target_attendees %}⚠ {% elif att_count == event.target_attendees %}✓ {% endif %}{{ att_count }}/{{ event.target_attendees }}</span>
+            </div>
+            {% endif %}
+            {% set att_pct = ((att_count / invited_count) * 100)|round|int if invited_count else 0 %}
+            {% set pend_pct = ((pend_count / invited_count) * 100)|round|int if invited_count else 0 %}
+            {% set decl_pct = ((decl_count / invited_count) * 100)|round|int if invited_count else 0 %}
+            <div class="summary-bar-row" id="invited-bar-row">
+                <span class="summary-bar-label">RSVP Status</span>
+                <div class="summary-bar">
+                    <div class="summary-bar-segment bar-attending" id="invited-bar-attending"
+                         style="width: {{ att_pct }}%"><span>{{ att_pct }}%</span></div>
+                    <div class="summary-bar-segment bar-pending" id="invited-bar-pending"
+                         style="width: {{ pend_pct }}%"><span>{{ pend_pct }}%</span></div>
+                    <div class="summary-bar-segment bar-declined" id="invited-bar-declined"
+                         style="width: {{ decl_pct }}%"><span>{{ decl_pct }}%</span></div>
+                </div>
+                <span class="summary-bar-value" id="invited-bar-value">{{ invited_count }} invited</span>
+            </div>
+        </div>
+        <table class="summary-table" id="summary-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Attending</th>
+                    <th>Pending</th>
+                    <th>Declined</th>
+                    <th>Total Invited</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-gender="male">
+                    <td class="row-label">Male</td>
+                    <td data-stat="attending">{{ male_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</td>
+                    <td data-stat="pending">{{ male_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</td>
+                    <td data-stat="declined">{{ male_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</td>
+                    <td data-stat="invited">{{ male_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
+                </tr>
+                <tr data-gender="female">
+                    <td class="row-label">Female</td>
+                    <td data-stat="attending">{{ female_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</td>
+                    <td data-stat="pending">{{ female_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</td>
+                    <td data-stat="declined">{{ female_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</td>
+                    <td data-stat="invited">{{ female_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
+                </tr>
+                <tr class="total-row" data-gender="total">
+                    <td class="row-label">Total</td>
+                    <td data-stat="attending"><strong>{{ all_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</strong></td>
+                    <td data-stat="pending"><strong>{{ all_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</strong></td>
+                    <td data-stat="declined"><strong>{{ all_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</strong></td>
+                    <td data-stat="invited"><strong>{{ all_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Guest List -->
+<div class="collapsible section">
+    <div class="collapsible-header">
+        <span class="collapse-icon">▼</span>
+        <h2 id="guest-list-heading">Guest List ({{ event.invitations|length }})</h2>
+    </div>
+    <div class="collapsible-body">
+        <div class="sticky-controls">
+        <div class="guest-list-controls">
+            <input type="search" class="search-input" data-table="invitations-table" placeholder="Search guests...">
+            <div class="kebab-wrapper" id="new-invite-wrapper">
+                <button type="button" class="btn btn-small new-invite-icon-btn" id="new-invite-btn">
+                    <span class="btn-label-full">+ New Invite</span>
+                    <span class="btn-label-short">+</span>
+                </button>
+                <div class="kebab-menu" id="new-invite-menu">
+                    <button type="button" id="select-from-db-btn">Select from Guest Database</button>
+                    <button type="button" id="add-new-guest-btn">Add New Guest</button>
+                </div>
+            </div>
+            <button type="button" class="icon-btn" id="gl-toggle-filters-btn" title="Filters">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+            </button>
+            <div class="kebab-wrapper">
+                <button type="button" class="icon-btn gl-menu-btn" aria-label="More">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                </button>
+                <div class="kebab-menu kebab-menu-right">
+                    <a href="{{ url_for('exports.export_event_guests', event_id=event.id) }}">Export to Excel</a>
+                    <button type="button" id="toggle-multiselect-btn">Multi-Select</button>
+                    <button type="button" id="toggle-gl-expand-btn">Collapse</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-controls" id="gl-filters" style="display:none">
+            <select class="filter-select" data-table="invitations-table" data-col="3">
+                <option value="">All Statuses</option>
+                <option value="Not Sent">Not Sent</option>
+                <option value="Attending">Attending</option>
+                <option value="Pending">Pending</option>
+                <option value="Declined">Declined</option>
+            </select>
+            <select class="filter-select" data-table="invitations-table" data-attr="data-gender">
+                <option value="">All Genders</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+            <div class="tag-filter-wrapper" id="gl-tag-filter-wrapper">
+                <button type="button" class="filter-select tag-filter-toggle" id="gl-tag-filter-toggle">All Tags</button>
+                <div class="tag-filter-dropdown" id="gl-tag-filter-dropdown" style="display:none"></div>
+            </div>
+            <select class="sort-select" id="gl-sort" data-table="invitations-table">
+                <option value="">Sort by...</option>
+                <option value="1:text">First Name</option>
+                <option value="1:last">Last Name</option>
+                <option value="1:gender">Gender</option>
+                <option value="2:check">Sent</option>
+                <option value="3:text">Status</option>
+            </select>
+        </div>
+
+        <div class="batch-bar" id="batch-bar" style="display:none">
+            <span id="batch-count">0</span> selected
+            <select id="batch-action" class="inline-select">
+                <option value="">Apply action...</option>
+                <option value="send">Mark as Sent</option>
+                <option value="unsend">Mark as Not Sent</option>
+                <option value="attending">Set Attending</option>
+                <option value="pending">Set Pending</option>
+                <option value="declined">Set Declined</option>
+                <option value="remove">Remove from Event</option>
+            </select>
+            <button type="button" class="btn btn-small" id="batch-apply">Apply</button>
+            <button type="button" class="btn btn-small btn-secondary" id="batch-clear">Clear</button>
+        </div>
+        </div>
+
+        <table id="invitations-table" class="sortable" data-event-id="{{ event.id }}">
+            <thead>
+                <tr>
+                    <th class="center col-check col-multiselect" style="display:none"><input type="checkbox" id="select-all"></th>
+                    <th data-sort="text">Guest</th>
+                    <th data-sort="check" class="center">Sent</th>
+                    <th data-sort="text">RSVP Status</th>
+                    <th class="col-expand">Invite Notes</th>
+                    <th class="col-expand">Guest Notes</th>
+                    <th class="col-expand">Guest Tags</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inv in event.invitations %}
+                <tr data-inv-id="{{ inv.id }}" data-guest-id="{{ inv.guest.id }}"
+                    data-gender="{{ inv.guest.gender }}"
+                    data-tags="{{ inv.guest.tags|map(attribute='id')|join(',') }}"
+                    data-sent="{{ 'true' if inv.status != 'Not Sent' else 'false' }}"
+                    data-date-invited="{{ inv.date_invited.strftime('%d %b %Y') if inv.date_invited else '' }}"
+                    data-date-invited-iso="{{ inv.date_invited.isoformat() if inv.date_invited else '' }}"
+                    data-date-responded="{{ inv.date_responded.strftime('%d %b %Y') if inv.date_responded else '' }}"
+                    data-date-responded-iso="{{ inv.date_responded.isoformat() if inv.date_responded else '' }}">
+                    <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
+                    <td class="guest-name-cell">{{ inv.guest.full_name }} <span class="gender-tag">{{ '(M)' if inv.guest.gender == 'Male' else '(F)' if inv.guest.gender == 'Female' else '' }}</span></td>
+                    <td class="center">
+                        <input type="checkbox" class="sent-checkbox"
+                               data-inv-id="{{ inv.id }}"
+                               {{ 'checked' if inv.status != 'Not Sent' }}>
+                    </td>
+                    <td>
+                        {% if inv.status == 'Not Sent' %}
+                        <span class="status-not-sent">Not Sent</span>
+                        {% else %}
+                        <select class="inline-select status-select" data-inv-id="{{ inv.id }}">
+                            <option value="Attending" {{ 'selected' if inv.status == 'Attending' }}>Attending</option>
+                            <option value="Pending" {{ 'selected' if inv.status == 'Pending' }}>Pending</option>
+                            <option value="Declined" {{ 'selected' if inv.status == 'Declined' }}>Declined</option>
+                        </select>
+                        {% endif %}
+                    </td>
+                    <td class="col-expand">
+                        <input type="text" class="inv-notes-input" data-inv-id="{{ inv.id }}"
+                               value="{{ inv.notes or '' }}" placeholder="Invite note...">
+                    </td>
+                    <td class="col-expand">{{ inv.guest.notes or '' }}</td>
+                    <td class="col-expand">{% for tag in inv.guest.tags %}<span class="tag-badge" style="background:{{ tag.color }}">{{ tag.name }}</span> {% endfor %}</td>
+                    <td>
+                        <div class="kebab-wrapper">
+                            <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>
+                            <div class="kebab-menu">
+                                <button type="button" class="inv-guest-detail-btn" data-guest-id="{{ inv.guest.id }}">Guest detail</button>
+                                <button type="button" class="edit-btn">Invitation detail</button>
+                                <button type="button" class="kebab-danger remove-btn" data-inv-id="{{ inv.id }}">Remove</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Seating Plan -->
+<div class="collapsible section collapsed">
+    <div class="collapsible-header">
+        <span class="collapse-icon">▼</span>
+        <h2>Seating Plan</h2>
+    </div>
+    <div class="collapsible-body">
+        <p class="empty" style="padding:1.5rem 1rem;">In development</p>
+    </div>
+</div>
+
+<!-- Guest Database Picker Modal -->
+<div class="detail-overlay" id="guest-db-overlay" style="display:none">
+    <div class="detail-card guest-db-card">
+        <div class="detail-card-header">
+            <span class="modal-title">Add from Guest Database</span>
+            <button type="button" class="detail-close" id="guest-db-close">&times;</button>
+        </div>
+        <div class="guest-db-search">
+            <div class="guest-db-search-row">
+                <input type="search" id="guest-db-search-input" placeholder="Search guests...">
+                <button type="button" class="icon-btn" id="guest-db-filter-btn" title="Filters">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="table-controls" id="guest-db-filters" style="display:none">
+                <select class="filter-select" id="guest-db-gender-filter">
+                    <option value="">All Genders</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+                <div class="tag-filter-wrapper" id="guest-db-tag-filter-wrapper">
+                    <button type="button" class="filter-select tag-filter-toggle" id="guest-db-tag-filter-toggle">All Tags</button>
+                    <div class="tag-filter-dropdown" id="guest-db-tag-filter-dropdown" style="display:none"></div>
+                </div>
+                <select class="filter-select" id="guest-db-archive-filter">
+                    <option value="active" selected>Hide Archived</option>
+                    <option value="all">Show Archived</option>
+                </select>
+                <select class="filter-select" id="guest-db-sort">
+                    <option value="first-asc">First Name (A-Z)</option>
+                    <option value="last-asc">Last Name (A-Z)</option>
+                    <option value="gender-asc">Gender</option>
+                </select>
+            </div>
+        </div>
+        <div class="guest-db-select-all">
+            <input type="checkbox" id="guest-db-select-all">
+            <label for="guest-db-select-all">Select All</label>
+        </div>
+        <div class="guest-db-list" id="guest-db-list"></div>
+        <div class="guest-db-footer">
+            <button type="button" class="btn" id="guest-db-add-btn">Add Selected</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Guest Modal -->
+<div class="detail-overlay" id="add-guest-overlay" style="display:none">
+    <div class="detail-card guest-db-card">
+        <div class="detail-card-header">
+            <span class="modal-title">Add New Guests</span>
+            <button type="button" class="detail-close" id="add-guest-close">&times;</button>
+        </div>
+        <div class="add-guest-table-wrapper">
+            <table class="add-guest-table" id="add-guest-table">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Gender</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="add-guest-tbody">
+                </tbody>
+            </table>
+        </div>
+        <div class="guest-db-footer">
+            <span class="modal-hint">Press Enter to add another guest</span>
+            <button type="button" class="btn" id="add-guest-save-btn">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Invitation Detail modal -->
+<div class="detail-overlay" id="detail-overlay" style="display:none">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <span class="modal-title">Invitation Detail</span>
+            <button type="button" class="detail-close" id="detail-close">&times;</button>
+        </div>
+        <div class="detail-card-body">
+            <form class="form modal-form" id="inv-detail-form">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="detail-first-name">First Name</label>
+                        <input type="text" id="detail-first-name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="detail-last-name">Last Name</label>
+                        <input type="text" id="detail-last-name">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="detail-gender">Gender</label>
+                        <select id="detail-gender">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Invitation Sent</label>
+                        <label class="ios-toggle">
+                            <input type="checkbox" id="detail-sent-toggle">
+                            <span class="ios-toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="form-field">
+                        <label>Sent on</label>
+                        <span class="inv-detail-datetime" id="detail-date-invited"></span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>RSVP Status</label>
+                        <select id="detail-status">
+                            <option value="Attending">Attending</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Declined">Declined</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>RSVP received on</label>
+                        <span class="inv-detail-datetime" id="detail-date-responded"></span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="detail-notes">Invitation Notes</label>
+                        <textarea id="detail-notes" rows="3" placeholder="Invite note..."></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Edit Event modal -->
+<div class="detail-overlay" id="edit-event-overlay" style="display:none">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <span class="modal-title">Edit Event</span>
+            <button type="button" class="detail-close" id="edit-event-close">&times;</button>
+        </div>
+        <div class="detail-card-body">
+            <form method="POST" action="{{ url_for('events.edit_event', event_id=event.id) }}" class="form modal-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="ee-name">Event Name</label>
+                        <input type="text" id="ee-name" name="name" value="{{ event.name }}" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="ee-location">Location</label>
+                        <input type="text" id="ee-location" name="location" value="{{ event.location or '' }}" placeholder="Optional">
+                    </div>
+                    <div class="form-field">
+                        <label for="ee-date">Date</label>
+                        <input type="date" id="ee-date" name="date" value="{{ event.date.isoformat() }}" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="ee-type">Type</label>
+                        <select id="ee-type" name="event_type" required>
+                            {% for t in event_types %}
+                            <option value="{{ t }}"{{ ' selected' if event.event_type == t }}>{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="ee-target">Target Attendees</label>
+                        <input type="number" id="ee-target" name="target_attendees" value="{{ event.target_attendees if event.target_attendees else '' }}" placeholder="Optional" min="1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="ee-notes">Notes</label>
+                        <textarea id="ee-notes" name="notes" rows="3" placeholder="Optional">{{ event.notes or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Guest Detail overlay -->
+<div class="detail-overlay" id="guest-detail-overlay" style="display:none">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <span class="modal-title">Guest Detail</span>
+            <button type="button" class="detail-close" id="guest-detail-close">&times;</button>
+        </div>
+        <div class="detail-card-body">
+            <form class="form modal-form" id="guest-detail-form">
+                <input type="hidden" id="gd-guest-id">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="gd-first">First Name</label>
+                        <input type="text" id="gd-first" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="gd-last">Last Name</label>
+                        <input type="text" id="gd-last">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="gd-gender">Gender</label>
+                        <select id="gd-gender">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>This is me</label>
+                        <label class="ios-toggle">
+                            <input type="checkbox" id="gd-is-me">
+                            <span class="ios-toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="gd-notes">Notes</label>
+                        <textarea id="gd-notes" rows="3" placeholder="Add notes about guest"></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Tags</label>
+                        <div class="tags-autocomplete-wrapper">
+                            <div class="tags-display" id="gd-tags-display"></div>
+                            <input type="text" id="gd-tags-input" placeholder="Add tag...">
+                            <div class="tags-suggestions" id="gd-tags-suggestions" style="display:none"></div>
+                        </div>
+                        <p class="form-hint">Add tags to sort your guests quickly (e.g., family, cycling, single, ...)</p>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save</button>
+                </div>
+            </form>
+            <div class="guest-detail-meta" id="gd-meta"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

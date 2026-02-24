@@ -1,0 +1,171 @@
+/* ── Tag badges ───────────────────────────────────────────────────────────── */
+.tag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #fff;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.tag-badge-sm {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.4rem;
+}
+
+.guest-db-item-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    margin-left: 0.4rem;
+    vertical-align: middle;
+}
+
+.ge-tags-cell {
+    white-space: nowrap;
+}
+
+.ge-tags-cell .tag-badge {
+    margin-right: 0.15rem;
+    font-size: 0.7rem;
+}
+
+.tag-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border: none;
+    background: rgba(255,255,255,0.3);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    margin-left: 0.1rem;
+}
+
+.tag-remove:hover { background: rgba(255,255,255,0.5); }
+
+/* ── Tags autocomplete wrapper ────────────────────────────────────────────── */
+.tags-autocomplete-wrapper {
+    position: relative;
+}
+
+.tags-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.35rem;
+    min-height: 0;
+}
+
+.tags-display:empty { margin-bottom: 0; }
+
+.tags-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    z-index: 50;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.tag-suggestion {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #1c1c1e;
+    transition: background 0.1s;
+}
+
+.tag-suggestion:first-child { border-radius: 10px 10px 0 0; }
+.tag-suggestion:last-child { border-radius: 0 0 10px 10px; }
+.tag-suggestion:only-child { border-radius: 10px; }
+.tag-suggestion:hover { background: rgba(0,122,255,0.06); }
+
+.tag-suggestion-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.tag-suggestion-create {
+    color: #007aff;
+    font-weight: 500;
+}
+
+/* ── Batch tag autocomplete (multi-select bar) ────────────────────────────── */
+.batch-tag-autocomplete {
+    position: relative;
+    display: inline-block;
+}
+
+.batch-tag-autocomplete .tags-suggestions {
+    min-width: 220px;
+}
+
+/* ── Tag filter dropdown (Guest Database page) ────────────────────────────── */
+.tag-filter-wrapper {
+    position: relative;
+}
+
+.tag-filter-toggle {
+    text-align: left;
+}
+
+.tag-filter-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: auto;
+    min-width: 200px;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    z-index: 50;
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 0.35rem 0;
+}
+
+.tag-filter-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: #1c1c1e;
+    transition: background 0.1s;
+}
+
+.tag-filter-option:hover { background: rgba(0,122,255,0.06); }
+
+.tag-filter-option input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+}
+
+/* Inside guest-db picker, align dropdown to right edge */
+#guest-db-filters .tag-filter-dropdown,
+#gl-filters .tag-filter-dropdown {
+    left: auto;
+    right: 0;
+}

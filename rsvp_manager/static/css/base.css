@@ -1,0 +1,288 @@
+/* ── Reset & Base ──────────────────────────────────────────────────────────── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    background: #f2f2f7;
+    color: #1c1c1e;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* ── Nav ───────────────────────────────────────────────────────────────────── */
+nav {
+    background: rgba(28, 28, 30, 0.92);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    padding: 0 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav .logo {
+    color: white;
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+}
+
+/* ── Hamburger button ─────────────────────────────────────────────────────── */
+.hamburger-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 120;
+}
+
+.hamburger-btn span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: white;
+    border-radius: 2px;
+    transition: transform 0.25s, opacity 0.2s;
+}
+
+.hamburger-btn.active span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.hamburger-btn.active span:nth-child(2) { opacity: 0; }
+.hamburger-btn.active span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* ── Hamburger menu (slide-in) ───────────────────────────────────────────── */
+.hamburger-menu {
+    position: fixed;
+    top: 52px;
+    right: -260px;
+    width: 240px;
+    background: rgba(28, 28, 30, 0.96);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-radius: 0 0 0 14px;
+    box-shadow: -4px 4px 20px rgba(0,0,0,0.2);
+    z-index: 110;
+    transition: right 0.25s ease;
+    padding: 0.5rem 0;
+}
+
+.hamburger-menu.open { right: 0; }
+
+.hamburger-menu a {
+    display: block;
+    padding: 0.75rem 1.25rem;
+    color: #007aff;
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 500;
+    transition: background 0.1s;
+}
+
+.hamburger-menu a:hover { background: rgba(255,255,255,0.06); }
+
+.hamburger-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 0.25rem 1rem;
+}
+
+.menu-disabled {
+    opacity: 0.35 !important;
+    pointer-events: none;
+}
+
+.hamburger-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 105;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.hamburger-overlay.open { display: block; }
+
+/* ── Main ──────────────────────────────────────────────────────────────────── */
+main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 3rem;
+}
+
+/* ── Header row ────────────────────────────────────────────────────────────── */
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+h1 {
+    font-size: 1.7rem;
+    color: #1c1c1e;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    font-size: 1.2rem;
+    color: #1c1c1e;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 0.9rem;
+    background: #007aff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn:hover { opacity: 0.85; }
+.btn:active { transform: scale(0.96); }
+
+.btn-secondary {
+    background: rgba(0,122,255,0.1);
+    color: #007aff;
+}
+.btn-secondary:hover { opacity: 0.7; }
+
+.btn-danger { background: #ff3b30; }
+.btn-danger:hover { opacity: 0.85; }
+
+.btn-small {
+    padding: 0.3rem 0.65rem;
+    font-size: 0.78rem;
+    border-radius: 7px;
+}
+
+.btn-group {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* ── Icon buttons (filter, 3-dot) ────────────────────────────────────────── */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(118,118,128,0.12);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #8e8e93;
+    transition: background 0.15s, color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.icon-btn:hover { background: rgba(118,118,128,0.2); }
+.icon-btn.active { background: rgba(0,122,255,0.12); color: #007aff; }
+
+/* ── Page kebab menu with search ─────────────────────────────────────────── */
+.kebab-menu-search {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.kebab-menu-search input {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    background: rgba(118,118,128,0.08);
+    color: #1c1c1e;
+    font-family: inherit;
+}
+
+.kebab-menu-search input:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 2px rgba(0,122,255,0.15);
+}
+
+.kebab-menu-search input::placeholder { color: #8e8e93; }
+
+/* ── Sticky controls (frozen headers for long lists) ──────────────────────── */
+.sticky-controls {
+    position: sticky;
+    top: 52px;
+    z-index: 15;
+    background: #f2f2f7;
+    padding-top: 0.5rem;
+    padding-bottom: 0.25rem;
+}
+
+/* ── Flash messages ────────────────────────────────────────────────────────── */
+.flash-msg {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+/* ── Empty state ───────────────────────────────────────────────────────────── */
+.empty {
+    text-align: center;
+    color: #8e8e93;
+    padding: 3rem 1rem;
+    font-size: 1rem;
+}
+
+.empty a { color: #007aff; }
+
+/* ── Scroll loader ───────────────────────────────────────────────────────── */
+.scroll-loader {
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 0;
+}
+.scroll-spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #e5e5ea;
+    border-top-color: #007aff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Responsive button labels ─────────────────────────────────────────────── */
+.btn-label-short { display: none; }
+.btn-label-full { display: inline; }

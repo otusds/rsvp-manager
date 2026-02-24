@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <h1>500 — Server Error</h1>
+    <p>Something went wrong. Please try again later.</p>
+    <a href="{{ url_for('events.home') }}" class="btn">Back to Events</a>
+</div>
+{% endblock %}
