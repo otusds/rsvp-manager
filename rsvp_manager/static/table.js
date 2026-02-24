@@ -769,7 +769,7 @@ document.addEventListener("DOMContentLoaded", function () {
             '<td class="guest-name-cell">' + window.escapeHtml(displayName) + ' <span class="gender-tag">' + window.escapeHtml(genderTag) + '</span></td>' +
             '<td class="center"><input type="checkbox" class="sent-checkbox" data-inv-id="' + data.invitation_id + '"' + (isSent ? ' checked' : '') + '></td>' +
             '<td>' + window.buildStatusHtml(data.invitation_id, data.status) + '</td>' +
-            '<td class="col-expand"><input type="text" class="inv-notes-input" data-inv-id="' + data.invitation_id + '" value="' + window.escapeHtml(data.notes || "") + '" placeholder="Invite note..."></td>' +
+            '<td class="col-expand-mobile"><input type="text" class="inv-notes-input" data-inv-id="' + data.invitation_id + '" value="' + window.escapeHtml(data.notes || "") + '" placeholder="Invite note..."></td>' +
             '<td class="col-expand">' + window.escapeHtml(data.guest_notes || "") + '</td>' +
             '<td class="col-expand">' + window.buildTagBadges(data.guest_tags || []) + '</td>' +
             '<td><div class="kebab-wrapper">' +

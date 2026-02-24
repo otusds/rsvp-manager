@@ -1672,6 +1672,7 @@ tr[data-is-me="true"] td {
 
     /* Hide gender & notes cols on mobile */
     .col-hide-mobile { display: none; }
+    .table-collapsed .col-expand-mobile { display: none; }
 
     th, td { padding: 0.35rem 0.3rem; font-size: 0.82rem; }
     .guest-name-cell { white-space: nowrap; }
