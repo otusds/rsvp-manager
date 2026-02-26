@@ -171,19 +171,22 @@
 
 /* ── Invitation notes ────────────────────────────────────────────────────── */
 .inv-notes-input {
-    padding: 0.3rem 0.5rem;
-    border: 1px solid rgba(0,0,0,0.1);
-    border-radius: 8px;
+    padding: 0.3rem 0.4rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
     font-size: 0.82rem;
     width: 100%;
     min-width: 80px;
-    background: white;
+    background: transparent;
+    transition: border-color 0.15s, background 0.15s;
 }
+.inv-notes-input:hover { border-color: rgba(0,0,0,0.1); }
 
 .inv-notes-input:focus {
     outline: none;
     border-color: #007aff;
-    box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
 }
 
 /* ── Batch bar ────────────────────────────────────────────────────────────── */

@@ -89,6 +89,16 @@
     background: #fff;
 }
 
+.form-field input[type="date"] {
+    line-height: 1.4;
+}
+
+.form-field select:invalid {
+    color: #c7c7cc;
+}
+.form-field select option { color: #1c1c1e; }
+.form-field select option:disabled { color: #c7c7cc; }
+
 .form-field input:focus,
 .form-field select:focus,
 .form-field textarea:focus {
