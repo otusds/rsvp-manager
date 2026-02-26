@@ -1,13 +1,19 @@
 import logging
 import secrets
 from datetime import datetime, timedelta, timezone
-from flask import url_for, render_template
-from flask_mail import Message
-from rsvp_manager.extensions import db, mail
+import resend
+from flask import url_for, render_template, current_app
+from rsvp_manager.extensions import db
 from rsvp_manager.models import User
 
 logger = logging.getLogger(__name__)
 TOKEN_EXPIRY_HOURS = 24
+
+
+def _send_email(to, subject, html):
+    resend.api_key = current_app.config["RESEND_API_KEY"]
+    sender = current_app.config["EMAIL_DEFAULT_SENDER"]
+    resend.Emails.send({"from": sender, "to": [to], "subject": subject, "html": html})
 
 
 def _utcnow():
@@ -25,12 +31,8 @@ def generate_verification_token(user):
 def send_verification_email(user):
     token = generate_verification_token(user)
     verify_url = url_for("auth.verify_email", token=token, _external=True)
-    msg = Message(
-        subject="Verify your email — RSVP Manager",
-        recipients=[user.email],
-        html=render_template("emails/verify_email.html", user=user, verify_url=verify_url),
-    )
-    mail.send(msg)
+    html = render_template("emails/verify_email.html", user=user, verify_url=verify_url)
+    _send_email(user.email, "Verify your email — RSVP Manager", html)
     logger.info("Verification email sent to %s", user.email)
 
 
@@ -62,12 +64,8 @@ def generate_password_reset_token(user):
 def send_password_reset_email(user):
     token = generate_password_reset_token(user)
     reset_url = url_for("auth.reset_password", token=token, _external=True)
-    msg = Message(
-        subject="Reset your password — RSVP Manager",
-        recipients=[user.email],
-        html=render_template("emails/reset_password.html", user=user, reset_url=reset_url),
-    )
-    mail.send(msg)
+    html = render_template("emails/reset_password.html", user=user, reset_url=reset_url)
+    _send_email(user.email, "Reset your password — RSVP Manager", html)
     logger.info("Password reset email sent to %s", user.email)
 
 

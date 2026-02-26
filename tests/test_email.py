@@ -94,7 +94,7 @@ class TestEmailVerification:
             db.session.commit()
         client.post("/login", data={"email": "verified@test.com", "password": "password123"})
 
-        with patch("rsvp_manager.services.email_service.mail.send") as mock_mail:
+        with patch("rsvp_manager.services.email_service.resend.Emails.send") as mock_mail:
             resp = client.post("/resend-verification", follow_redirects=True)
             assert resp.status_code == 200
             mock_mail.assert_not_called()
@@ -280,20 +280,20 @@ class TestEmailService:
         from rsvp_manager.services.email_service import send_verification_email
         with test_app.app_context():
             u = db.session.get(User, user)
-            with patch("rsvp_manager.services.email_service.mail.send") as mock_send:
+            with patch("rsvp_manager.services.email_service.resend.Emails.send") as mock_send:
                 send_verification_email(u)
                 mock_send.assert_called_once()
-                msg = mock_send.call_args[0][0]
-                assert "Verify" in msg.subject
-                assert u.email in msg.recipients
+                payload = mock_send.call_args[0][0]
+                assert "Verify" in payload["subject"]
+                assert u.email in payload["to"]
 
     def test_send_password_reset_email_uses_mail(self, test_app, user):
         from rsvp_manager.services.email_service import send_password_reset_email
         with test_app.app_context():
             u = db.session.get(User, user)
-            with patch("rsvp_manager.services.email_service.mail.send") as mock_send:
+            with patch("rsvp_manager.services.email_service.resend.Emails.send") as mock_send:
                 send_password_reset_email(u)
                 mock_send.assert_called_once()
-                msg = mock_send.call_args[0][0]
-                assert "Reset" in msg.subject or "reset" in msg.subject
-                assert u.email in msg.recipients
+                payload = mock_send.call_args[0][0]
+                assert "Reset" in payload["subject"] or "reset" in payload["subject"]
+                assert u.email in payload["to"]

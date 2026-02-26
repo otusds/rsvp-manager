@@ -22,13 +22,8 @@ class Config:
             "pool_recycle": 300,
         }
 
-    MAIL_SERVER = os.environ.get("MAIL_SERVER", "localhost")
-    MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
-    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
-    MAIL_USE_SSL = os.environ.get("MAIL_USE_SSL", "false").lower() == "true"
-    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "noreply@rsvpmanager.com")
+    RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
+    EMAIL_DEFAULT_SENDER = os.environ.get("EMAIL_DEFAULT_SENDER", "onboarding@resend.dev")
 
     if os.environ.get("DATABASE_URL"):
         _missing = [v for v in ("SECRET_KEY",) if not os.environ.get(v)]
@@ -48,5 +43,6 @@ class TestConfig:
     SECRET_KEY = "test-secret"
     WTF_CSRF_ENABLED = False
     SERVER_NAME = "localhost"
-    MAIL_SUPPRESS_SEND = True
+    RESEND_API_KEY = "re_test_fake"
+    EMAIL_DEFAULT_SENDER = "test@resend.dev"
     RATELIMIT_ENABLED = False

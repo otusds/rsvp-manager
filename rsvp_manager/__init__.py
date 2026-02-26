@@ -3,7 +3,7 @@ import os
 
 from flask import Flask, jsonify
 from rsvp_manager.config import Config
-from rsvp_manager.extensions import db, migrate, login_manager, csrf, mail, limiter
+from rsvp_manager.extensions import db, migrate, login_manager, csrf, limiter
 
 
 def configure_logging(app):
@@ -42,7 +42,6 @@ def create_app(config_class=Config):
     migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
-    mail.init_app(app)
     limiter.init_app(app)
 
     login_manager.login_view = "auth.login"
