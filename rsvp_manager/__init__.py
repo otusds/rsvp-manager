@@ -74,6 +74,8 @@ def create_app(config_class=Config):
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
         )
+        if response.content_type and ("css" in response.content_type or "javascript" in response.content_type):
+            response.headers["Cache-Control"] = "public, max-age=3600"
         return response
 
     return app
