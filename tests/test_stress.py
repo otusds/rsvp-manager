@@ -181,13 +181,13 @@ class TestAuthEdgeCases:
         assert r.status_code == 200
         assert b"Invalid" in r.data
 
-    def test_signup_password_exactly_6(self, client, test_app):
+    def test_signup_password_exactly_8(self, client, test_app):
         r = client.post("/signup", data={
-            "email": "exact6@test.com", "password": "123456"
+            "email": "exact8@test.com", "password": "12345678"
         }, follow_redirects=True)
         assert r.status_code == 200
         with test_app.app_context():
-            assert User.query.filter_by(email="exact6@test.com").first() is not None
+            assert User.query.filter_by(email="exact8@test.com").first() is not None
 
 
 # ── Settings routes require login ────────────────────────────────────────────

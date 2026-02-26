@@ -25,10 +25,10 @@ class TestSignup:
 
     def test_signup_short_password(self, client):
         r = client.post("/signup", data={
-            "email": "new@test.com", "password": "12345"
+            "email": "new@test.com", "password": "1234567"
         })
         assert r.status_code == 200
-        assert b"at least 6 characters" in r.data
+        assert b"at least 8 characters" in r.data
 
     def test_signup_missing_email(self, client):
         r = client.post("/signup", data={"password": "validpass"})
@@ -126,10 +126,10 @@ class TestLogin:
 
 class TestLogout:
     def test_logout(self, logged_in_client):
-        r = logged_in_client.get("/logout")
+        r = logged_in_client.post("/logout")
         assert r.status_code == 302
 
     def test_logout_requires_login(self, client):
-        r = client.get("/logout")
+        r = client.post("/logout")
         assert r.status_code == 302
         assert "login" in r.headers["Location"]

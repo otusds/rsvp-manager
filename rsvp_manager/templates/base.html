@@ -29,7 +29,10 @@
             <div class="hamburger-divider"></div>
             <a href="{{ url_for('settings.settings') }}">Settings</a>
             <div class="hamburger-divider"></div>
-            <a href="{{ url_for('auth.logout') }}" class="nav-logout">Logout</a>
+            <form method="POST" action="{{ url_for('auth.logout') }}" class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="nav-logout">Logout</button>
+            </form>
         </div>
         <div class="hamburger-overlay" id="hamburger-overlay"></div>
         {% endif %}

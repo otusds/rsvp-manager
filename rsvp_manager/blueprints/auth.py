@@ -3,7 +3,7 @@ import logging
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from rsvp_manager.extensions import db
+from rsvp_manager.extensions import db, limiter
 from rsvp_manager.models import User
 from rsvp_manager.services.email_service import (
     send_verification_email, verify_email_token,
@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @bp.route("/signup", methods=["GET", "POST"])
+@limiter.limit("10 per minute", methods=["POST"])
 def signup():
     if current_user.is_authenticated:
         return redirect(url_for("events.home"))
@@ -25,15 +26,15 @@ def signup():
             return render_template("signup.html", error="Valid email is required")
         if User.query.filter_by(email=email).first():
             return render_template("signup.html", error="Email already registered")
-        if len(password) < 6:
-            return render_template("signup.html", error="Password must be at least 6 characters")
+        if len(password) < 8:
+            return render_template("signup.html", error="Password must be at least 8 characters")
         user = User(email=email, password_hash=generate_password_hash(password))
         db.session.add(user)
         db.session.commit()
         try:
             send_verification_email(user)
         except Exception:
-            pass
+            logger.exception("Failed to send verification email to %s", email)
         login_user(user)
         logger.info("New user signed up: %s", email)
         flash("Account created! Check your email to verify your address.")
@@ -42,6 +43,7 @@ def signup():
 
 
 @bp.route("/login", methods=["GET", "POST"])
+@limiter.limit("10 per minute", methods=["POST"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("events.home"))
@@ -61,7 +63,7 @@ def login():
     return render_template("login.html")
 
 
-@bp.route("/logout")
+@bp.route("/logout", methods=["POST"])
 @login_required
 def logout():
     logout_user()
@@ -86,11 +88,13 @@ def resend_verification():
         send_verification_email(current_user)
         flash("Verification email sent! Check your inbox.")
     except Exception:
+        logger.exception("Failed to resend verification email to %s", current_user.email)
         flash("Could not send verification email. Please try again later.")
     return redirect(url_for("settings.settings"))
 
 
 @bp.route("/forgot-password", methods=["GET", "POST"])
+@limiter.limit("5 per minute", methods=["POST"])
 def forgot_password():
     if current_user.is_authenticated:
         return redirect(url_for("events.home"))
@@ -101,7 +105,7 @@ def forgot_password():
             try:
                 send_password_reset_email(user)
             except Exception:
-                pass
+                logger.exception("Failed to send password reset email to %s", email)
         return render_template(
             "forgot_password.html",
             success="If that email is registered, you'll receive a reset link shortly.",
@@ -117,8 +121,8 @@ def reset_password(token):
     if request.method == "POST":
         password = request.form.get("password", "")
         password_confirm = request.form.get("password_confirm", "")
-        if len(password) < 6:
-            return render_template("reset_password.html", error="Password must be at least 6 characters")
+        if len(password) < 8:
+            return render_template("reset_password.html", error="Password must be at least 8 characters")
         if password != password_confirm:
             return render_template("reset_password.html", error="Passwords do not match")
         user.password_hash = generate_password_hash(password)

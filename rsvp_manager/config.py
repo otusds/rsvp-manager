@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 
 class Config:
@@ -7,11 +8,19 @@ class Config:
     SESSION_COOKIE_SAMESITE = "Lax"
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_SAMESITE = "Lax"
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
 
     _database_url = os.environ.get("DATABASE_URL") or "sqlite:///rsvp.db"
     if _database_url.startswith("postgres://"):
         _database_url = _database_url.replace("postgres://", "postgresql://", 1)
     SQLALCHEMY_DATABASE_URI = _database_url
+
+    if _database_url.startswith("postgresql://"):
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            "pool_size": 5,
+            "max_overflow": 10,
+            "pool_recycle": 300,
+        }
 
     MAIL_SERVER = os.environ.get("MAIL_SERVER", "localhost")
     MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
@@ -21,6 +30,9 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "noreply@rsvpmanager.com")
 
     if os.environ.get("DATABASE_URL"):
+        _missing = [v for v in ("SECRET_KEY",) if not os.environ.get(v)]
+        if _missing:
+            raise RuntimeError(f"Missing required env vars for production: {', '.join(_missing)}")
         SECRET_KEY = os.environ["SECRET_KEY"]
         SESSION_COOKIE_SECURE = True
         REMEMBER_COOKIE_SECURE = True
@@ -36,3 +48,4 @@ class TestConfig:
     WTF_CSRF_ENABLED = False
     SERVER_NAME = "localhost"
     MAIL_SUPPRESS_SEND = True
+    RATELIMIT_ENABLED = False

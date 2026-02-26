@@ -65,4 +65,11 @@
 
 .hamburger-menu .nav-logout {
     color: #ff6961 !important;
+    background: none;
+    border: none;
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+    width: 100%;
+    text-align: left;
 }

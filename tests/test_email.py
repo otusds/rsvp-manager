@@ -1,6 +1,6 @@
 """Tests for email verification and password reset flows."""
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pytest
@@ -43,7 +43,7 @@ class TestEmailVerification:
         with test_app.app_context():
             u = db.session.get(User, user)
             u.email_verification_token = token
-            u.email_verification_sent_at = datetime.utcnow()
+            u.email_verification_sent_at = datetime.now(timezone.utc).replace(tzinfo=None)
             db.session.commit()
 
         resp = client.get(f"/verify-email/{token}")
@@ -65,7 +65,7 @@ class TestEmailVerification:
         with test_app.app_context():
             u = db.session.get(User, user)
             u.email_verification_token = token
-            u.email_verification_sent_at = datetime.utcnow() - timedelta(hours=25)
+            u.email_verification_sent_at = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=25)
             db.session.commit()
 
         resp = client.get(f"/verify-email/{token}")
@@ -128,7 +128,7 @@ class TestPasswordReset:
         with test_app.app_context():
             u = db.session.get(User, user)
             u.password_reset_token = token
-            u.password_reset_sent_at = datetime.utcnow()
+            u.password_reset_sent_at = datetime.now(timezone.utc).replace(tzinfo=None)
             db.session.commit()
 
         # GET shows the form
@@ -159,7 +159,7 @@ class TestPasswordReset:
         with test_app.app_context():
             u = db.session.get(User, user)
             u.password_reset_token = token
-            u.password_reset_sent_at = datetime.utcnow() - timedelta(hours=25)
+            u.password_reset_sent_at = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=25)
             db.session.commit()
 
         resp = client.get(f"/reset-password/{token}")
@@ -171,7 +171,7 @@ class TestPasswordReset:
         with test_app.app_context():
             u = db.session.get(User, user)
             u.password_reset_token = token
-            u.password_reset_sent_at = datetime.utcnow()
+            u.password_reset_sent_at = datetime.now(timezone.utc).replace(tzinfo=None)
             db.session.commit()
 
         resp = client.post(f"/reset-password/{token}", data={
@@ -179,14 +179,14 @@ class TestPasswordReset:
             "password_confirm": "short",
         })
         assert resp.status_code == 200
-        assert b"at least 6" in resp.data.lower()
+        assert b"at least 8" in resp.data.lower()
 
     def test_reset_password_mismatch(self, client, test_app, user):
         token = secrets.token_urlsafe(32)
         with test_app.app_context():
             u = db.session.get(User, user)
             u.password_reset_token = token
-            u.password_reset_sent_at = datetime.utcnow()
+            u.password_reset_sent_at = datetime.now(timezone.utc).replace(tzinfo=None)
             db.session.commit()
 
         resp = client.post(f"/reset-password/{token}", data={
@@ -201,7 +201,7 @@ class TestPasswordReset:
         with test_app.app_context():
             u = db.session.get(User, user)
             u.password_reset_token = token
-            u.password_reset_sent_at = datetime.utcnow()
+            u.password_reset_sent_at = datetime.now(timezone.utc).replace(tzinfo=None)
             db.session.commit()
 
         client.post(f"/reset-password/{token}", data={

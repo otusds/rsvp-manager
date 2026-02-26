@@ -1,9 +1,9 @@
 import logging
 import os
 
-from flask import Flask
+from flask import Flask, jsonify
 from rsvp_manager.config import Config
-from rsvp_manager.extensions import db, migrate, login_manager, csrf, mail
+from rsvp_manager.extensions import db, migrate, login_manager, csrf, mail, limiter
 
 
 def configure_logging(app):
@@ -43,6 +43,7 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     csrf.init_app(app)
     mail.init_app(app)
+    limiter.init_app(app)
 
     login_manager.login_view = "auth.login"
 
@@ -58,6 +59,10 @@ def create_app(config_class=Config):
     from rsvp_manager.blueprints.api import api_bp
     app.register_blueprint(api_bp)
     csrf.exempt(api_bp)
+
+    @app.route("/health")
+    def health():
+        return jsonify({"status": "ok"})
 
     @app.after_request
     def set_security_headers(response):

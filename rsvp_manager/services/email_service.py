@@ -1,6 +1,6 @@
 import logging
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import url_for, render_template
 from flask_mail import Message
 from rsvp_manager.extensions import db, mail
@@ -10,9 +10,14 @@ logger = logging.getLogger(__name__)
 TOKEN_EXPIRY_HOURS = 24
 
 
+def _utcnow():
+    """Naive UTC datetime (compatible with DateTime columns without timezone)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 def generate_verification_token(user):
     user.email_verification_token = secrets.token_urlsafe(32)
-    user.email_verification_sent_at = datetime.utcnow()
+    user.email_verification_sent_at = _utcnow()
     db.session.commit()
     return user.email_verification_token
 
@@ -37,7 +42,7 @@ def verify_email_token(token):
         return None
     if user.email_verification_sent_at is None:
         return None
-    if datetime.utcnow() - user.email_verification_sent_at > timedelta(hours=TOKEN_EXPIRY_HOURS):
+    if _utcnow() - user.email_verification_sent_at > timedelta(hours=TOKEN_EXPIRY_HOURS):
         return None
     user.email_verified = True
     user.email_verification_token = None
@@ -49,7 +54,7 @@ def verify_email_token(token):
 
 def generate_password_reset_token(user):
     user.password_reset_token = secrets.token_urlsafe(32)
-    user.password_reset_sent_at = datetime.utcnow()
+    user.password_reset_sent_at = _utcnow()
     db.session.commit()
     return user.password_reset_token
 
@@ -74,7 +79,7 @@ def validate_reset_token(token):
         return None
     if user.password_reset_sent_at is None:
         return None
-    if datetime.utcnow() - user.password_reset_sent_at > timedelta(hours=TOKEN_EXPIRY_HOURS):
+    if _utcnow() - user.password_reset_sent_at > timedelta(hours=TOKEN_EXPIRY_HOURS):
         return None
     return user
 

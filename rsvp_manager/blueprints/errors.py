@@ -22,6 +22,11 @@ def not_found(e):
     return render_template("errors/404.html"), 404
 
 
+@bp.app_errorhandler(429)
+def too_many_requests(e):
+    return render_template("errors/429.html"), 429
+
+
 @bp.app_errorhandler(500)
 def internal_error(e):
     logger.error("500 Internal Server Error: %s %s", request.method, request.path, exc_info=e)
