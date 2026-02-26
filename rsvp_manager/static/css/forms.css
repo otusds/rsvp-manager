@@ -90,7 +90,7 @@
 }
 
 .form-field input[type="date"] {
-    line-height: 1.4;
+    height: 34px;
 }
 
 .form-field select:invalid {
