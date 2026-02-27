@@ -4,16 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSVP Manager</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tables.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/event-detail.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/guests.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tags.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    {% set v = 4 %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v={{ v }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}?v={{ v }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tables.css') }}?v={{ v }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}?v={{ v }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/event-detail.css') }}?v={{ v }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/guests.css') }}?v={{ v }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v={{ v }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}?v={{ v }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tags.css') }}?v={{ v }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}?v={{ v }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
@@ -43,10 +44,10 @@
         {% endfor %}
         {% block content %}{% endblock %}
     </main>
-    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/tables.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/event-detail.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/home.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/guests.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/common.js') }}?v={{ v }}"></script>
+    <script src="{{ url_for('static', filename='js/tables.js') }}?v={{ v }}"></script>
+    <script src="{{ url_for('static', filename='js/event-detail.js') }}?v={{ v }}"></script>
+    <script src="{{ url_for('static', filename='js/home.js') }}?v={{ v }}"></script>
+    <script src="{{ url_for('static', filename='js/guests.js') }}?v={{ v }}"></script>
 </body>
 </html>

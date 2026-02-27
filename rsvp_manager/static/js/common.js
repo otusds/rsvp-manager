@@ -107,14 +107,178 @@ document.addEventListener("DOMContentLoaded", function () {
     var addGuestClose = document.getElementById("add-guest-close");
     var addGuestTbody = document.getElementById("add-guest-tbody");
     var addGuestSaveBtn = document.getElementById("add-guest-save-btn");
+    var cachedGuestList = null;
+
+    function fetchGuestListForAutocomplete() {
+        if (cachedGuestList) return Promise.resolve(cachedGuestList);
+        return window.fetchWithCsrf("/api/v1/guests?show_archived=0&page=1")
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                cachedGuestList = resp.data.items || [];
+                // Fetch remaining pages if any
+                if (resp.data.pages > 1) {
+                    var promises = [];
+                    for (var p = 2; p <= resp.data.pages; p++) {
+                        promises.push(
+                            window.fetchWithCsrf("/api/v1/guests?show_archived=0&page=" + p)
+                                .then(function (r2) { return r2.json(); })
+                        );
+                    }
+                    return Promise.all(promises).then(function (results) {
+                        results.forEach(function (r) {
+                            cachedGuestList = cachedGuestList.concat(r.data.items || []);
+                        });
+                        return cachedGuestList;
+                    });
+                }
+                return cachedGuestList;
+            });
+    }
+
+    function showAgSuggestions(input, suggestionsDiv, tr) {
+        var q = input.value.trim().toLowerCase();
+        suggestionsDiv.innerHTML = "";
+        if (!q || !cachedGuestList) { suggestionsDiv.style.display = "none"; return; }
+
+        var matches = cachedGuestList.filter(function (g) {
+            var full = (g.first_name + " " + (g.last_name || "")).toLowerCase();
+            return full.indexOf(q) !== -1;
+        }).slice(0, 8);
+
+        if (matches.length === 0) { suggestionsDiv.style.display = "none"; return; }
+
+        matches.forEach(function (g, idx) {
+            var div = document.createElement("div");
+            div.className = "ag-suggestion";
+            div.setAttribute("data-index", idx);
+            div.innerHTML = '<span>' + window.escapeHtml(g.first_name + " " + (g.last_name || "")).trim() +
+                '</span><span class="ag-suggestion-gender">' + window.escapeHtml(g.gender) + '</span>';
+            div.addEventListener("mousedown", function (e) {
+                e.preventDefault();
+                selectGuestSuggestion(tr, g);
+                suggestionsDiv.style.display = "none";
+            });
+            suggestionsDiv.appendChild(div);
+        });
+        suggestionsDiv.style.display = "block";
+    }
+
+    function showAgTooltip(td) {
+        var existing = td.querySelector(".ag-tooltip");
+        if (existing) existing.remove();
+        var tip = document.createElement("span");
+        tip.className = "ag-tooltip";
+        tip.textContent = "Already in your guest database";
+        td.style.position = "relative";
+        td.appendChild(tip);
+        setTimeout(function () { if (tip.parentNode) tip.remove(); }, 2000);
+    }
+
+    function selectGuestSuggestion(tr, guest) {
+        var firstInput = tr.querySelector(".ag-first-name");
+        var lastInput = tr.querySelector(".ag-last-name");
+        var genderSelect = tr.querySelector(".ag-gender");
+        firstInput.value = guest.first_name;
+        lastInput.value = guest.last_name || "";
+        genderSelect.value = guest.gender;
+        tr.setAttribute("data-guest-id", guest.id);
+        lastInput.disabled = true;
+        genderSelect.disabled = true;
+        // Auto-advance to next row
+        var newRow = createBlankGuestRow();
+        addGuestTbody.appendChild(newRow);
+        newRow.querySelector(".ag-first-name").focus();
+    }
+
+    function unlinkGuestRow(tr) {
+        tr.removeAttribute("data-guest-id");
+        var lastInput = tr.querySelector(".ag-last-name");
+        var genderSelect = tr.querySelector(".ag-gender");
+        lastInput.disabled = false;
+        genderSelect.disabled = false;
+    }
 
     function createBlankGuestRow() {
         var tr = document.createElement("tr");
         tr.innerHTML =
-            '<td><input type="text" class="ag-first-name" placeholder="First name"></td>' +
+            '<td><div class="ag-first-name-wrapper"><input type="text" class="ag-first-name" placeholder="First name" autocomplete="off"><div class="ag-suggestions" style="display:none"></div></div></td>' +
             '<td><input type="text" class="ag-last-name" placeholder="Last name"></td>' +
             '<td><select class="ag-gender"><option value="Male">Male</option><option value="Female">Female</option></select></td>' +
             '<td><button type="button" class="add-guest-remove-btn">&times;</button></td>';
+
+        var firstInput = tr.querySelector(".ag-first-name");
+        var suggestionsDiv = tr.querySelector(".ag-suggestions");
+        var activeIdx = -1;
+
+        firstInput.addEventListener("input", function () {
+            // If row was linked, unlink on manual edit
+            if (tr.hasAttribute("data-guest-id")) unlinkGuestRow(tr);
+            activeIdx = -1;
+            showAgSuggestions(firstInput, suggestionsDiv, tr);
+        });
+
+        firstInput.addEventListener("blur", function () {
+            // Small delay to allow mousedown on suggestion
+            setTimeout(function () { suggestionsDiv.style.display = "none"; }, 150);
+        });
+
+        firstInput.addEventListener("keydown", function (e) {
+            var items = suggestionsDiv.querySelectorAll(".ag-suggestion");
+            if (suggestionsDiv.style.display === "block" && items.length > 0) {
+                if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    activeIdx = Math.min(activeIdx + 1, items.length - 1);
+                    items.forEach(function (it, i) { it.classList.toggle("active", i === activeIdx); });
+                    return;
+                }
+                if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    activeIdx = Math.max(activeIdx - 1, 0);
+                    items.forEach(function (it, i) { it.classList.toggle("active", i === activeIdx); });
+                    return;
+                }
+                if (e.key === "Enter" && activeIdx >= 0) {
+                    e.preventDefault();
+                    items[activeIdx].dispatchEvent(new MouseEvent("mousedown"));
+                    return;
+                }
+            }
+            if (e.key === "Escape") {
+                suggestionsDiv.style.display = "none";
+                return;
+            }
+            if (e.key === "Enter") {
+                e.preventDefault();
+                var firstName = firstInput.value.trim();
+                if (firstName) {
+                    var newRow = createBlankGuestRow();
+                    addGuestTbody.appendChild(newRow);
+                    newRow.querySelector(".ag-first-name").focus();
+                }
+            }
+        });
+
+        tr.querySelector(".ag-last-name").addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                var firstName = firstInput.value.trim();
+                if (firstName) {
+                    var newRow = createBlankGuestRow();
+                    addGuestTbody.appendChild(newRow);
+                    newRow.querySelector(".ag-first-name").focus();
+                }
+            }
+        });
+
+        // Show tooltip when clicking disabled fields (linked guest)
+        var lastNameTd = tr.querySelector(".ag-last-name").parentElement;
+        var genderTd = tr.querySelector(".ag-gender").parentElement;
+        lastNameTd.addEventListener("click", function () {
+            if (tr.hasAttribute("data-guest-id")) showAgTooltip(lastNameTd);
+        });
+        genderTd.addEventListener("click", function () {
+            if (tr.hasAttribute("data-guest-id")) showAgTooltip(genderTd);
+        });
 
         tr.querySelector(".add-guest-remove-btn").addEventListener("click", function () {
             tr.remove();
@@ -123,28 +287,16 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        tr.querySelectorAll("input").forEach(function (input) {
-            input.addEventListener("keydown", function (e) {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    var firstName = tr.querySelector(".ag-first-name").value.trim();
-                    if (firstName) {
-                        var newRow = createBlankGuestRow();
-                        addGuestTbody.appendChild(newRow);
-                        newRow.querySelector(".ag-first-name").focus();
-                    }
-                }
-            });
-        });
-
         return tr;
     }
 
     window.openAddGuestModal = function () {
         addGuestTbody.innerHTML = "";
+        cachedGuestList = null;
         addGuestTbody.appendChild(createBlankGuestRow());
         addGuestOverlay.style.display = "flex";
         addGuestTbody.querySelector(".ag-first-name").focus();
+        fetchGuestListForAutocomplete();
     };
 
     // Event page trigger (inside kebab menu)
@@ -172,19 +324,25 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         addGuestSaveBtn.addEventListener("click", function () {
-            var guests = [];
+            var existingIds = [];
+            var newGuests = [];
             addGuestTbody.querySelectorAll("tr").forEach(function (row) {
                 var firstName = row.querySelector(".ag-first-name").value.trim();
                 if (!firstName) return;
-                guests.push({
-                    first_name: firstName,
-                    last_name: row.querySelector(".ag-last-name").value.trim(),
-                    gender: row.querySelector(".ag-gender").value,
-                    notes: ""
-                });
+                var guestId = row.getAttribute("data-guest-id");
+                if (guestId) {
+                    existingIds.push(parseInt(guestId));
+                } else {
+                    newGuests.push({
+                        first_name: firstName,
+                        last_name: row.querySelector(".ag-last-name").value.trim(),
+                        gender: row.querySelector(".ag-gender").value,
+                        notes: ""
+                    });
+                }
             });
 
-            if (guests.length === 0) {
+            if (existingIds.length === 0 && newGuests.length === 0) {
                 addGuestOverlay.style.display = "none";
                 return;
             }
@@ -193,29 +351,49 @@ document.addEventListener("DOMContentLoaded", function () {
             var eventId = invTable ? invTable.getAttribute("data-event-id") : null;
 
             if (eventId) {
-                // Event page: create guests and add as invitations
-                window.fetchWithCsrf("/api/v1/events/" + eventId + "/invitations/bulk-create", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ guests: guests })
-                })
-                .then(function (r) { return r.json(); })
-                .then(function (resp) {
-                    var tbody = document.querySelector("#invitations-table tbody");
-                    resp.data.forEach(function (g) {
-                        var tr = window.buildInvitationRow(g);
-                        tbody.appendChild(tr);
-                    });
-                    window.refreshSummary();
-                    addGuestOverlay.style.display = "none";
-                })
-                .catch(window.handleFetchError);
+                // Event page: add existing guests + create new guests as invitations
+                var promises = [];
+                if (existingIds.length > 0) {
+                    promises.push(
+                        window.fetchWithCsrf("/api/v1/events/" + eventId + "/invitations/bulk", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ guest_ids: existingIds })
+                        }).then(function (r) { return r.json(); })
+                    );
+                }
+                if (newGuests.length > 0) {
+                    promises.push(
+                        window.fetchWithCsrf("/api/v1/events/" + eventId + "/invitations/bulk-create", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ guests: newGuests })
+                        }).then(function (r) { return r.json(); })
+                    );
+                }
+                Promise.all(promises)
+                    .then(function (results) {
+                        var tbody = document.querySelector("#invitations-table tbody");
+                        results.forEach(function (resp) {
+                            resp.data.forEach(function (g) {
+                                var tr = window.buildInvitationRow(g);
+                                tbody.appendChild(tr);
+                            });
+                        });
+                        window.refreshSummary();
+                        addGuestOverlay.style.display = "none";
+                    })
+                    .catch(window.handleFetchError);
             } else {
-                // Guest DB page: create guests only, reload to get inline-edit rows
+                // Guest DB page: create new guests only (existing ones already in DB)
+                if (newGuests.length === 0) {
+                    addGuestOverlay.style.display = "none";
+                    return;
+                }
                 window.fetchWithCsrf("/api/v1/guests/bulk", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ guests: guests })
+                    body: JSON.stringify({ guests: newGuests })
                 })
                 .then(function (r) { return r.json(); })
                 .then(function (resp) {
