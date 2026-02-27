@@ -1,6 +1,6 @@
 {% for event in events %}
 {% set attending = event.invitations|selectattr('status', 'equalto', 'Attending')|list|length %}
-{% set total = event.invitations|length %}
+{% set total = event.invitations|rejectattr('status', 'equalto', 'Not Sent')|list|length %}
 <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="event-row-card"
    data-name="{{ event.name|lower }}"
    data-type="{{ event.event_type }}"
