@@ -16,7 +16,7 @@
 
 body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-    background: var(--gc-bg);
+    background: var(--gc-white);
     color: #1c1c1e;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -25,8 +25,8 @@ body {
 
 /* ── Nav ───────────────────────────────────────────────────────────────────── */
 nav {
-    background: var(--gc-white);
-    border-bottom: 1px solid var(--gc-pale);
+    background: var(--gc-dark);
+    border-bottom: none;
     padding: 0 1.25rem;
     display: flex;
     justify-content: space-between;
@@ -60,7 +60,7 @@ nav .logo {
     display: block;
     width: 20px;
     height: 2px;
-    background: var(--gc-text);
+    background: #fff;
     border-radius: 2px;
     transition: transform 0.25s, opacity 0.2s;
 }
@@ -75,7 +75,7 @@ nav .logo {
     top: 52px;
     right: -260px;
     width: 240px;
-    background: rgba(28, 28, 30, 0.96);
+    background: rgba(6, 78, 59, 0.96);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     border-radius: 0 0 0 14px;
@@ -162,7 +162,7 @@ h2 {
     justify-content: center;
     height: 36px;
     padding: 0 0.9rem;
-    background: var(--gc-accent);
+    background: var(--gc-dark);
     color: white;
     border: none;
     border-radius: 8px;
@@ -175,7 +175,7 @@ h2 {
     -webkit-tap-highlight-color: transparent;
 }
 
-.btn:hover { background: var(--gc-dark); }
+.btn:hover { background: var(--gc-mid); }
 .btn:active { transform: scale(0.96); }
 
 .btn-secondary {
@@ -207,16 +207,16 @@ h2 {
     justify-content: center;
     width: 36px;
     height: 36px;
-    background: rgba(118,118,128,0.12);
+    background: var(--gc-pale);
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    color: #8e8e93;
+    color: var(--gc-dark);
     transition: background 0.15s, color 0.15s;
     -webkit-tap-highlight-color: transparent;
 }
 
-.icon-btn:hover { background: rgba(118,118,128,0.2); }
+.icon-btn:hover { background: rgba(16,185,129,0.3); }
 .icon-btn.active { background: rgba(16,185,129,0.12); color: var(--gc-accent); }
 
 /* ── Page kebab menu with search ─────────────────────────────────────────── */
@@ -249,7 +249,7 @@ h2 {
     position: sticky;
     top: 52px;
     z-index: 15;
-    background: var(--gc-bg);
+    background: var(--gc-white);
     padding-top: 0.5rem;
     padding-bottom: 0.25rem;
 }

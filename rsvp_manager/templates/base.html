@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GuestCheck</title>
-    {% set v = 5 %}
+    {% set v = 6 %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -34,7 +34,7 @@
             <svg viewBox="0 0 240 48" width="170" height="34" xmlns="http://www.w3.org/2000/svg">
                 <rect x="4" y="4" width="40" height="40" rx="10" fill="none" stroke="#10B981" stroke-width="1.8"/>
                 <path d="M16 26 L23 33 L36 18" fill="none" stroke="#10B981" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-                <text x="56" y="32" font-family="'Plus Jakarta Sans',sans-serif" font-size="25" font-weight="800" fill="#0A2E23" letter-spacing="-0.5">Guest<tspan fill="#10B981" font-weight="400">Check</tspan></text>
+                <text x="56" y="32" font-family="'Plus Jakarta Sans',sans-serif" font-size="25" font-weight="800" fill="#FFFFFF" letter-spacing="-0.5">Guest<tspan fill="#10B981" font-weight="400">Check</tspan></text>
             </svg>
         </a>{% endblock %}
         {% if current_user.is_authenticated %}

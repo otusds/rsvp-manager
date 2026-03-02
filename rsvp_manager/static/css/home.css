@@ -10,25 +10,27 @@
     grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
     gap: 0 1rem;
-    background: white;
+    background: var(--gc-bg);
+    border: 1.5px solid var(--gc-pale);
     border-radius: 12px;
     padding: 0.9rem 1rem;
     text-decoration: none;
     color: #1c1c1e;
-    box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
-    transition: background 0.15s;
+    box-shadow: none;
+    transition: background 0.15s, box-shadow 0.15s;
     -webkit-tap-highlight-color: transparent;
 }
 
 .event-row-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(6,78,59,0.1);
+    border-color: var(--gc-accent);
 }
 
 .event-row-card:active {
     transform: translateY(0);
-    background: #F0FDF4;
-    box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
+    background: var(--gc-pale);
+    box-shadow: none;
 }
 
 .event-row-left {
