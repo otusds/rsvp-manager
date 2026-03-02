@@ -35,8 +35,8 @@
 .form select:focus,
 .form textarea:focus {
     outline: none;
-    border-color: #007aff;
-    box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+    border-color: #10B981;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
 }
 
 .form textarea { resize: vertical; font-family: inherit; }
@@ -103,8 +103,8 @@
 .form-field select:focus,
 .form-field textarea:focus {
     outline: none;
-    border-color: #007aff;
-    box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+    border-color: #10B981;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
 }
 
 .form-hint {

@@ -27,7 +27,7 @@
 
 .event-row-card:active {
     transform: translateY(0);
-    background: #f2f2f7;
+    background: #F0FDF4;
     box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
 }
 

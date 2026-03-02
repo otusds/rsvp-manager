@@ -156,8 +156,8 @@
 
 .event-notes-textarea:focus {
     outline: none;
-    border-color: #007aff;
-    box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+    border-color: #10B981;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
 }
 
 .save-indicator {
@@ -184,9 +184,9 @@
 
 .inv-notes-input:focus {
     outline: none;
-    border-color: #007aff;
+    border-color: #10B981;
     background: white;
-    box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
 }
 
 /* ── Batch bar ────────────────────────────────────────────────────────────── */
@@ -195,12 +195,12 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
-    background: rgba(0,122,255,0.08);
+    background: rgba(16,185,129,0.08);
     border-radius: 10px;
     margin-bottom: 0.6rem;
     font-size: 0.85rem;
     font-weight: 500;
-    color: #007aff;
+    color: #10B981;
     flex-wrap: wrap;
 }
 
@@ -221,7 +221,7 @@
 }
 
 .detail-card {
-    background: #f2f2f7;
+    background: #F0FDF4;
     border-radius: 14px 14px 0 0;
     box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
     width: 100%;
@@ -268,7 +268,7 @@
 
 .detail-name-input:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(0,122,255,0.2);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
     background: white;
 }
 
@@ -337,11 +337,11 @@
     border-radius: 7px;
     font-size: 0.88rem;
     background: rgba(118,118,128,0.12);
-    color: #007aff;
+    color: #10B981;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%23007aff' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%2310B981' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.35rem center;
     cursor: pointer;
@@ -385,7 +385,7 @@
 
 .detail-row textarea:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(0,122,255,0.2);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
     background: white;
 }
 
@@ -409,7 +409,7 @@
     border-radius: 10px; font-size: 0.88rem; background: rgba(118,118,128,0.08); font-family: inherit;
 }
 
-.guest-db-search-row input:focus { outline: none; border-color: #007aff; box-shadow: 0 0 0 3px rgba(0,122,255,0.15); }
+.guest-db-search-row input:focus { outline: none; border-color: #10B981; box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
 
 #guest-db-filters { margin-top: 0.4rem; }
 
@@ -421,13 +421,13 @@
     cursor: pointer; transition: background 0.1s; -webkit-tap-highlight-color: transparent;
 }
 
-.guest-db-item:hover { background: rgba(0,122,255,0.04); }
+.guest-db-item:hover { background: rgba(16,185,129,0.04); }
 .guest-db-item.disabled { opacity: 0.4; cursor: default; }
 .guest-db-item.disabled:hover { background: none; }
 .guest-db-item.archived-item { opacity: 0.5; }
 .guest-db-item.archived-item .guest-db-item-name { font-style: italic; }
 
-.guest-db-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #007aff; flex-shrink: 0; }
+.guest-db-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #10B981; flex-shrink: 0; }
 
 .guest-db-item-info { flex: 1; min-width: 0; }
 .guest-db-item-name { font-size: 0.92rem; font-weight: 500; }
@@ -470,8 +470,8 @@
 .add-guest-table input:focus,
 .add-guest-table select:focus {
     outline: none;
-    border-color: #007aff;
-    box-shadow: 0 0 0 2px rgba(0,122,255,0.15);
+    border-color: #10B981;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
 }
 
 .add-guest-remove-btn {
@@ -522,7 +522,7 @@
 .ag-suggestion:last-child { border-radius: 0 0 10px 10px; }
 .ag-suggestion:only-child { border-radius: 10px; }
 .ag-suggestion:hover,
-.ag-suggestion.active { background: rgba(0,122,255,0.06); }
+.ag-suggestion.active { background: rgba(16,185,129,0.06); }
 
 .ag-suggestion-gender {
     font-size: 0.75rem;
@@ -571,7 +571,7 @@
 .guest-db-select-all input[type="checkbox"] {
     width: 18px;
     height: 18px;
-    accent-color: #007aff;
+    accent-color: #10B981;
 }
 
 /* ── Include-me toggle ────────────────────────────────────────────────────── */
@@ -584,7 +584,7 @@
 
 .checkbox-row input[type="checkbox"] {
     width: auto;
-    accent-color: #007aff;
+    accent-color: #10B981;
 }
 
 .checkbox-row label {
@@ -640,7 +640,7 @@
 
 /* ── "Me" row highlight ───────────────────────────────────────────────────── */
 tr[data-is-me="true"] td {
-    background: rgba(0, 122, 255, 0.06);
+    background: rgba(16, 185, 129, 0.06);
 }
 
 /* ── Guest Detail meta section ────────────────────────────────────────────── */

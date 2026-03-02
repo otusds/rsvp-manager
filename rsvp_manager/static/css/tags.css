@@ -96,7 +96,7 @@
 .tag-suggestion:first-child { border-radius: 10px 10px 0 0; }
 .tag-suggestion:last-child { border-radius: 0 0 10px 10px; }
 .tag-suggestion:only-child { border-radius: 10px; }
-.tag-suggestion:hover { background: rgba(0,122,255,0.06); }
+.tag-suggestion:hover { background: rgba(16,185,129,0.06); }
 
 .tag-suggestion-color {
     width: 10px;
@@ -106,7 +106,7 @@
 }
 
 .tag-suggestion-create {
-    color: #007aff;
+    color: #10B981;
     font-weight: 500;
 }
 
@@ -156,7 +156,7 @@
     transition: background 0.1s;
 }
 
-.tag-filter-option:hover { background: rgba(0,122,255,0.06); }
+.tag-filter-option:hover { background: rgba(16,185,129,0.06); }
 
 .tag-filter-option input[type="checkbox"] {
     margin: 0;

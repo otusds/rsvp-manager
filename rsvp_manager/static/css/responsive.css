@@ -44,7 +44,7 @@
     .summary-table td { font-size: 0.78rem; padding: 0.3rem 0.35rem; }
 
     .detail-overlay {
-        background: #f2f2f7;
+        background: #F0FDF4;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
         align-items: stretch;

@@ -107,7 +107,7 @@ class TestPasswordReset:
     def test_forgot_password_page_loads(self, client, test_app):
         resp = client.get("/forgot-password")
         assert resp.status_code == 200
-        assert b"Forgot Password" in resp.data
+        assert b"Send Reset Link" in resp.data
 
     def test_forgot_password_sends_email(self, client, test_app, user):
         with patch("rsvp_manager.blueprints.auth.send_password_reset_email") as mock_send:
