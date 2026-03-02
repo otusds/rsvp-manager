@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RSVP Manager</title>
+    <title>GuestCheck</title>
     {% set v = 4 %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}?v={{ v }}">
@@ -19,7 +19,7 @@
 </head>
 <body>
     <nav>
-        {% block logo %}<a href="{{ url_for('events.home') }}" class="logo">RSVP Manager</a>{% endblock %}
+        {% block logo %}<a href="{{ url_for('events.home') }}" class="logo">GuestCheck</a>{% endblock %}
         {% if current_user.is_authenticated %}
         <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu">
             <span></span><span></span><span></span>

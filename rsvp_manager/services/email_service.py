@@ -32,7 +32,7 @@ def send_verification_email(user):
     token = generate_verification_token(user)
     verify_url = url_for("auth.verify_email", token=token, _external=True)
     html = render_template("emails/verify_email.html", user=user, verify_url=verify_url)
-    _send_email(user.email, "Verify your email — RSVP Manager", html)
+    _send_email(user.email, "Verify your email — GuestCheck", html)
     logger.info("Verification email sent to %s", user.email)
 
 
@@ -65,7 +65,7 @@ def send_password_reset_email(user):
     token = generate_password_reset_token(user)
     reset_url = url_for("auth.reset_password", token=token, _external=True)
     html = render_template("emails/reset_password.html", user=user, reset_url=reset_url)
-    _send_email(user.email, "Reset your password — RSVP Manager", html)
+    _send_email(user.email, "Reset your password — GuestCheck", html)
     logger.info("Password reset email sent to %s", user.email)
 
 

@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from rsvp_manager.extensions import db
-from rsvp_manager.models import Event, Guest, Invitation
+from rsvp_manager.models import Event, Guest, Invitation, Tag
 
 
 def seed(user_id):
@@ -124,4 +124,29 @@ def seed(user_id):
         Invitation(event_id=events[7].id, guest_id=guests[23].id, status="Pending", channel="Email", date_invited=date(2026, 5, 10)),
     ]
     db.session.add_all(invitations)
+    db.session.flush()
+
+    tag_names = ["Family", "Cycling", "Single", "Colleague"]
+    tags = []
+    for tn in tag_names:
+        t = Tag.query.filter_by(user_id=user_id, name=tn).first()
+        if not t:
+            t = Tag(user_id=user_id, name=tn)
+            db.session.add(t)
+        tags.append(t)
+    db.session.flush()
+
+    # Family: Alice, Sofia, Emma, Charlotte, Amelia
+    for g in [guests[0], guests[2], guests[4], guests[6], guests[8]]:
+        g.tags.append(tags[0])
+    # Cycling: James, Oliver, Henry, Lucas, Jack
+    for g in [guests[1], guests[3], guests[7], guests[9], guests[19]]:
+        g.tags.append(tags[1])
+    # Single: Oliver, Charlotte, Lucas, Mia, Nathan
+    for g in [guests[3], guests[6], guests[9], guests[12], guests[23]]:
+        g.tags.append(tags[2])
+    # Colleague: William, Benjamin, Daniel, Noah, Ryan
+    for g in [guests[5], guests[11], guests[17], guests[15], guests[21]]:
+        g.tags.append(tags[3])
+
     db.session.commit()
