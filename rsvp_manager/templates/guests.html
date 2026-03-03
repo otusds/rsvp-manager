@@ -75,6 +75,7 @@
 </div>
 
 {% if guests %}
+<div class="table-scroll">
 <table id="guests-table" class="sortable" data-page="{{ pagination.page }}" data-pages="{{ pagination.pages }}" data-show-archived="{{ '1' if show_archived else '0' }}">
     <thead>
         <tr>
@@ -91,6 +92,7 @@
         {% include "partials/guest_rows.html" %}
     </tbody>
 </table>
+</div>
 
 <p class="empty" id="no-results" style="display:none;">No guests match your filters.</p>
 
