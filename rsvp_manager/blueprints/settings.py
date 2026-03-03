@@ -1,4 +1,3 @@
-import secrets
 from flask import Blueprint, render_template, redirect, url_for, flash, current_app, abort
 from flask_login import login_required, current_user
 from rsvp_manager.extensions import db
@@ -11,7 +10,7 @@ bp = Blueprint("settings", __name__)
 @bp.route("/settings")
 @login_required
 def settings():
-    return render_template("settings.html", api_token=current_user.api_token)
+    return render_template("settings.html")
 
 
 @bp.route("/settings/load-sample-data", methods=["POST"])
@@ -39,10 +38,3 @@ def reset_sample_data():
     return redirect(url_for("settings.settings"))
 
 
-@bp.route("/settings/regenerate-token", methods=["POST"])
-@login_required
-def regenerate_token():
-    current_user.api_token = secrets.token_urlsafe(32)
-    db.session.commit()
-    flash("API token regenerated.")
-    return redirect(url_for("settings.settings"))
