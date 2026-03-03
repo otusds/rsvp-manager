@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GuestCheck</title>
-    {% set v = 7 %}
+    {% set v = 8 %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -38,13 +38,17 @@
             </svg>
         </a>{% endblock %}
         {% if current_user.is_authenticated %}
+        <div class="nav-links">
+            <a href="{{ url_for('events.home') }}" class="nav-link">All Events</a>
+            <a href="{{ url_for('guests.guests') }}" class="nav-link">Guest Database</a>
+        </div>
         <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu">
             <span></span><span></span><span></span>
         </button>
         <div class="hamburger-menu" id="hamburger-menu">
-            <a href="{{ url_for('events.home') }}">All Events</a>
-            <a href="{{ url_for('guests.guests') }}">Guest Database</a>
-            <div class="hamburger-divider"></div>
+            <a href="{{ url_for('events.home') }}" class="nav-link-mobile">All Events</a>
+            <a href="{{ url_for('guests.guests') }}" class="nav-link-mobile">Guest Database</a>
+            <div class="hamburger-divider nav-link-mobile"></div>
             <a href="{{ url_for('settings.settings') }}">Settings</a>
             <div class="hamburger-divider"></div>
             <form method="POST" action="{{ url_for('auth.logout') }}" class="inline">

@@ -1,5 +1,13 @@
+/* ── Desktop nav links: hide mobile-only hamburger items ─────────────────── */
+.nav-link-mobile { display: none; }
+
 /* ── Mobile responsive ────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
+    /* Show mobile nav items in hamburger, hide desktop nav links */
+    .nav-links { display: none !important; }
+    .nav-link-mobile { display: block; }
+    .div.nav-link-mobile { display: block; }
+
     main { padding: 0.75rem 0.75rem 2rem; }
 
     .header-row {

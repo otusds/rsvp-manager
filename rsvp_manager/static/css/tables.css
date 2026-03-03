@@ -244,14 +244,14 @@ select.status-declined {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0.3rem 0.45rem;
+    padding: 0.35rem 0.5rem;
     border-radius: 8px;
-    font-size: 1.1rem;
+    font-size: 1.35rem;
     line-height: 1;
     color: #8e8e93;
     transition: background 0.15s;
     -webkit-tap-highlight-color: transparent;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
 }
 
 .kebab-btn:hover { background: rgba(0,0,0,0.05); }
