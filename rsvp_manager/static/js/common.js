@@ -270,6 +270,15 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
+        tr.querySelector(".ag-gender").addEventListener("change", function () {
+            var firstName = firstInput.value.trim();
+            if (firstName && !tr.nextElementSibling) {
+                var newRow = createBlankGuestRow();
+                addGuestTbody.appendChild(newRow);
+                newRow.querySelector(".ag-first-name").focus();
+            }
+        });
+
         // Show tooltip when clicking disabled fields (linked guest)
         var lastNameTd = tr.querySelector(".ag-last-name").parentElement;
         var genderTd = tr.querySelector(".ag-gender").parentElement;
