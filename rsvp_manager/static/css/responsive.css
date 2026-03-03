@@ -39,11 +39,14 @@
     .col-hide-mobile { display: none; }
     .table-collapsed .col-expand-mobile { display: none; }
 
-    th, td { padding: 0.3rem 0.2rem; font-size: 0.82rem; }
-    .col-kebab { width: 32px; padding-left: 0; padding-right: 0; }
-    .col-gender { width: 55px; padding-left: 0.15rem; padding-right: 0.15rem; }
-    .guest-name-cell { white-space: nowrap; }
-    .kebab-wrapper .kebab-btn { padding: 0.2rem 0.25rem; font-size: 1.15rem; }
+    /* Force table to fit screen width */
+    table.sortable { table-layout: fixed; width: 100%; }
+
+    th, td { padding: 0.3rem 0.15rem; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; }
+    .col-kebab { width: 28px; padding: 0; }
+    .col-gender { width: 46px; padding-left: 0; padding-right: 0; }
+    .guest-name-cell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .kebab-wrapper .kebab-btn { padding: 0.2rem 0.2rem; font-size: 1.15rem; }
 
     .event-row-name { font-size: 0.92rem; }
     .event-row-location { font-size: 0.75rem; }
@@ -88,10 +91,18 @@
         justify-content: center;
     }
 
-    /* Let name inputs use available space */
+    /* Constrain name inputs to cell width */
     .inline-edit.ge-first,
     .inline-edit.ge-last {
-        padding: 0.2rem 0.3rem;
+        width: 100%;
+        padding: 0.2rem 0.2rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .inline-select.ge-gender {
+        width: 100%;
+        padding-left: 0.2rem;
+        padding-right: 1rem;
     }
 
     /* Prevent iOS auto-zoom on input focus (requires font-size >= 16px) */
