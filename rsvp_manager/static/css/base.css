@@ -75,11 +75,11 @@ nav .logo {
     top: 52px;
     right: -260px;
     width: 240px;
-    background: rgba(6, 78, 59, 0.96);
+    background: rgba(209,250,229,0.97);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     border-radius: 0 0 0 14px;
-    box-shadow: -4px 4px 20px rgba(0,0,0,0.2);
+    box-shadow: -4px 4px 20px rgba(0,0,0,0.12);
     z-index: 110;
     transition: right 0.25s ease;
     padding: 0.5rem 0;
@@ -90,18 +90,18 @@ nav .logo {
 .hamburger-menu a {
     display: block;
     padding: 0.75rem 1.25rem;
-    color: var(--gc-light);
+    color: var(--gc-dark);
     text-decoration: none;
     font-size: 0.92rem;
     font-weight: 500;
     transition: background 0.1s;
 }
 
-.hamburger-menu a:hover { background: rgba(255,255,255,0.06); }
+.hamburger-menu a:hover { background: rgba(16,185,129,0.15); }
 
 .hamburger-divider {
     height: 1px;
-    background: rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.08);
     margin: 0.25rem 1rem;
 }
 
@@ -207,16 +207,16 @@ h2 {
     justify-content: center;
     width: 36px;
     height: 36px;
-    background: var(--gc-pale);
+    background: rgba(118,118,128,0.12);
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    color: var(--gc-dark);
+    color: #8e8e93;
     transition: background 0.15s, color 0.15s;
     -webkit-tap-highlight-color: transparent;
 }
 
-.icon-btn:hover { background: rgba(16,185,129,0.3); }
+.icon-btn:hover { background: rgba(118,118,128,0.2); }
 .icon-btn.active { background: rgba(16,185,129,0.12); color: var(--gc-accent); }
 
 /* ── Page kebab menu with search ─────────────────────────────────────────── */

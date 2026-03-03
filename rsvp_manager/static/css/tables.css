@@ -11,8 +11,7 @@ table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    background: var(--gc-bg);
-    border: 1px solid var(--gc-pale);
+    background: white;
     border-radius: 12px;
     font-size: 0.88rem;
 }
@@ -54,7 +53,7 @@ tr:last-child td { border-bottom: none; }
     font-size: 0.85rem;
     flex: 1;
     min-width: 140px;
-    background: var(--gc-pale);
+    background: rgba(118,118,128,0.12);
     color: #1c1c1e;
     transition: box-shadow 0.2s;
     -webkit-appearance: none;
@@ -81,7 +80,7 @@ tr:last-child td { border-bottom: none; }
     border: none;
     border-radius: 10px;
     font-size: 0.85rem;
-    background: var(--gc-pale);
+    background: rgba(118,118,128,0.12);
     color: #1c1c1e;
     -webkit-appearance: none;
     -moz-appearance: none;
