@@ -10,7 +10,7 @@ from rsvp_manager.services import guest_service
 @api_auth_required
 def list_guests():
     page = request.args.get("page", 1, type=int)
-    show_archived = request.args.get("show_archived", "0") == "1"
+    show_archived = request.args.get("show_archived", "0")
     pagination = guest_service.get_user_guests(get_api_user().id, page=page, show_archived=show_archived)
     return api_success({
         "items": [serialize_guest(g) for g in pagination.items],

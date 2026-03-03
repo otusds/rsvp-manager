@@ -40,8 +40,9 @@
             <div class="tag-filter-dropdown" id="tag-filter-dropdown" style="display:none"></div>
         </div>
         <select class="filter-select" id="guest-archive-filter">
-            <option value="active"{{ ' selected' if not show_archived }}>Hide Archived</option>
-            <option value="all"{{ ' selected' if show_archived }}>Show Archived</option>
+            <option value="0"{{ ' selected' if show_archived == '0' }}>Hide Archived</option>
+            <option value="1"{{ ' selected' if show_archived == '1' }}>Show Archived</option>
+            <option value="2"{{ ' selected' if show_archived == '2' }}>Archived Only</option>
         </select>
     </div>
     <div class="filter-row">
@@ -76,7 +77,7 @@
 
 {% if guests %}
 <div class="table-scroll">
-<table id="guests-table" class="sortable" data-page="{{ pagination.page }}" data-pages="{{ pagination.pages }}" data-show-archived="{{ '1' if show_archived else '0' }}">
+<table id="guests-table" class="sortable" data-page="{{ pagination.page }}" data-pages="{{ pagination.pages }}" data-show-archived="{{ show_archived }}">
     <thead>
         <tr>
             <th class="center col-check col-multiselect" style="display:none"><input type="checkbox" id="guest-select-all"></th>

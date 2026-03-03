@@ -9,7 +9,7 @@ bp = Blueprint("guests", __name__)
 @login_required
 def guests():
     page = request.args.get("page", 1, type=int)
-    show_archived = request.args.get("show_archived", "0") == "1"
+    show_archived = request.args.get("show_archived", "0")
     pagination = guest_service.get_user_guests(current_user.id, page=page, show_archived=show_archived)
     if request.args.get("partial"):
         return render_template("partials/guest_rows.html", guests=pagination.items)

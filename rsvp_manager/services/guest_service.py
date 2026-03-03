@@ -9,9 +9,11 @@ VALID_GENDERS = ("Male", "Female")
 GUESTS_PER_PAGE = 50
 
 
-def get_user_guests(user_id, page=1, show_archived=False):
+def get_user_guests(user_id, page=1, show_archived="0"):
     query = Guest.query.filter_by(user_id=user_id)
-    if not show_archived:
+    if show_archived == "2":
+        query = query.filter_by(is_archived=True)
+    elif show_archived != "1":
         query = query.filter_by(is_archived=False)
     return query.order_by(
         Guest.last_name, Guest.first_name

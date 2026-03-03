@@ -146,14 +146,14 @@ document.addEventListener("DOMContentLoaded", function () {
     if (guestSortSelect) guestSortSelect.addEventListener("change", applyGuestTableControls);
 
     // ── Archive filter (server-side reload) ───────────────────────────────
-    var showArchived = guestsTable.getAttribute("data-show-archived") === "1";
+    var showArchived = guestsTable.getAttribute("data-show-archived") || "0";
     var guestArchiveFilter = document.getElementById("guest-archive-filter");
     if (guestArchiveFilter) {
         guestArchiveFilter.addEventListener("change", function () {
-            var wantArchived = guestArchiveFilter.value === "all";
-            if (wantArchived !== showArchived) {
+            var val = guestArchiveFilter.value;
+            if (val !== showArchived) {
                 var url = window.location.pathname;
-                if (wantArchived) url += "?show_archived=1";
+                if (val !== "0") url += "?show_archived=" + val;
                 window.location.href = url;
             }
         });
@@ -310,7 +310,7 @@ document.addEventListener("DOMContentLoaded", function () {
         scrollLoader.style.display = "flex";
 
         var scrollUrl = "/guests?page=" + currentPage + "&partial=1";
-        if (showArchived) scrollUrl += "&show_archived=1";
+        if (showArchived !== "0") scrollUrl += "&show_archived=" + showArchived;
         window.fetchWithCsrf(scrollUrl)
             .then(function (res) { return res.text(); })
             .then(function (html) {
