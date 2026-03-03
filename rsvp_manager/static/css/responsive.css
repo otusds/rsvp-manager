@@ -39,9 +39,11 @@
     .col-hide-mobile { display: none; }
     .table-collapsed .col-expand-mobile { display: none; }
 
-    th, td { padding: 0.35rem 0.3rem; font-size: 0.82rem; }
+    th, td { padding: 0.3rem 0.2rem; font-size: 0.82rem; }
+    .col-kebab { width: 32px; padding-left: 0; padding-right: 0; }
+    .col-gender { width: 55px; padding-left: 0.15rem; padding-right: 0.15rem; }
     .guest-name-cell { white-space: nowrap; }
-    .kebab-wrapper .kebab-btn { padding: 0.2rem 0.3rem; }
+    .kebab-wrapper .kebab-btn { padding: 0.2rem 0.25rem; font-size: 1.15rem; }
 
     .event-row-name { font-size: 0.92rem; }
     .event-row-location { font-size: 0.75rem; }
@@ -86,10 +88,10 @@
         justify-content: center;
     }
 
-    /* Narrower name inputs in guest database */
+    /* Let name inputs use available space */
     .inline-edit.ge-first,
     .inline-edit.ge-last {
-        max-width: 90px;
+        padding: 0.2rem 0.3rem;
     }
 
     /* Prevent iOS auto-zoom on input focus (requires font-size >= 16px) */
