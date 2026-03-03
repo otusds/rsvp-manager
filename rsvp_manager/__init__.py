@@ -61,7 +61,7 @@ def create_app(config_class=Config):
 
     @app.route("/health")
     def health():
-        return jsonify({"status": "ok", "env": app.config.get("APP_ENV")})
+        return jsonify({"status": "ok", "env": app.config.get("APP_ENV"), "raw": os.environ.get("APP_ENV")})
 
     @app.after_request
     def set_security_headers(response):
