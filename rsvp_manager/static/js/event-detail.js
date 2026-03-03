@@ -95,7 +95,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Update guest list heading count
         var glHeading = document.getElementById("guest-list-heading");
-        if (glHeading) glHeading.textContent = "Guest List (" + rows.length + ")";
+        if (glHeading) {
+            var visibleRows = 0;
+            rows.forEach(function (r) { if (r.style.display !== "none") visibleRows++; });
+            glHeading.textContent = visibleRows < rows.length
+                ? "Guest List (" + visibleRows + "/" + rows.length + ")"
+                : "Guest List (" + rows.length + ")";
+        }
     };
 
     // ── Status helpers ───────────────────────────────────────────────────────
@@ -565,6 +571,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 var matchTags = glSelectedTagIds.some(function (id) { return rowTags.indexOf(id) !== -1; });
                 if (!matchTags) row.style.display = "none";
             });
+        }
+        // Update guest list heading count after filtering
+        if (table === invTable) {
+            var glHeading = document.getElementById("guest-list-heading");
+            if (glHeading) {
+                var allRows = table.querySelectorAll("tbody tr:not(.add-guest-row)");
+                var visibleCount = 0;
+                allRows.forEach(function (r) { if (r.style.display !== "none") visibleCount++; });
+                glHeading.textContent = visibleCount < allRows.length
+                    ? "Guest List (" + visibleCount + "/" + allRows.length + ")"
+                    : "Guest List (" + allRows.length + ")";
+            }
         }
     };
 
@@ -1046,11 +1064,11 @@ document.addEventListener("DOMContentLoaded", function () {
         if (invTable) {
             invTable.classList.add("table-collapsed");
         }
-        toggleGlExpandBtn.textContent = "Expand";
+        toggleGlExpandBtn.textContent = "Expand Columns";
         toggleGlExpandBtn.addEventListener("click", function () {
             if (!invTable) return;
             var isCollapsed = invTable.classList.toggle("table-collapsed");
-            toggleGlExpandBtn.textContent = isCollapsed ? "Expand" : "Collapse";
+            toggleGlExpandBtn.textContent = isCollapsed ? "Expand Columns" : "Collapse Columns";
             var menu = toggleGlExpandBtn.closest(".kebab-menu");
             if (menu) menu.classList.remove("open");
         });

@@ -185,30 +185,36 @@
         </div>
 
         <div class="table-controls" id="gl-filters" style="display:none">
-            <select class="filter-select" data-table="invitations-table" data-col="3">
-                <option value="">All Statuses</option>
-                <option value="Not Sent">Not Sent</option>
-                <option value="Attending">Attending</option>
-                <option value="Pending">Pending</option>
-                <option value="Declined">Declined</option>
-            </select>
-            <select class="filter-select" data-table="invitations-table" data-attr="data-gender">
-                <option value="">All Genders</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-            </select>
-            <div class="tag-filter-wrapper" id="gl-tag-filter-wrapper">
-                <button type="button" class="filter-select tag-filter-toggle" id="gl-tag-filter-toggle">All Tags</button>
-                <div class="tag-filter-dropdown" id="gl-tag-filter-dropdown" style="display:none"></div>
+            <div class="filter-row">
+                <span class="filter-label">Filter:</span>
+                <select class="filter-select" data-table="invitations-table" data-col="3">
+                    <option value="">All Statuses</option>
+                    <option value="Not Sent">Not Sent</option>
+                    <option value="Attending">Attending</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Declined">Declined</option>
+                </select>
+                <select class="filter-select" data-table="invitations-table" data-attr="data-gender">
+                    <option value="">All Genders</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+                <div class="tag-filter-wrapper" id="gl-tag-filter-wrapper">
+                    <button type="button" class="filter-select tag-filter-toggle" id="gl-tag-filter-toggle">All Tags</button>
+                    <div class="tag-filter-dropdown" id="gl-tag-filter-dropdown" style="display:none"></div>
+                </div>
             </div>
-            <select class="sort-select" id="gl-sort" data-table="invitations-table">
-                <option value="">Sort by...</option>
-                <option value="1:text">First Name</option>
-                <option value="1:last">Last Name</option>
-                <option value="1:gender">Gender</option>
-                <option value="2:check">Sent</option>
-                <option value="3:text">Status</option>
-            </select>
+            <div class="filter-row">
+                <span class="filter-label">Sort by:</span>
+                <select class="sort-select" id="gl-sort" data-table="invitations-table">
+                    <option value="">Sort by...</option>
+                    <option value="1:text">First Name</option>
+                    <option value="1:last">Last Name</option>
+                    <option value="1:gender">Gender</option>
+                    <option value="2:check">Sent</option>
+                    <option value="3:text">Status</option>
+                </select>
+            </div>
         </div>
 
         <div class="batch-bar" id="batch-bar" style="display:none">
@@ -317,24 +323,30 @@
                 </button>
             </div>
             <div class="table-controls" id="guest-db-filters" style="display:none">
-                <select class="filter-select" id="guest-db-gender-filter">
-                    <option value="">All Genders</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                </select>
-                <div class="tag-filter-wrapper" id="guest-db-tag-filter-wrapper">
-                    <button type="button" class="filter-select tag-filter-toggle" id="guest-db-tag-filter-toggle">All Tags</button>
-                    <div class="tag-filter-dropdown" id="guest-db-tag-filter-dropdown" style="display:none"></div>
+                <div class="filter-row">
+                    <span class="filter-label">Filter:</span>
+                    <select class="filter-select" id="guest-db-gender-filter">
+                        <option value="">All Genders</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                    <div class="tag-filter-wrapper" id="guest-db-tag-filter-wrapper">
+                        <button type="button" class="filter-select tag-filter-toggle" id="guest-db-tag-filter-toggle">All Tags</button>
+                        <div class="tag-filter-dropdown" id="guest-db-tag-filter-dropdown" style="display:none"></div>
+                    </div>
+                    <select class="filter-select" id="guest-db-archive-filter">
+                        <option value="active" selected>Hide Archived</option>
+                        <option value="all">Show Archived</option>
+                    </select>
                 </div>
-                <select class="filter-select" id="guest-db-archive-filter">
-                    <option value="active" selected>Hide Archived</option>
-                    <option value="all">Show Archived</option>
-                </select>
-                <select class="filter-select" id="guest-db-sort">
-                    <option value="first-asc">First Name (A-Z)</option>
-                    <option value="last-asc">Last Name (A-Z)</option>
-                    <option value="gender-asc">Gender</option>
-                </select>
+                <div class="filter-row">
+                    <span class="filter-label">Sort by:</span>
+                    <select class="filter-select" id="guest-db-sort">
+                        <option value="first-asc">First Name (A-Z)</option>
+                        <option value="last-asc">Last Name (A-Z)</option>
+                        <option value="gender-asc">Gender</option>
+                    </select>
+                </div>
             </div>
         </div>
         <div class="guest-db-select-all">

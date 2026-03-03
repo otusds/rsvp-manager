@@ -25,25 +25,31 @@
 
 {% if events %}
 <div class="table-controls" id="event-filters" style="display:none">
-    <select class="filter-select" id="event-type-filter">
-        <option value="">All Types</option>
-        {% for t in event_types %}
-        <option value="{{ t }}">{{ t }}</option>
-        {% endfor %}
-    </select>
-    <select class="filter-select" id="event-location-filter">
-        <option value="">All Locations</option>
-        {% for loc in events|map(attribute='location')|select|unique|sort %}
-        <option value="{{ loc }}">{{ loc }}</option>
-        {% endfor %}
-    </select>
-    <select class="filter-select" id="event-sort">
-        <option value="" disabled selected>Sort by</option>
-        <option value="date-asc">Date</option>
-        <option value="created-desc">Recently created</option>
-        <option value="name-asc">Name</option>
-        <option value="guests-desc">Most guests</option>
-    </select>
+    <div class="filter-row">
+        <span class="filter-label">Filter:</span>
+        <select class="filter-select" id="event-type-filter">
+            <option value="">All Types</option>
+            {% for t in event_types %}
+            <option value="{{ t }}">{{ t }}</option>
+            {% endfor %}
+        </select>
+        <select class="filter-select" id="event-location-filter">
+            <option value="">All Locations</option>
+            {% for loc in events|map(attribute='location')|select|unique|sort %}
+            <option value="{{ loc }}">{{ loc }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filter-row">
+        <span class="filter-label">Sort by:</span>
+        <select class="filter-select" id="event-sort">
+            <option value="" disabled selected>Sort by</option>
+            <option value="date-asc">Date</option>
+            <option value="created-desc">Recently created</option>
+            <option value="name-asc">Name</option>
+            <option value="guests-desc">Most guests</option>
+        </select>
+    </div>
 </div>
 
 <div class="event-list" id="event-grid" data-page="{{ pagination.page }}" data-pages="{{ pagination.pages }}">

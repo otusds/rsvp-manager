@@ -11,10 +11,10 @@
     <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
     <td><input type="text" class="inline-edit ge-first" value="{{ guest.first_name }}" data-guest-id="{{ guest.id }}"></td>
     <td><input type="text" class="inline-edit ge-last" value="{{ guest.last_name or '' }}" data-guest-id="{{ guest.id }}"></td>
-    <td>
-        <select class="inline-select ge-gender" data-guest-id="{{ guest.id }}">
-            <option value="Male"{{ ' selected' if guest.gender == 'Male' }}>Male</option>
-            <option value="Female"{{ ' selected' if guest.gender == 'Female' }}>Female</option>
+    <td class="gender-cell">
+        <select class="inline-select ge-gender gender-tag-select" data-guest-id="{{ guest.id }}">
+            <option value="Male"{{ ' selected' if guest.gender == 'Male' }}>M</option>
+            <option value="Female"{{ ' selected' if guest.gender == 'Female' }}>F</option>
         </select>
     </td>
     <td class="col-expand"><input type="text" class="inline-edit ge-notes" value="{{ guest.notes or '' }}" placeholder="Add notes about guest" data-guest-id="{{ guest.id }}"></td>

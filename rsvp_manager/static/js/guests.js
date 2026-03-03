@@ -131,6 +131,11 @@ document.addEventListener("DOMContentLoaded", function () {
             if (show) visibleCount++;
         });
         if (guestNoResults) guestNoResults.style.display = visibleCount === 0 ? "" : "none";
+        var guestCountEl = document.getElementById("guest-count");
+        if (guestCountEl) {
+            var totalRows = guestsTable.querySelectorAll("tbody tr").length;
+            guestCountEl.textContent = visibleCount < totalRows ? "(" + visibleCount + "/" + totalRows + ")" : "(" + totalRows + ")";
+        }
     }
 
     if (guestSearchInput) {
@@ -156,18 +161,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Inline editing helpers ────────────────────────────────────────────
 
-    function abbreviateGender(select) {
-        if (!isMobile) return;
-        Array.from(select.options).forEach(function (opt) {
-            if (opt.value === "Male") opt.textContent = "M";
-            else if (opt.value === "Female") opt.textContent = "F";
-        });
-    }
-    function expandGender(select) {
-        Array.from(select.options).forEach(function (opt) {
-            if (opt.value === "Male") opt.textContent = "Male";
-            else if (opt.value === "Female") opt.textContent = "Female";
-        });
+    function updateGenderTagColor(select) {
+        select.classList.remove("gender-m", "gender-f");
+        if (select.value === "Male") select.classList.add("gender-m");
+        else if (select.value === "Female") select.classList.add("gender-f");
     }
 
     // ── Initialize listeners on a guest row ───────────────────────────────
@@ -204,10 +201,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // Gender editing
         var genderSelect = row.querySelector(".ge-gender");
         if (genderSelect) {
-            abbreviateGender(genderSelect);
-            genderSelect.addEventListener("focus", function () { expandGender(genderSelect); });
-            genderSelect.addEventListener("blur", function () { abbreviateGender(genderSelect); });
+            updateGenderTagColor(genderSelect);
             genderSelect.addEventListener("change", function () {
+                updateGenderTagColor(genderSelect);
                 var guestId = genderSelect.getAttribute("data-guest-id");
                 row.setAttribute("data-gender", genderSelect.value);
                 window.fetchWithCsrf("/api/v1/guests/" + guestId, {
@@ -415,13 +411,13 @@ document.addEventListener("DOMContentLoaded", function () {
     if (toggleExpandBtn && guestsTable) {
         if (isMobile) {
             guestsTable.classList.add("table-collapsed");
-            toggleExpandBtn.textContent = "Expand";
+            toggleExpandBtn.textContent = "Expand Columns";
         } else {
-            toggleExpandBtn.textContent = "Collapse";
+            toggleExpandBtn.textContent = "Collapse Columns";
         }
         toggleExpandBtn.addEventListener("click", function () {
             var isCollapsed = guestsTable.classList.toggle("table-collapsed");
-            toggleExpandBtn.textContent = isCollapsed ? "Expand" : "Collapse";
+            toggleExpandBtn.textContent = isCollapsed ? "Expand Columns" : "Collapse Columns";
             var menu = toggleExpandBtn.closest(".kebab-menu");
             if (menu) menu.classList.remove("open");
         });
@@ -914,7 +910,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     var notesInput = gdActiveRow.querySelector(".ge-notes");
                     if (firstInput) firstInput.value = firstName;
                     if (lastInput) lastInput.value = lastName;
-                    if (genderSelect) genderSelect.value = gender;
+                    if (genderSelect) { genderSelect.value = gender; updateGenderTagColor(genderSelect); }
                     if (notesInput) notesInput.value = notes;
                     gdActiveRow.setAttribute("data-first", firstName.toLowerCase());
                     gdActiveRow.setAttribute("data-last", lastName.toLowerCase());

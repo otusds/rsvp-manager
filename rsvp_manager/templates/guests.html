@@ -4,7 +4,7 @@
 {% block content %}
 <div class="sticky-controls">
 <div class="header-row">
-    <h1>Guest Database</h1>
+    <h1>Guest Database <span id="guest-count">({{ pagination.total }})</span></h1>
     <div class="btn-group">
         <button type="button" class="btn" id="open-add-guest-btn"><span class="btn-label-short">+</span><span class="btn-label-full">+ Add New Guest</span></button>
         <button type="button" class="icon-btn" id="toggle-filters-btn" title="Filters">
@@ -28,25 +28,31 @@
 
 {% if guests %}
 <div class="table-controls" id="event-filters" style="display:none">
-    <select class="filter-select" id="guest-gender-filter">
-        <option value="">All Genders</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-    </select>
-    <div class="tag-filter-wrapper" id="tag-filter-wrapper">
-        <button type="button" class="filter-select tag-filter-toggle" id="tag-filter-toggle">All Tags</button>
-        <div class="tag-filter-dropdown" id="tag-filter-dropdown" style="display:none"></div>
+    <div class="filter-row">
+        <span class="filter-label">Filter:</span>
+        <select class="filter-select" id="guest-gender-filter">
+            <option value="">All Genders</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+        <div class="tag-filter-wrapper" id="tag-filter-wrapper">
+            <button type="button" class="filter-select tag-filter-toggle" id="tag-filter-toggle">All Tags</button>
+            <div class="tag-filter-dropdown" id="tag-filter-dropdown" style="display:none"></div>
+        </div>
+        <select class="filter-select" id="guest-archive-filter">
+            <option value="active"{{ ' selected' if not show_archived }}>Hide Archived</option>
+            <option value="all"{{ ' selected' if show_archived }}>Show Archived</option>
+        </select>
     </div>
-    <select class="filter-select" id="guest-archive-filter">
-        <option value="active"{{ ' selected' if not show_archived }}>Hide Archived</option>
-        <option value="all"{{ ' selected' if show_archived }}>Show Archived</option>
-    </select>
-    <select class="filter-select" id="guest-sort">
-        <option value="created-desc">Last Created</option>
-        <option value="first-asc">First Name (A-Z)</option>
-        <option value="last-asc">Last Name (A-Z)</option>
-        <option value="gender-asc">Gender</option>
-    </select>
+    <div class="filter-row">
+        <span class="filter-label">Sort by:</span>
+        <select class="filter-select" id="guest-sort">
+            <option value="created-desc">Last Created</option>
+            <option value="first-asc">First Name (A-Z)</option>
+            <option value="last-asc">Last Name (A-Z)</option>
+            <option value="gender-asc">Gender</option>
+        </select>
+    </div>
 </div>
 {% endif %}
 

@@ -41,9 +41,24 @@ tr:last-child td { border-bottom: none; }
 /* ── Table controls ────────────────────────────────────────────────────────── */
 .table-controls {
     display: flex;
-    gap: 0.4rem;
+    flex-direction: column;
+    gap: 0.35rem;
     margin-bottom: 0.6rem;
+}
+
+.filter-row {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
     flex-wrap: wrap;
+}
+
+.filter-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #8e8e93;
+    white-space: nowrap;
+    min-width: 52px;
 }
 
 .search-input {
@@ -182,29 +197,29 @@ td.center, th.center { text-align: center; }
     cursor: pointer;
 }
 
-/* Gender select: invisible until hovered/focused (like text inputs) */
-.inline-select.ge-gender {
-    border-color: transparent;
-    background: transparent;
+/* Gender tag select: colored mini rounded tag */
+.gender-tag-select {
+    display: inline-block;
+    width: auto;
+    min-width: 0;
+    padding: 0.15rem 0.45rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
     background-image: none;
-    transition: border-color 0.15s, background 0.15s;
+    transition: opacity 0.15s;
 }
-.inline-select.ge-gender:hover {
-    border-color: rgba(0,0,0,0.1);
-    background: white;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%238e8e93' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.35rem center;
-}
-.inline-select.ge-gender:focus {
-    outline: none;
-    border-color: #10B981;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%238e8e93' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.35rem center;
-}
+.gender-tag-select:focus { outline: none; opacity: 0.8; box-shadow: 0 0 0 2px rgba(0,0,0,0.1); }
+
+/* M = blue, F = rose */
+.gender-tag-select.gender-m { background: rgba(0,122,255,0.15); color: #0055cc; }
+.gender-tag-select.gender-f { background: rgba(255,45,85,0.15); color: #cc0029; }
 
 .inline-select:disabled {
     opacity: 0.4;
