@@ -43,6 +43,19 @@ nav .logo {
     text-decoration: none;
 }
 
+.env-badge {
+    display: inline-block;
+    margin-left: 0.4rem;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #fff;
+    background: #ef4444;
+    border-radius: 6px;
+    vertical-align: middle;
+}
+
 /* ── Desktop nav links ────────────────────────────────────────────────────── */
 .nav-links {
     display: flex;

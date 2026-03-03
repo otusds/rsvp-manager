@@ -22,6 +22,8 @@ class Config:
             "pool_recycle": 300,
         }
 
+    APP_ENV = os.environ.get("APP_ENV", "production")
+
     RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
     EMAIL_DEFAULT_SENDER = os.environ.get("EMAIL_DEFAULT_SENDER", "onboarding@resend.dev")
 

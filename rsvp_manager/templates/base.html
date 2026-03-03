@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GuestCheck</title>
-    {% set v = 17 %}
+    {% set v = 18 %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -36,7 +36,7 @@
                 <path d="M16 26 L23 33 L36 18" fill="none" stroke="#10B981" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
                 <text x="56" y="32" font-family="'Plus Jakarta Sans',sans-serif" font-size="25" font-weight="800" fill="#FFFFFF" letter-spacing="-0.5">Guest<tspan fill="#10B981" font-weight="400">Check</tspan></text>
             </svg>
-        </a>{% endblock %}
+        </a>{% if config.APP_ENV == 'staging' %}<span class="env-badge">TEST</span>{% endif %}{% endblock %}
         {% if current_user.is_authenticated %}
         <div class="nav-links">
             <a href="{{ url_for('events.home') }}" class="nav-link">All Events</a>
