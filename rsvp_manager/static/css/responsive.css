@@ -43,7 +43,8 @@
     table.sortable { table-layout: fixed; width: 100%; }
 
     th, td { padding: 0.3rem 0.15rem; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; }
-    .col-kebab { width: 28px; padding: 0; }
+    td:last-child, th:last-child { overflow: visible; }
+    .col-kebab { width: 28px; padding: 0; overflow: visible; }
     .col-gender { width: 46px; padding-left: 0; padding-right: 0; }
     .guest-name-cell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .kebab-wrapper .kebab-btn { padding: 0.2rem 0.2rem; font-size: 1.15rem; }
