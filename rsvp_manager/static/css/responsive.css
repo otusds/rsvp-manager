@@ -42,10 +42,13 @@
     table.sortable.table-collapsed { table-layout: fixed; width: 100%; }
     table.sortable:not(.table-collapsed) { table-layout: auto; min-width: 100%; }
 
-    /* Expanded table: wider columns for readable content */
+    /* Expanded table: preserve collapsed column widths, widen new columns */
+    table.sortable:not(.table-collapsed) .col-name { min-width: 130px; }
+    table.sortable:not(.table-collapsed) .col-guest { min-width: 140px; }
     table.sortable:not(.table-collapsed) .col-gender { width: auto; min-width: 58px; }
     table.sortable:not(.table-collapsed) .col-expand { min-width: 140px; }
-    table.sortable:not(.table-collapsed) .col-expand-mobile { min-width: 120px; }
+    table.sortable:not(.table-collapsed) .col-expand-mobile { min-width: 240px; }
+    table.sortable:not(.table-collapsed) .col-kebab { width: auto; min-width: 56px; }
 
     th, td { padding: 0.3rem 0.15rem; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; }
     td:last-child, th:last-child { overflow: visible; }
