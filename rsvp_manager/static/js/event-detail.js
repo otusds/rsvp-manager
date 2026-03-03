@@ -9,6 +9,18 @@ document.addEventListener("DOMContentLoaded", function () {
         return "";
     }
 
+    // ── Last Edited timestamp helper ────────────────────────────────────────
+    function touchLastEdited() {
+        var el = document.getElementById("last-edited-value");
+        if (!el) return;
+        var now = new Date();
+        var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+        var d = String(now.getDate()).padStart(2, "0");
+        var h = String(now.getHours()).padStart(2, "0");
+        var m = String(now.getMinutes()).padStart(2, "0");
+        el.textContent = d + " " + months[now.getMonth()] + " " + now.getFullYear() + " at " + h + ":" + m;
+    }
+
     // ── Auto-refresh summary ─────────────────────────────────────────────────
     // Cols: 0=Select, 1=Guest, 2=Gender, 3=Sent(checkbox), 4=Status, 5=Notes, 6=Actions
 
@@ -111,6 +123,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 ? "Guest List (" + visibleRows + "/" + rows.length + ")"
                 : "Guest List (" + rows.length + ")";
         }
+        touchLastEdited();
     };
 
     // ── Status helpers ───────────────────────────────────────────────────────
@@ -1023,6 +1036,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     body: JSON.stringify({ notes: eventNotesArea.value })
                 })
                 .then(function () {
+                    touchLastEdited();
                     if (saveIndicator) {
                         saveIndicator.style.opacity = "1";
                         setTimeout(function () { saveIndicator.style.opacity = "0"; }, 1500);

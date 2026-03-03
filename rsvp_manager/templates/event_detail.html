@@ -58,7 +58,7 @@
             {% endif %}
             <div class="event-info-row">
                 <span class="event-info-label">Last Edited</span>
-                <span class="event-info-value">{{ event.date_edited.strftime('%d %B %Y at %H:%M') if event.date_edited else '—' }}</span>
+                <span class="event-info-value" id="last-edited-value">{{ event.date_edited.strftime('%d %B %Y at %H:%M') if event.date_edited else '—' }}</span>
             </div>
         </div>
         <div class="event-details-notes">
