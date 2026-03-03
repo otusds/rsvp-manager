@@ -1,5 +1,14 @@
 document.addEventListener("DOMContentLoaded", function () {
 
+    // ── Gender label helper ─────────────────────────────────────────────────
+    function genderTagText(gender) {
+        var invTable = document.getElementById("invitations-table");
+        var expanded = invTable && !invTable.classList.contains("table-collapsed");
+        if (gender === "Male") return expanded ? " Male" : " (M)";
+        if (gender === "Female") return expanded ? " Female" : " (F)";
+        return "";
+    }
+
     // ── Auto-refresh summary ─────────────────────────────────────────────────
     // Cols: 0=Select, 1=Guest, 2=Gender, 3=Sent(checkbox), 4=Status, 5=Notes, 6=Actions
 
@@ -151,7 +160,7 @@ document.addEventListener("DOMContentLoaded", function () {
         tr.setAttribute("data-date-responded", data.date_responded || "");
         tr.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
 
-        var genderTag = data.gender === "Male" ? " (M)" : data.gender === "Female" ? " (F)" : "";
+        var genderTag = genderTagText(data.gender);
         tr.innerHTML =
             '<td class="center col-multiselect" style="display:' + multiShow + '"><input type="checkbox" class="row-select"></td>' +
             '<td class="guest-name-cell">' + window.escapeHtml(displayName) + ' <span class="gender-tag">' + window.escapeHtml(genderTag) + '</span></td>' +
@@ -376,7 +385,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (currentDetailRow) {
                     currentDetailRow.setAttribute("data-gender", newGender);
                     var genderTag = currentDetailRow.cells[1] && currentDetailRow.cells[1].querySelector(".gender-tag");
-                    if (genderTag) genderTag.textContent = newGender === "Male" ? "(M)" : newGender === "Female" ? "(F)" : "";
+                    if (genderTag) genderTag.textContent = genderTagText(newGender);
                     window.refreshSummary();
                 }
             })
@@ -472,7 +481,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     var tagHTML = genderTag ? " " + genderTag.outerHTML : "";
                     nameCell.innerHTML = window.escapeHtml(resp.data.full_name) + tagHTML;
                     var gt = nameCell.querySelector(".gender-tag");
-                    if (gt) gt.textContent = newGender === "Male" ? "(M)" : newGender === "Female" ? "(F)" : "";
+                    if (gt) gt.textContent = genderTagText(newGender);
                     currentDetailRow.setAttribute("data-gender", newGender);
                 }
             });
@@ -807,7 +816,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     var displayName = lastName ? firstName + " " + lastName : firstName;
                     var nameCell = gdActiveRow.cells[1];
                     var genderTag = nameCell.querySelector(".gender-tag");
-                    var tagText = gender === "Male" ? "(M)" : gender === "Female" ? "(F)" : "";
+                    var tagText = genderTagText(gender);
                     if (genderTag) {
                         genderTag.textContent = tagText;
                     }
@@ -1069,6 +1078,13 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!invTable) return;
             var isCollapsed = invTable.classList.toggle("table-collapsed");
             toggleGlExpandBtn.textContent = isCollapsed ? "Expand Columns" : "Collapse Columns";
+            invTable.querySelectorAll(".gender-tag").forEach(function (tag) {
+                if (isCollapsed) {
+                    tag.textContent = tag.textContent.replace("Male", "(M)").replace("Female", "(F)");
+                } else {
+                    tag.textContent = tag.textContent.replace("(M)", "Male").replace("(F)", "Female");
+                }
+            });
             var menu = toggleGlExpandBtn.closest(".kebab-menu");
             if (menu) menu.classList.remove("open");
         });
