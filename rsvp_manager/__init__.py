@@ -61,8 +61,7 @@ def create_app(config_class=Config):
 
     @app.route("/health")
     def health():
-        railway_vars = {k: v[:10] for k, v in os.environ.items() if k.startswith(("APP_", "RAILWAY_", "PORT"))}
-        return jsonify({"status": "ok", "env": app.config.get("APP_ENV"), "raw": os.environ.get("APP_ENV"), "vars": railway_vars})
+        return jsonify({"status": "ok"})
 
     @app.after_request
     def set_security_headers(response):
