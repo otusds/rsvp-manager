@@ -1,5 +1,5 @@
 import secrets
-from flask import Blueprint, render_template, redirect, url_for, flash
+from flask import Blueprint, render_template, redirect, url_for, flash, current_app, abort
 from flask_login import login_required, current_user
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Event, Guest, Invitation
@@ -17,6 +17,8 @@ def settings():
 @bp.route("/settings/load-sample-data", methods=["POST"])
 @login_required
 def load_sample_data():
+    if current_app.config.get("APP_ENV") != "staging":
+        abort(404)
     seed(current_user.id)
     flash("Sample data loaded successfully.")
     return redirect(url_for("settings.settings"))
@@ -25,6 +27,8 @@ def load_sample_data():
 @bp.route("/settings/reset-sample-data", methods=["POST"])
 @login_required
 def reset_sample_data():
+    if current_app.config.get("APP_ENV") != "staging":
+        abort(404)
     uid = current_user.id
     Invitation.query.filter(Invitation.event.has(user_id=uid)).delete(synchronize_session=False)
     Event.query.filter_by(user_id=uid).delete()

@@ -48,3 +48,4 @@ class TestConfig:
     RESEND_API_KEY = "re_test_fake"
     EMAIL_DEFAULT_SENDER = "test@resend.dev"
     RATELIMIT_ENABLED = False
+    APP_ENV = "staging"
