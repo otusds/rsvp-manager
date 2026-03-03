@@ -21,6 +21,13 @@
     background: rgba(118,118,128,0.12); padding: 0.1rem 0.45rem; border-radius: 10px;
 }
 
+/* ── Guest count in title ────────────────────────────────────────────────── */
+#guest-count {
+    font-size: 0.75em;
+    font-weight: 400;
+    color: #8e8e93;
+}
+
 /* ── Archived guest rows ─────────────────────────────────────────────────── */
 .archived-row td { opacity: 0.5; }
 .archived-row td:last-child { opacity: 1; }

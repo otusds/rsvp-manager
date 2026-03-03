@@ -54,11 +54,11 @@ tr:last-child td { border-bottom: none; }
 }
 
 .filter-label {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     font-weight: 600;
     color: #8e8e93;
     white-space: nowrap;
-    min-width: 52px;
+    min-width: 48px;
 }
 
 .search-input {
@@ -91,10 +91,10 @@ tr:last-child td { border-bottom: none; }
 
 .filter-select,
 .sort-select {
-    padding: 0.45rem 1.6rem 0.45rem 0.6rem;
+    padding: 0.4rem 1.5rem 0.4rem 0.55rem;
     border: none;
     border-radius: 10px;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     background: rgba(118,118,128,0.12);
     color: #1c1c1e;
     -webkit-appearance: none;
@@ -197,17 +197,20 @@ td.center, th.center { text-align: center; }
     cursor: pointer;
 }
 
-/* Gender tag select: colored mini rounded tag */
+/* Gender tag select: colored rounded square */
 .gender-tag-select {
-    display: inline-block;
-    width: auto;
-    min-width: 0;
-    padding: 0.15rem 0.45rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
     border: none;
-    border-radius: 6px;
+    border-radius: 7px;
     font-size: 0.72rem;
     font-weight: 700;
     text-align: center;
+    text-align-last: center;
     cursor: pointer;
     -webkit-appearance: none;
     -moz-appearance: none;

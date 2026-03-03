@@ -29,7 +29,6 @@
     .btn-small { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
 
     .table-controls { gap: 0.3rem; }
-    .search-input, .filter-select, .sort-select { font-size: 0.82rem; }
 
     /* Responsive button: show "+" only on mobile */
     .btn-label-short { display: inline; }
@@ -39,8 +38,9 @@
     .col-hide-mobile { display: none; }
     .table-collapsed .col-expand-mobile { display: none; }
 
-    /* Force table to fit screen width */
-    table.sortable { table-layout: fixed; width: 100%; }
+    /* Collapsed table fits screen; expanded table can scroll horizontally */
+    table.sortable.table-collapsed { table-layout: fixed; width: 100%; }
+    table.sortable:not(.table-collapsed) { table-layout: auto; min-width: 100%; }
 
     th, td { padding: 0.3rem 0.15rem; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; }
     td:last-child, th:last-child { overflow: visible; }
@@ -100,10 +100,10 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    .inline-select.ge-gender {
-        width: 100%;
-        padding-left: 0.2rem;
-        padding-right: 1rem;
+    .gender-tag-select {
+        width: 24px;
+        height: 24px;
+        font-size: 0.68rem;
     }
 
     /* Prevent iOS auto-zoom on input focus (requires font-size >= 16px) */
@@ -117,10 +117,17 @@
     textarea {
         font-size: 16px !important;
     }
-    /* Keep inline table selects at table font size */
+    /* Keep inline table selects and filter selects at intended font size */
     .status-select,
     .inline-select {
         font-size: 0.82rem !important;
+    }
+    .filter-select,
+    .sort-select {
+        font-size: 0.78rem !important;
+    }
+    .gender-tag-select {
+        font-size: 0.68rem !important;
     }
 }
 

@@ -167,6 +167,20 @@ document.addEventListener("DOMContentLoaded", function () {
         else if (select.value === "Female") select.classList.add("gender-f");
     }
 
+    function abbreviateGender(select) {
+        Array.from(select.options).forEach(function (opt) {
+            if (opt.value === "Male") opt.textContent = "M";
+            else if (opt.value === "Female") opt.textContent = "F";
+        });
+    }
+
+    function expandGender(select) {
+        Array.from(select.options).forEach(function (opt) {
+            if (opt.value === "Male") opt.textContent = "Male";
+            else if (opt.value === "Female") opt.textContent = "Female";
+        });
+    }
+
     // ── Initialize listeners on a guest row ───────────────────────────────
 
     function initGuestRow(row) {
@@ -201,7 +215,10 @@ document.addEventListener("DOMContentLoaded", function () {
         // Gender editing
         var genderSelect = row.querySelector(".ge-gender");
         if (genderSelect) {
+            abbreviateGender(genderSelect);
             updateGenderTagColor(genderSelect);
+            genderSelect.addEventListener("focus", function () { expandGender(genderSelect); });
+            genderSelect.addEventListener("blur", function () { abbreviateGender(genderSelect); });
             genderSelect.addEventListener("change", function () {
                 updateGenderTagColor(genderSelect);
                 var guestId = genderSelect.getAttribute("data-guest-id");
@@ -910,7 +927,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     var notesInput = gdActiveRow.querySelector(".ge-notes");
                     if (firstInput) firstInput.value = firstName;
                     if (lastInput) lastInput.value = lastName;
-                    if (genderSelect) { genderSelect.value = gender; updateGenderTagColor(genderSelect); }
+                    if (genderSelect) { genderSelect.value = gender; abbreviateGender(genderSelect); updateGenderTagColor(genderSelect); }
                     if (notesInput) notesInput.value = notes;
                     gdActiveRow.setAttribute("data-first", firstName.toLowerCase());
                     gdActiveRow.setAttribute("data-last", lastName.toLowerCase());
