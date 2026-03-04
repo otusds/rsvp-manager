@@ -18,9 +18,11 @@ def home():
             today_date=date.today()
         )
     me_exists = event_service.check_me_exists(current_user.id)
+    locations = event_service.get_user_locations(current_user.id)
     return render_template(
         "home.html", events=pagination.items, event_types=EVENT_TYPES,
-        today_date=date.today(), me_exists=me_exists, pagination=pagination
+        today_date=date.today(), me_exists=me_exists, pagination=pagination,
+        locations=locations
     )
 
 
@@ -35,8 +37,10 @@ def add_event():
 @login_required
 def event_detail(event_id):
     event = event_service.get_owned_event_or_404(event_id, current_user.id)
+    locations = event_service.get_user_locations(current_user.id)
     return render_template(
-        "event_detail.html", event=event, event_types=EVENT_TYPES
+        "event_detail.html", event=event, event_types=EVENT_TYPES,
+        locations=locations
     )
 
 

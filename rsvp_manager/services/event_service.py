@@ -27,6 +27,13 @@ def get_owned_event_or_404(event_id, user_id):
     return event
 
 
+def get_user_locations(user_id):
+    rows = db.session.query(Event.location).filter(
+        Event.user_id == user_id, Event.location.isnot(None), Event.location != ""
+    ).distinct().order_by(Event.location).all()
+    return [r[0] for r in rows]
+
+
 def check_me_exists(user_id):
     return Guest.query.filter_by(user_id=user_id, is_me=True).first() is not None
 

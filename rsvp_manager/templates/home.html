@@ -91,7 +91,12 @@
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ne-location">Location</label>
-                        <input type="text" id="ne-location" name="location" placeholder="Optional">
+                        <input type="text" id="ne-location" name="location" placeholder="Optional" list="location-options">
+                        <datalist id="location-options">
+                            {% for loc in locations %}
+                            <option value="{{ loc }}">
+                            {% endfor %}
+                        </datalist>
                     </div>
                     <div class="form-field">
                         <label for="ne-date">Date</label>

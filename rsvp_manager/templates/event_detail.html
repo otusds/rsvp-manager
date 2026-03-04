@@ -476,7 +476,12 @@
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ee-location">Location</label>
-                        <input type="text" id="ee-location" name="location" value="{{ event.location or '' }}" placeholder="Optional">
+                        <input type="text" id="ee-location" name="location" value="{{ event.location or '' }}" placeholder="Optional" list="location-options">
+                        <datalist id="location-options">
+                            {% for loc in locations %}
+                            <option value="{{ loc }}">
+                            {% endfor %}
+                        </datalist>
                     </div>
                     <div class="form-field">
                         <label for="ee-date">Date</label>
