@@ -4,11 +4,19 @@
 /* ── Gender header symbol (replaces "Gender" text) ───────────────────────── */
 .col-gender-symbol { display: none; }
 
-/* ── Desktop: expanded tables use full viewport width ────────────────────── */
-table.sortable:not(.table-collapsed) {
-    table-layout: auto;
-    width: max-content;
-    min-width: 100%;
+/* ── Desktop: table area breaks out of 800px container to full width ───── */
+@media (min-width: 601px) {
+    .table-scroll {
+        width: 100vw;
+        margin-left: calc(50% - 50vw);
+        padding-left: 1rem;
+        padding-right: 1rem;
+        overflow-x: auto;
+    }
+    .table-scroll table.sortable {
+        table-layout: auto;
+        width: 100%;
+    }
 }
 
 /* ── Mobile responsive ────────────────────────────────────────────────────── */
@@ -57,7 +65,7 @@ table.sortable:not(.table-collapsed) {
     /* col-guest gets the remainder automatically via table-layout: fixed */
 
     /* Guest database collapsed: gender column with symbol */
-    #guests-table.table-collapsed .col-gender { width: 36px; }
+    #guests-table.table-collapsed .col-gender { width: 36px; overflow: hidden; text-overflow: clip; }
     #guests-table.table-collapsed .col-kebab { width: 30px; }
 
     /* ── Expanded: scrollable, auto-sizing ─────────────────────────────── */
@@ -81,9 +89,10 @@ table.sortable:not(.table-collapsed) {
     .guest-name-cell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .kebab-wrapper .kebab-btn { padding: 0.2rem 0.2rem; font-size: 1.15rem; }
 
-    /* Gender header: show symbol, hide text */
-    .col-gender-text { display: none; }
+    /* Gender header: collapsed = symbol only, expanded = symbol + text */
     .col-gender-symbol { display: inline; }
+    .table-collapsed .col-gender-text { display: none; }
+    table:not(.table-collapsed) .col-gender-text { display: inline; }
 
     .event-row-name { font-size: 1.05rem; }
     .event-row-location { font-size: 0.75rem; }

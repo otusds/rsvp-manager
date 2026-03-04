@@ -194,9 +194,6 @@ main {
     margin: 0 auto;
     padding: 1.25rem 1rem 3rem;
 }
-main.main-wide {
-    max-width: none;
-}
 
 /* ── Header row ────────────────────────────────────────────────────────────── */
 .header-row {
