@@ -83,6 +83,7 @@
     /* ── General mobile cell sizing ────────────────────────────────────── */
     th, td { padding: 0.3rem 0.15rem; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; }
     td:last-child, th:last-child { overflow: visible; }
+    .add-guest-table td { overflow: visible; }
     .col-kebab { width: 30px; padding: 0; overflow: visible; }
     .col-gender { width: 36px; padding-left: 0; padding-right: 0; }
     .guest-name-cell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

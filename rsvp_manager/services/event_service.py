@@ -11,7 +11,7 @@ EVENTS_PER_PAGE = 20
 def get_user_events(user_id, page=1):
     return Event.query.filter_by(user_id=user_id).options(
         joinedload(Event.invitations)
-    ).order_by(Event.date).paginate(
+    ).order_by(Event.date.desc()).paginate(
         page=page, per_page=EVENTS_PER_PAGE, error_out=False
     )
 
