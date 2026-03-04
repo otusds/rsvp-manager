@@ -282,6 +282,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
+    // Set collapsed state before initializing rows so gender abbreviation works
+    if (isMobile) guestsTable.classList.add("table-collapsed");
+
     // Initialize all existing rows
     guestsTable.querySelectorAll("tbody tr").forEach(initGuestRow);
 
@@ -415,12 +418,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ── Expand/collapse toggle ──────────────────────────────────────────────
     var toggleExpandBtn = document.getElementById("toggle-guest-expand-btn");
     if (toggleExpandBtn && guestsTable) {
-        if (isMobile) {
-            guestsTable.classList.add("table-collapsed");
-            toggleExpandBtn.textContent = "Expand Columns";
-        } else {
-            toggleExpandBtn.textContent = "Collapse Columns";
-        }
+        toggleExpandBtn.textContent = isMobile ? "Expand Columns" : "Collapse Columns";
         toggleExpandBtn.addEventListener("click", function () {
             var isCollapsed = guestsTable.classList.toggle("table-collapsed");
             toggleExpandBtn.textContent = isCollapsed ? "Expand Columns" : "Collapse Columns";
