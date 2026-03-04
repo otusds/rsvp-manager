@@ -4,16 +4,16 @@
 /* ── Gender header symbol (replaces "Gender" text) ───────────────────────── */
 .col-gender-symbol { display: none; }
 
-/* ── Desktop: table area breaks out of 800px container to full width ───── */
+/* ── Desktop: table area breaks out to full width only when expanded ───── */
 @media (min-width: 601px) {
-    .table-scroll {
+    .table-scroll:has(table.sortable:not(.table-collapsed)) {
         width: 100vw;
         margin-left: calc(50% - 50vw);
         padding-left: 1rem;
         padding-right: 1rem;
         overflow-x: auto;
     }
-    .table-scroll table.sortable {
+    .table-scroll table.sortable:not(.table-collapsed) {
         table-layout: auto;
         width: 100%;
     }
