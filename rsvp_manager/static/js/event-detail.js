@@ -2,10 +2,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Gender label helper ─────────────────────────────────────────────────
     function genderTagText(gender) {
-        var invTable = document.getElementById("invitations-table");
-        var expanded = invTable && !invTable.classList.contains("table-collapsed");
-        if (gender === "Male") return expanded ? " Male" : " (M)";
-        if (gender === "Female") return expanded ? " Female" : " (F)";
+        if (gender === "Male") return " (M)";
+        if (gender === "Female") return " (F)";
         return "";
     }
 
@@ -1084,10 +1082,13 @@ document.addEventListener("DOMContentLoaded", function () {
     var toggleGlExpandBtn = document.getElementById("toggle-gl-expand-btn");
     if (toggleGlExpandBtn) {
         var invTable = document.getElementById("invitations-table");
+        var isMobileGL = window.innerWidth <= 600;
         if (invTable) {
-            invTable.classList.add("table-collapsed");
+            if (isMobileGL) {
+                invTable.classList.add("table-collapsed");
+            }
         }
-        toggleGlExpandBtn.textContent = "Expand Columns";
+        toggleGlExpandBtn.textContent = isMobileGL ? "Expand Columns" : "Collapse Columns";
         toggleGlExpandBtn.addEventListener("click", function () {
             if (!invTable) return;
             var isCollapsed = invTable.classList.toggle("table-collapsed");

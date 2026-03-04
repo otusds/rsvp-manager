@@ -1,7 +1,7 @@
 from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from flask_login import login_required, current_user
-from rsvp_manager.models import EVENT_TYPES, CHANNELS
+from rsvp_manager.models import EVENT_TYPES
 from rsvp_manager.services import event_service
 
 bp = Blueprint("events", __name__)
@@ -36,7 +36,7 @@ def add_event():
 def event_detail(event_id):
     event = event_service.get_owned_event_or_404(event_id, current_user.id)
     return render_template(
-        "event_detail.html", event=event, channels=CHANNELS, event_types=EVENT_TYPES
+        "event_detail.html", event=event, event_types=EVENT_TYPES
     )
 
 

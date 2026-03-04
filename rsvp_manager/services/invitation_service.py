@@ -51,9 +51,7 @@ def remove_invitation(invitation):
 
 
 def update_field(invitation, field, value):
-    if field == "channel":
-        invitation.channel = value
-    elif field == "notes":
+    if field == "notes":
         invitation.notes = value
     else:
         abort(400, description="Invalid field")
@@ -133,7 +131,7 @@ def bulk_create_and_invite(event, guests_data, user_id):
             "invitation_id": inv.id, "guest_id": guest.id,
             "first_name": guest.first_name, "last_name": guest.last_name or "",
             "gender": guest.gender, "status": "Not Sent",
-            "channel": "", "notes": "",
+            "notes": "",
             "guest_notes": "", "guest_tags": [],
             "date_invited": "", "date_invited_iso": "",
             "date_responded": "", "date_responded_iso": ""

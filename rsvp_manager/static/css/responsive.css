@@ -1,6 +1,16 @@
 /* ── Desktop nav links: hide mobile-only hamburger items ─────────────────── */
 .nav-link-mobile { display: none; }
 
+/* ── Gender header symbol (replaces "Gender" text) ───────────────────────── */
+.col-gender-symbol { display: none; }
+
+/* ── Desktop: expanded tables use full viewport width ────────────────────── */
+table.sortable:not(.table-collapsed) {
+    table-layout: auto;
+    width: max-content;
+    min-width: 100%;
+}
+
 /* ── Mobile responsive ────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
     /* Show mobile nav items in hamburger, hide desktop nav links */
@@ -37,26 +47,43 @@
     /* Hide expanded-only cols on mobile when collapsed */
     .table-collapsed .col-expand-mobile { display: none; }
 
-    /* Collapsed table fits screen; expanded table can scroll horizontally */
+    /* ── Collapsed: fixed layout, fit exactly to screen ────────────────── */
     table.sortable.table-collapsed { table-layout: fixed; width: 100%; }
+
+    /* Event guest list collapsed: precise column widths */
+    #invitations-table.table-collapsed .col-kebab { width: 30px; }
+    #invitations-table.table-collapsed .col-status { width: 95px; }
+    #invitations-table.table-collapsed .col-sent { width: 36px; }
+    /* col-guest gets the remainder automatically via table-layout: fixed */
+
+    /* Guest database collapsed: gender column with symbol */
+    #guests-table.table-collapsed .col-gender { width: 36px; }
+    #guests-table.table-collapsed .col-kebab { width: 30px; }
+
+    /* ── Expanded: scrollable, auto-sizing ─────────────────────────────── */
     table.sortable:not(.table-collapsed) { table-layout: auto; min-width: 100%; }
 
-    /* Expanded table: preserve collapsed column widths, widen new columns */
-    table.sortable:not(.table-collapsed) .col-name { min-width: 130px; }
-    table.sortable:not(.table-collapsed) .col-guest { min-width: 140px; }
-    table.sortable:not(.table-collapsed) .col-gender { width: auto; min-width: 58px; }
+    /* Expanded table: ensure columns have sensible minimum widths */
+    table.sortable:not(.table-collapsed) .col-name { min-width: 120px; }
+    table.sortable:not(.table-collapsed) .col-guest { min-width: 130px; }
+    table.sortable:not(.table-collapsed) .col-gender { width: auto; min-width: 50px; }
     table.sortable:not(.table-collapsed) .col-expand { min-width: 140px; }
-    table.sortable:not(.table-collapsed) .col-expand-mobile { min-width: 240px; }
-    table.sortable:not(.table-collapsed) .col-kebab { width: auto; min-width: 56px; }
+    table.sortable:not(.table-collapsed) .col-expand-mobile { min-width: 200px; }
+    table.sortable:not(.table-collapsed) .col-kebab { width: auto; min-width: 44px; }
+    table.sortable:not(.table-collapsed) .col-sent { width: auto; min-width: 40px; }
+    table.sortable:not(.table-collapsed) .col-status { width: auto; min-width: 95px; }
 
+    /* ── General mobile cell sizing ────────────────────────────────────── */
     th, td { padding: 0.3rem 0.15rem; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; }
     td:last-child, th:last-child { overflow: visible; }
-    .col-sent { width: 50px; }
-    .col-status { width: 96px; }
-    .col-kebab { width: 24px; padding: 0; overflow: visible; }
-    .col-gender { width: 46px; padding-left: 0; padding-right: 0; }
+    .col-kebab { width: 30px; padding: 0; overflow: visible; }
+    .col-gender { width: 36px; padding-left: 0; padding-right: 0; }
     .guest-name-cell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .kebab-wrapper .kebab-btn { padding: 0.2rem 0.2rem; font-size: 1.15rem; }
+
+    /* Gender header: show symbol, hide text */
+    .col-gender-text { display: none; }
+    .col-gender-symbol { display: inline; }
 
     .event-row-name { font-size: 1.05rem; }
     .event-row-location { font-size: 0.75rem; }

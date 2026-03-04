@@ -37,9 +37,6 @@ def update_invitation(invitation_id):
     if "status" in data:
         invitation_service.update_status(invitation, data["status"])
 
-    if "channel" in data:
-        invitation_service.update_field(invitation, "channel", data["channel"])
-
     if "notes" in data:
         invitation_service.update_field(invitation, "notes", data["notes"])
 

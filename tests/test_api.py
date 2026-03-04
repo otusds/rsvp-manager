@@ -251,13 +251,6 @@ class TestInvitationsAPI:
         assert resp.status_code == 200
         assert resp.get_json()["data"]["notes"] == "Bringing a plus one"
 
-    def test_update_invitation_channel(self, logged_in_client, sample_invitation):
-        resp = api_put(logged_in_client, f"/api/v1/invitations/{sample_invitation}", {
-            "channel": "WhatsApp",
-        })
-        assert resp.status_code == 200
-        assert resp.get_json()["data"]["channel"] == "WhatsApp"
-
     def test_delete_invitation(self, logged_in_client, sample_invitation):
         resp = api_delete(logged_in_client, f"/api/v1/invitations/{sample_invitation}")
         assert resp.status_code == 204

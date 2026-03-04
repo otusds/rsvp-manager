@@ -3,7 +3,6 @@ from rsvp_manager.extensions import db, login_manager
 
 
 EVENT_TYPES = ["Dinner", "Party", "Weekend", "Hunt", "Corporate", "Other"]
-CHANNELS = ["WhatsApp", "Email", "Call", "Live", "SMS", "Other"]
 
 
 class User(UserMixin, db.Model):
@@ -99,7 +98,6 @@ class Invitation(db.Model):
     event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False, index=True)
     guest_id = db.Column(db.Integer, db.ForeignKey("guest.id"), nullable=False, index=True)
     status = db.Column(db.String(20), nullable=False, default="Not Sent", index=True)
-    channel = db.Column(db.String(50), nullable=True, default="")
     date_invited = db.Column(db.Date, nullable=True)
     date_responded = db.Column(db.Date, nullable=True)
     notes = db.Column(db.Text, nullable=True, default="")

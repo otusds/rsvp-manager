@@ -54,12 +54,12 @@ def export_guests_xlsx(guests):
 def export_event_guests_xlsx(event):
     wb = Workbook()
     ws = _styled_sheet(wb, event.name[:31],
-                       ["Last Name", "First Name", "Gender", "Sent", "Channel",
+                       ["Last Name", "First Name", "Gender", "Sent",
                         "Invited On", "Status", "Responded On", "Inv. Notes", "Guest Notes"])
     for inv in event.invitations:
         g = inv.guest
         sent = "Yes" if inv.status != "Not Sent" else "No"
-        ws.append([g.last_name or "", g.first_name, g.gender, sent, inv.channel or "",
+        ws.append([g.last_name or "", g.first_name, g.gender, sent,
                    inv.date_invited.strftime("%Y-%m-%d") if inv.date_invited else "",
                    inv.status,
                    inv.date_responded.strftime("%Y-%m-%d") if inv.date_responded else "",

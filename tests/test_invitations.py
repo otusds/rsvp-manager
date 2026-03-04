@@ -152,14 +152,6 @@ class TestRemoveInvitation:
 
 
 class TestInvitationFieldAPI:
-    def test_update_channel(self, logged_in_client, sample_invitation, test_app):
-        r = logged_in_client.post(f"/api/invitation/{sample_invitation}/field",
-            json={"field": "channel", "value": "WhatsApp"})
-        assert r.status_code == 200
-        with test_app.app_context():
-            inv = db.session.get(Invitation,sample_invitation)
-            assert inv.channel == "WhatsApp"
-
     def test_update_notes(self, logged_in_client, sample_invitation, test_app):
         r = logged_in_client.post(f"/api/invitation/{sample_invitation}/field",
             json={"field": "notes", "value": "Updated note"})
