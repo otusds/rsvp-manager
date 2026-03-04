@@ -126,6 +126,22 @@ document.addEventListener("DOMContentLoaded", function () {
     if (guestGenderFilter) guestGenderFilter.addEventListener("change", applyGuestTableControls);
     if (guestSortSelect) guestSortSelect.addEventListener("change", applyGuestTableControls);
 
+    // ── Clear filters ─────────────────────────────────────────────────────
+    var guestClearBtn = document.getElementById("guest-clear-filters");
+    if (guestClearBtn) {
+        guestClearBtn.addEventListener("click", function () {
+            if (guestSearchInput) guestSearchInput.value = "";
+            if (guestGenderFilter) guestGenderFilter.selectedIndex = 0;
+            if (guestSortSelect) guestSortSelect.selectedIndex = 0;
+            if (tagFilterToggle) tagFilterToggle.textContent = "All Tags";
+            selectedTagIds = [];
+            if (tagFilterDropdown) {
+                tagFilterDropdown.querySelectorAll("input[type='checkbox']").forEach(function (cb) { cb.checked = false; });
+            }
+            applyGuestTableControls();
+        });
+    }
+
     // ── Archive filter (server-side reload) ───────────────────────────────
     var showArchived = guestsTable.getAttribute("data-show-archived") || "0";
     var guestArchiveFilter = document.getElementById("guest-archive-filter");

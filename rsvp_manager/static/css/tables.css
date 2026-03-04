@@ -61,6 +61,20 @@ tr:last-child td { border-bottom: none; }
     min-width: 48px;
 }
 
+.filter-clear-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: color 0.15s, background 0.15s;
+    margin-left: auto;
+}
+.filter-clear-btn:hover { color: var(--color-danger); background: rgba(255,59,48,0.08); }
+
 .search-input {
     padding: 0.45rem 0.75rem;
     border: none;

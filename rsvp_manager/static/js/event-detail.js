@@ -580,6 +580,26 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .catch(function () { /* ignore */ });
 
+    // ── Clear guest list filters ─────────────────────────────────────────
+    var glClearBtn = document.getElementById("gl-clear-filters");
+    if (glClearBtn) {
+        glClearBtn.addEventListener("click", function () {
+            var glSearch = document.querySelector('.search-input[data-table="invitations-table"]');
+            if (glSearch) glSearch.value = "";
+            document.querySelectorAll('.filter-select[data-table="invitations-table"]').forEach(function (sel) {
+                sel.selectedIndex = 0;
+            });
+            var glSort = document.getElementById("gl-sort");
+            if (glSort) glSort.selectedIndex = 0;
+            if (glTagFilterToggle) glTagFilterToggle.textContent = "All Tags";
+            glSelectedTagIds = [];
+            if (glTagFilterDropdown) {
+                glTagFilterDropdown.querySelectorAll("input[type='checkbox']").forEach(function (cb) { cb.checked = false; });
+            }
+            if (invTable) window.filterTable(invTable);
+        });
+    }
+
     // Extend filterTable to also apply tag filter on invitations table
     var origFilterTable = window.filterTable;
     window.filterTable = function (table) {
@@ -1216,6 +1236,22 @@ document.addEventListener("DOMContentLoaded", function () {
         if (guestDbGenderFilter) guestDbGenderFilter.addEventListener("change", applyGuestDbFilters);
         if (guestDbArchiveFilter) guestDbArchiveFilter.addEventListener("change", applyGuestDbFilters);
         if (guestDbSort) guestDbSort.addEventListener("change", applyGuestDbFilters);
+
+        var guestDbClearBtn = document.getElementById("guest-db-clear-filters");
+        if (guestDbClearBtn) {
+            guestDbClearBtn.addEventListener("click", function () {
+                if (guestDbSearchInput) guestDbSearchInput.value = "";
+                if (guestDbGenderFilter) guestDbGenderFilter.selectedIndex = 0;
+                if (guestDbArchiveFilter) guestDbArchiveFilter.selectedIndex = 0;
+                if (guestDbSort) guestDbSort.selectedIndex = 0;
+                if (guestDbTagFilterToggle) guestDbTagFilterToggle.textContent = "All Tags";
+                guestDbSelectedTagIds = [];
+                if (guestDbTagFilterDropdown) {
+                    guestDbTagFilterDropdown.querySelectorAll("input[type='checkbox']").forEach(function (cb) { cb.checked = false; });
+                }
+                applyGuestDbFilters();
+            });
+        }
 
         selectFromDbBtn.addEventListener("click", function () {
             var menu = selectFromDbBtn.closest(".kebab-menu");

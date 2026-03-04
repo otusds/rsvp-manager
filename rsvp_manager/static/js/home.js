@@ -136,6 +136,18 @@ document.addEventListener("DOMContentLoaded", function () {
     if (locationFilter) locationFilter.addEventListener("change", applyCardControls);
     if (sortSelect) sortSelect.addEventListener("change", applyCardControls);
 
+    // ── Clear filters ─────────────────────────────────────────────────────
+    var eventClearBtn = document.getElementById("event-clear-filters");
+    if (eventClearBtn) {
+        eventClearBtn.addEventListener("click", function () {
+            if (searchInput) searchInput.value = "";
+            if (typeFilter) typeFilter.selectedIndex = 0;
+            if (locationFilter) locationFilter.selectedIndex = 0;
+            if (sortSelect) sortSelect.selectedIndex = 0;
+            applyCardControls();
+        });
+    }
+
     // Initial separation of past events
     applyCardControls();
 
