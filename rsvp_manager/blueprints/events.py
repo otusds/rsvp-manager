@@ -60,6 +60,6 @@ def delete_event(event_id):
 @login_required
 def update_event_notes(event_id):
     event = event_service.get_owned_event_or_404(event_id, current_user.id)
-    data = request.get_json()
+    data = request.get_json() or {}
     event_service.update_event_notes(event, data.get("notes", ""))
     return jsonify(ok=True)

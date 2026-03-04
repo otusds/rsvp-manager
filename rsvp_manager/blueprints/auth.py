@@ -20,8 +20,8 @@ def signup():
     if current_user.is_authenticated:
         return redirect(url_for("events.home"))
     if request.method == "POST":
-        email = request.form["email"].strip().lower()
-        password = request.form["password"]
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
         if not email or "@" not in email:
             return render_template("signup.html", error="Valid email is required")
         if User.query.filter_by(email=email).first():
@@ -48,8 +48,8 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for("events.home"))
     if request.method == "POST":
-        email = request.form["email"].strip().lower()
-        password = request.form["password"]
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
         user = User.query.filter_by(email=email).first()
         if not user or not check_password_hash(user.password_hash, password):
             logger.warning("Failed login attempt for %s", email)

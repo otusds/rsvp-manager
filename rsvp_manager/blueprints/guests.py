@@ -43,7 +43,7 @@ def delete_guest(guest_id):
 @login_required
 def update_guest_name(guest_id):
     guest = guest_service.get_owned_guest_or_404(guest_id, current_user.id)
-    data = request.get_json()
+    data = request.get_json() or {}
     guest_service.update_guest_name(
         guest, data.get("first_name", guest.first_name),
         data.get("last_name", guest.last_name or "")
@@ -55,7 +55,7 @@ def update_guest_name(guest_id):
 @login_required
 def update_guest_gender(guest_id):
     guest = guest_service.get_owned_guest_or_404(guest_id, current_user.id)
-    data = request.get_json()
+    data = request.get_json() or {}
     guest_service.update_guest_gender(guest, data.get("gender", guest.gender))
     return jsonify(ok=True)
 
@@ -64,7 +64,7 @@ def update_guest_gender(guest_id):
 @login_required
 def update_guest_notes(guest_id):
     guest = guest_service.get_owned_guest_or_404(guest_id, current_user.id)
-    data = request.get_json()
+    data = request.get_json() or {}
     guest_service.update_guest_notes(guest, data.get("notes", ""))
     return jsonify(ok=True)
 
@@ -73,7 +73,7 @@ def update_guest_notes(guest_id):
 @login_required
 def update_guest_is_me(guest_id):
     guest = guest_service.get_owned_guest_or_404(guest_id, current_user.id)
-    data = request.get_json()
+    data = request.get_json() or {}
     is_me = guest_service.update_guest_is_me(guest, current_user.id, data.get("is_me", False))
     return jsonify(ok=True, is_me=is_me)
 
@@ -81,6 +81,6 @@ def update_guest_is_me(guest_id):
 @bp.route("/api/guests/bulk-create", methods=["POST"])
 @login_required
 def bulk_create_guests():
-    data = request.get_json()
+    data = request.get_json() or {}
     added = guest_service.bulk_create_guests(current_user.id, data.get("guests", []))
     return jsonify(added=added)

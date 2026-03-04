@@ -1,7 +1,7 @@
-import secrets
 from functools import wraps
-from flask import Blueprint, jsonify, request, g
+from flask import Blueprint, jsonify, request, g, current_app
 from flask_login import current_user
+from flask_wtf.csrf import validate_csrf
 
 api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
@@ -38,8 +38,14 @@ def api_auth_required(f):
             g.api_user = user
             return f(*args, **kwargs)
 
-        # Fall back to session auth
+        # Fall back to session auth (require CSRF for state-changing methods)
         if current_user.is_authenticated:
+            if request.method not in ("GET", "HEAD", "OPTIONS") and current_app.config.get("WTF_CSRF_ENABLED", True):
+                csrf_token = request.headers.get("X-CSRFToken") or request.headers.get("X-CSRF-Token")
+                try:
+                    validate_csrf(csrf_token)
+                except Exception:
+                    return api_error("CSRF token missing or invalid", "CSRF_ERROR", 403)
             g.api_user = current_user
             return f(*args, **kwargs)
 

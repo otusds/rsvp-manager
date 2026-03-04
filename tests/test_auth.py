@@ -32,11 +32,13 @@ class TestSignup:
 
     def test_signup_missing_email(self, client):
         r = client.post("/signup", data={"password": "validpass"})
-        assert r.status_code == 400
+        assert r.status_code == 200
+        assert b"Valid email is required" in r.data
 
     def test_signup_missing_password(self, client):
         r = client.post("/signup", data={"email": "new@test.com"})
-        assert r.status_code == 400
+        assert r.status_code == 200
+        assert b"at least 8 characters" in r.data
 
     def test_signup_empty_email(self, client):
         r = client.post("/signup", data={"email": "", "password": "validpass"})
@@ -95,7 +97,8 @@ class TestLogin:
 
     def test_login_missing_fields(self, client):
         r = client.post("/login", data={"email": "test@test.com"})
-        assert r.status_code == 400
+        assert r.status_code == 200
+        assert b"Invalid email or password" in r.data
 
     def test_login_redirects_if_logged_in(self, logged_in_client):
         r = logged_in_client.get("/login")

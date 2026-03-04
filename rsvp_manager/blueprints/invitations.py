@@ -50,7 +50,7 @@ def remove_invitation(invitation_id):
 @login_required
 def update_invitation_field(invitation_id):
     invitation = invitation_service.get_owned_invitation_or_404(invitation_id, current_user.id)
-    data = request.get_json()
+    data = request.get_json() or {}
     field = data.get("field")
     value = data.get("value", "")
     invitation_service.update_field(invitation, field, value)
@@ -69,7 +69,7 @@ def api_available_guests(event_id):
 @login_required
 def bulk_add_guests(event_id):
     event = event_service.get_owned_event_or_404(event_id, current_user.id)
-    data = request.get_json()
+    data = request.get_json() or {}
     added = invitation_service.bulk_add_guests(event, data.get("guest_ids", []), current_user.id)
     return jsonify(added=added)
 
@@ -78,6 +78,6 @@ def bulk_add_guests(event_id):
 @login_required
 def bulk_create_and_invite(event_id):
     event = event_service.get_owned_event_or_404(event_id, current_user.id)
-    data = request.get_json()
+    data = request.get_json() or {}
     added = invitation_service.bulk_create_and_invite(event, data.get("guests", []), current_user.id)
     return jsonify(added=added)
