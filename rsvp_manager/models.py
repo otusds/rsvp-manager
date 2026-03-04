@@ -58,7 +58,7 @@ class Guest(db.Model):
     last_name = db.Column(db.String(100), nullable=True, default="")
     gender = db.Column(db.String(10), nullable=False)
     is_me = db.Column(db.Boolean, default=False)
-    is_archived = db.Column(db.Boolean, default=False, server_default=db.text("0"), nullable=False)
+    is_archived = db.Column(db.Boolean, default=False, server_default=db.text("false"), nullable=False)
     notes = db.Column(db.Text, default="")
     date_created = db.Column(db.DateTime, nullable=True)
     date_edited = db.Column(db.DateTime, nullable=True)

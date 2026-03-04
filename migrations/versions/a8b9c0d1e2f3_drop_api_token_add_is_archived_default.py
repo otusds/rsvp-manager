@@ -24,7 +24,7 @@ def upgrade():
     with op.batch_alter_table('guest', schema=None) as batch_op:
         batch_op.alter_column('is_archived',
                               existing_type=sa.Boolean(),
-                              server_default=sa.text('0'),
+                              server_default=sa.text('false'),
                               nullable=False)
 
 
