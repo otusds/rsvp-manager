@@ -145,9 +145,10 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    .gender-tag-select {
+    .table-collapsed .gender-tag-select {
         width: 24px;
         height: 24px;
+        padding: 0;
         font-size: 0.68rem;
     }
 
@@ -171,7 +172,7 @@
     .sort-select {
         font-size: 0.78rem !important;
     }
-    .gender-tag-select {
+    .table-collapsed .gender-tag-select {
         font-size: 0.68rem !important;
     }
 }

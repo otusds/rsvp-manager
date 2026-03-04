@@ -124,7 +124,8 @@ th.sort-desc::after { content: "\2193\FE0E"; opacity: 0.7; }
 td.center, th.center { text-align: center; }
 .col-check { width: 36px; }
 .col-kebab, table.sortable td:last-child { width: 40px; padding-left: 0.2rem; padding-right: 0.2rem; text-align: center; }
-.col-gender { width: 65px; padding-left: 0.3rem; padding-right: 0.3rem; }
+.col-sent { text-align: center; }
+.col-gender { width: 75px; padding-left: 0.3rem; padding-right: 0.3rem; }
 .col-multiselect { display: none; }
 .table-collapsed .col-expand { display: none; }
 
@@ -181,14 +182,13 @@ td.center, th.center { text-align: center; }
     cursor: pointer;
 }
 
-/* Gender tag select: colored rounded square */
+/* Gender tag select: colored rounded tag */
 .gender-tag-select {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
     height: 26px;
-    padding: 0;
+    padding: 0.15rem 0.45rem;
     border: none;
     border-radius: 7px;
     font-size: 0.72rem;

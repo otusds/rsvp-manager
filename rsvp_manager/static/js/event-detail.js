@@ -1,18 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
 
     // ── Gender label helper ─────────────────────────────────────────────────
-    function isGuestListCollapsed() {
-        var t = document.getElementById("invitations-table");
-        return t && t.classList.contains("table-collapsed");
-    }
     function genderTagText(gender) {
-        if (isGuestListCollapsed()) {
-            if (gender === "Male") return " (M)";
-            if (gender === "Female") return " (F)";
-        } else {
-            if (gender === "Male") return " Male";
-            if (gender === "Female") return " Female";
-        }
+        if (gender === "Male") return " (M)";
+        if (gender === "Female") return " (F)";
         return "";
     }
 
@@ -1099,13 +1090,6 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!invTable) return;
             var isCollapsed = invTable.classList.toggle("table-collapsed");
             toggleGlExpandBtn.textContent = isCollapsed ? "Expand Columns" : "Collapse Columns";
-            invTable.querySelectorAll(".gender-tag").forEach(function (tag) {
-                if (isCollapsed) {
-                    tag.textContent = tag.textContent.replace("Male", "(M)").replace("Female", "(F)");
-                } else {
-                    tag.textContent = tag.textContent.replace("(M)", "Male").replace("(F)", "Female");
-                }
-            });
             var menu = toggleGlExpandBtn.closest(".kebab-menu");
             if (menu) menu.classList.remove("open");
         });
