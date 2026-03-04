@@ -51,9 +51,9 @@ table.sortable:not(.table-collapsed) {
     table.sortable.table-collapsed { table-layout: fixed; width: 100%; }
 
     /* Event guest list collapsed: precise column widths */
-    #invitations-table.table-collapsed .col-kebab { width: 30px; }
+    #invitations-table.table-collapsed .col-kebab { width: 36px; }
     #invitations-table.table-collapsed .col-status { width: 95px; }
-    #invitations-table.table-collapsed .col-sent { width: 36px; }
+    #invitations-table.table-collapsed .col-sent { width: 72px; }
     /* col-guest gets the remainder automatically via table-layout: fixed */
 
     /* Guest database collapsed: gender column with symbol */
