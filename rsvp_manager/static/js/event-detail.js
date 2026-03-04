@@ -1,9 +1,18 @@
 document.addEventListener("DOMContentLoaded", function () {
 
     // ── Gender label helper ─────────────────────────────────────────────────
+    function isGuestListCollapsed() {
+        var t = document.getElementById("invitations-table");
+        return t && t.classList.contains("table-collapsed");
+    }
     function genderTagText(gender) {
-        if (gender === "Male") return " (M)";
-        if (gender === "Female") return " (F)";
+        if (isGuestListCollapsed()) {
+            if (gender === "Male") return " (M)";
+            if (gender === "Female") return " (F)";
+        } else {
+            if (gender === "Male") return " Male";
+            if (gender === "Female") return " Female";
+        }
         return "";
     }
 
