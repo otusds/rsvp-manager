@@ -16,7 +16,7 @@
 }
 
 .auth-tagline {
-    color: #8e8e93;
+    color: var(--color-text-muted);
     font-size: 1rem;
     font-weight: 400;
 }
@@ -33,7 +33,7 @@
 
 .auth-error {
     background: rgba(255,59,48,0.1);
-    color: #ff3b30;
+    color: var(--color-danger);
     padding: 0.6rem 1rem;
     border-radius: 10px;
     font-size: 0.88rem;
@@ -54,17 +54,17 @@
 .auth-switch {
     margin-top: 1.25rem;
     font-size: 0.88rem;
-    color: #8e8e93;
+    color: var(--color-text-muted);
 }
 
 .auth-switch a {
-    color: #10B981;
+    color: var(--gc-accent);
     text-decoration: none;
     font-weight: 500;
 }
 
 .hamburger-menu .nav-logout {
-    color: #ff3b30 !important;
+    color: var(--color-danger) !important;
     background: none;
     border: none;
     font: inherit;

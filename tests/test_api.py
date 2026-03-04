@@ -1,6 +1,5 @@
 """Tests for the /api/v1/ endpoints."""
 import json
-import secrets
 from datetime import date, datetime
 
 import pytest
@@ -11,98 +10,23 @@ from werkzeug.security import generate_password_hash
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
-def api_get(client, url, token=None):
-    headers = {}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    return client.get(url, headers=headers)
-
-
-def api_post(client, url, data=None, token=None):
+def api_post(client, url, data=None):
     headers = {"Content-Type": "application/json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
     return client.post(url, data=json.dumps(data or {}), headers=headers)
 
 
-def api_put(client, url, data=None, token=None):
+def api_put(client, url, data=None):
     headers = {"Content-Type": "application/json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
     return client.put(url, data=json.dumps(data or {}), headers=headers)
 
 
-def api_delete(client, url, token=None):
-    headers = {}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    return client.delete(url, headers=headers)
+def api_delete(client, url):
+    return client.delete(url)
 
 
-# ── Auth Token Tests ─────────────────────────────────────────────────────────
+# ── Auth Tests ───────────────────────────────────────────────────────────────
 
-class TestAuthToken:
-    def test_get_token_success(self, client, user):
-        resp = api_post(client, "/api/v1/auth/token", {
-            "email": "test@test.com", "password": "password123"
-        })
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert data["status"] == "success"
-        assert "token" in data["data"]
-        assert data["data"]["email"] == "test@test.com"
-
-    def test_get_token_wrong_password(self, client, user):
-        resp = api_post(client, "/api/v1/auth/token", {
-            "email": "test@test.com", "password": "wrongpassword"
-        })
-        assert resp.status_code == 401
-        data = resp.get_json()
-        assert data["status"] == "error"
-        assert data["code"] == "AUTH_ERROR"
-
-    def test_get_token_nonexistent_email(self, client, user):
-        resp = api_post(client, "/api/v1/auth/token", {
-            "email": "nobody@test.com", "password": "password123"
-        })
-        assert resp.status_code == 401
-
-    def test_get_token_missing_fields(self, client, user):
-        resp = api_post(client, "/api/v1/auth/token", {"email": "test@test.com"})
-        assert resp.status_code == 400
-
-    def test_token_is_persistent(self, client, user):
-        resp1 = api_post(client, "/api/v1/auth/token", {
-            "email": "test@test.com", "password": "password123"
-        })
-        token1 = resp1.get_json()["data"]["token"]
-        resp2 = api_post(client, "/api/v1/auth/token", {
-            "email": "test@test.com", "password": "password123"
-        })
-        token2 = resp2.get_json()["data"]["token"]
-        assert token1 == token2
-
-
-# ── Token Auth Tests ─────────────────────────────────────────────────────────
-
-class TestTokenAuth:
-    def test_bearer_token_works(self, client, user):
-        # Get a token
-        resp = api_post(client, "/api/v1/auth/token", {
-            "email": "test@test.com", "password": "password123"
-        })
-        token = resp.get_json()["data"]["token"]
-
-        # Use token to access API
-        resp = api_get(client, "/api/v1/events", token=token)
-        assert resp.status_code == 200
-        assert resp.get_json()["status"] == "success"
-
-    def test_invalid_token_returns_401(self, client, user):
-        resp = api_get(client, "/api/v1/events", token="invalid-token-here")
-        assert resp.status_code == 401
-        assert resp.get_json()["code"] == "INVALID_TOKEN"
-
+class TestAPIAuth:
     def test_no_auth_returns_401(self, client, user):
         resp = client.get("/api/v1/events")
         assert resp.status_code == 401

@@ -7,7 +7,7 @@
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 500;
-    color: #fff;
+    color: var(--gc-white);
     white-space: nowrap;
     line-height: 1.4;
 }
@@ -42,7 +42,7 @@
     height: 14px;
     border: none;
     background: rgba(255,255,255,0.3);
-    color: #fff;
+    color: var(--gc-white);
     border-radius: 50%;
     font-size: 0.65rem;
     cursor: pointer;
@@ -73,7 +73,7 @@
     top: 100%;
     left: 0;
     right: 0;
-    background: #fff;
+    background: var(--gc-white);
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 10px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
@@ -89,7 +89,7 @@
     padding: 0.5rem 0.75rem;
     cursor: pointer;
     font-size: 0.85rem;
-    color: #1c1c1e;
+    color: var(--color-text);
     transition: background 0.1s;
 }
 
@@ -106,7 +106,7 @@
 }
 
 .tag-suggestion-create {
-    color: #10B981;
+    color: var(--gc-accent);
     font-weight: 500;
 }
 
@@ -135,7 +135,7 @@
     left: 0;
     right: auto;
     min-width: 200px;
-    background: #fff;
+    background: var(--gc-white);
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 10px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
@@ -152,7 +152,7 @@
     padding: 0.4rem 0.75rem;
     cursor: pointer;
     font-size: 0.82rem;
-    color: #1c1c1e;
+    color: var(--color-text);
     transition: background 0.1s;
 }
 

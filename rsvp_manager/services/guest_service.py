@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import abort
+from sqlalchemy.orm import joinedload
 from rsvp_manager.extensions import db
-from rsvp_manager.models import Guest
+from rsvp_manager.models import Guest, Invitation
 
 VALID_GENDERS = ("Male", "Female")
 
@@ -10,7 +11,10 @@ GUESTS_PER_PAGE = 50
 
 
 def get_user_guests(user_id, page=1, show_archived="0"):
-    query = Guest.query.filter_by(user_id=user_id)
+    query = Guest.query.filter_by(user_id=user_id).options(
+        joinedload(Guest.invitations).joinedload(Invitation.event),
+        joinedload(Guest.tags),
+    )
     if show_archived == "2":
         query = query.filter_by(is_archived=True)
     elif show_archived != "1":
@@ -29,13 +33,19 @@ def get_owned_guest_or_404(guest_id, user_id):
     return guest
 
 
-def create_guest(user_id, form_data):
+def _validate_guest_fields(form_data):
+    """Validate and return cleaned guest fields from form data."""
     first_name = form_data.get("first_name", "").strip()
     if not first_name or len(first_name) > 100:
         abort(400, description="First name is required (max 100 characters)")
     gender = form_data.get("gender", "")
     if gender not in VALID_GENDERS:
         abort(400, description="Gender must be Male or Female")
+    return first_name, gender
+
+
+def create_guest(user_id, form_data):
+    first_name, gender = _validate_guest_fields(form_data)
 
     is_me = bool(form_data.get("is_me"))
     if is_me:
@@ -47,7 +57,7 @@ def create_guest(user_id, form_data):
         gender=gender,
         is_me=is_me,
         notes=form_data.get("notes", "").strip(),
-        date_created=datetime.now(),
+        date_created=datetime.now(timezone.utc),
     )
     db.session.add(guest)
     db.session.commit()
@@ -55,12 +65,7 @@ def create_guest(user_id, form_data):
 
 
 def update_guest(guest, user_id, form_data):
-    first_name = form_data.get("first_name", "").strip()
-    if not first_name or len(first_name) > 100:
-        abort(400, description="First name is required (max 100 characters)")
-    gender = form_data.get("gender", "")
-    if gender not in VALID_GENDERS:
-        abort(400, description="Gender must be Male or Female")
+    first_name, gender = _validate_guest_fields(form_data)
 
     is_me = bool(form_data.get("is_me"))
     if is_me and not guest.is_me:
@@ -70,7 +75,7 @@ def update_guest(guest, user_id, form_data):
     guest.gender = gender
     guest.is_me = is_me
     guest.notes = form_data.get("notes", "").strip()
-    guest.date_edited = datetime.now()
+    guest.date_edited = datetime.now(timezone.utc)
     db.session.commit()
     return guest
 
@@ -83,7 +88,7 @@ def delete_guest(guest):
 def update_guest_name(guest, first_name, last_name):
     guest.first_name = first_name
     guest.last_name = last_name or ""
-    guest.date_edited = datetime.now()
+    guest.date_edited = datetime.now(timezone.utc)
     db.session.commit()
 
 
@@ -91,13 +96,13 @@ def update_guest_gender(guest, gender):
     if gender not in VALID_GENDERS:
         abort(400, description="Gender must be Male or Female")
     guest.gender = gender
-    guest.date_edited = datetime.now()
+    guest.date_edited = datetime.now(timezone.utc)
     db.session.commit()
 
 
 def update_guest_notes(guest, notes):
     guest.notes = notes
-    guest.date_edited = datetime.now()
+    guest.date_edited = datetime.now(timezone.utc)
     db.session.commit()
 
 
@@ -105,59 +110,64 @@ def update_guest_is_me(guest, user_id, is_me):
     if is_me and not guest.is_me:
         Guest.query.filter_by(user_id=user_id, is_me=True).update({"is_me": False})
     guest.is_me = is_me
-    guest.date_edited = datetime.now()
+    guest.date_edited = datetime.now(timezone.utc)
     db.session.commit()
     return guest.is_me
 
 
 def archive_guest(guest):
     guest.is_archived = True
-    guest.date_edited = datetime.now()
+    guest.date_edited = datetime.now(timezone.utc)
     db.session.commit()
 
 
 def unarchive_guest(guest):
     guest.is_archived = False
-    guest.date_edited = datetime.now()
+    guest.date_edited = datetime.now(timezone.utc)
     db.session.commit()
 
 
+def _get_owned_guests_by_ids(user_id, guest_ids):
+    """Batch-fetch guests owned by user_id from a list of IDs."""
+    if not guest_ids:
+        return []
+    return Guest.query.filter(
+        Guest.id.in_(guest_ids), Guest.user_id == user_id
+    ).all()
+
+
 def bulk_archive_guests(user_id, guest_ids):
+    guests = _get_owned_guests_by_ids(user_id, guest_ids)
     archived = 0
-    for gid in guest_ids:
-        guest = db.session.get(Guest, gid)
-        if guest and guest.user_id == user_id and not guest.is_archived:
+    for guest in guests:
+        if not guest.is_archived:
             guest.is_archived = True
-            guest.date_edited = datetime.now()
+            guest.date_edited = datetime.now(timezone.utc)
             archived += 1
     db.session.commit()
     return archived
 
 
 def bulk_delete_guests(user_id, guest_ids):
-    deleted = 0
-    for gid in guest_ids:
-        guest = db.session.get(Guest, gid)
-        if guest and guest.user_id == user_id:
-            db.session.delete(guest)
-            deleted += 1
+    guests = _get_owned_guests_by_ids(user_id, guest_ids)
+    for guest in guests:
+        db.session.delete(guest)
     db.session.commit()
-    return deleted
+    return len(guests)
 
 
 def bulk_add_tag(user_id, guest_ids, tag_name):
     from rsvp_manager.services import tag_service
     tag = tag_service.get_or_create_tag(user_id, tag_name)
+    guests = _get_owned_guests_by_ids(user_id, guest_ids)
     updated = []
-    for gid in guest_ids:
-        guest = db.session.get(Guest, gid)
-        if guest and guest.user_id == user_id:
-            if tag not in guest.tags:
-                guest.tags.append(tag)
-            updated.append({
-                "id": guest.id,
-                "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
-            })
+    for guest in guests:
+        if tag not in guest.tags:
+            guest.tags.append(tag)
+        updated.append({
+            "id": guest.id,
+            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
+        })
     db.session.commit()
     return updated
 
@@ -171,16 +181,15 @@ def bulk_remove_tag(user_id, guest_ids, tag_name):
             break
     if not tag:
         return []
+    guests = _get_owned_guests_by_ids(user_id, guest_ids)
     updated = []
-    for gid in guest_ids:
-        guest = db.session.get(Guest, gid)
-        if guest and guest.user_id == user_id:
-            if tag in guest.tags:
-                guest.tags.remove(tag)
-            updated.append({
-                "id": guest.id,
-                "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
-            })
+    for guest in guests:
+        if tag in guest.tags:
+            guest.tags.remove(tag)
+        updated.append({
+            "id": guest.id,
+            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
+        })
     db.session.commit()
     return updated
 
@@ -197,7 +206,7 @@ def bulk_create_guests(user_id, guests_data):
             last_name=g_data.get("last_name", "").strip(),
             gender=g_data.get("gender", "Male"),
             notes=g_data.get("notes", "").strip(),
-            date_created=datetime.now()
+            date_created=datetime.now(timezone.utc)
         )
         db.session.add(guest)
         db.session.flush()

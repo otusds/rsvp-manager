@@ -4,7 +4,7 @@ from rsvp_manager.models import User, Event, Guest, Invitation
 from rsvp_manager import create_app
 from rsvp_manager.config import TestConfig
 from werkzeug.security import generate_password_hash
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 
 @pytest.fixture()
@@ -64,7 +64,7 @@ def sample_guest(test_app, user):
     with test_app.app_context():
         g = Guest(
             user_id=user, first_name="Alice", last_name="Smith",
-            gender="Female", notes="Test guest", date_created=datetime.now()
+            gender="Female", notes="Test guest", date_created=datetime.now(timezone.utc)
         )
         db.session.add(g)
         db.session.commit()

@@ -15,7 +15,7 @@
     border-radius: 12px;
     padding: 0.9rem 1rem;
     text-decoration: none;
-    color: #1c1c1e;
+    color: var(--color-text);
     box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
     transition: background 0.15s;
     -webkit-tap-highlight-color: transparent;
@@ -28,7 +28,7 @@
 
 .event-row-card:active {
     transform: translateY(0);
-    background: #f2f2f7;
+    background: var(--color-bg-secondary);
     box-shadow: 0 0.5px 1px rgba(0,0,0,0.05);
 }
 
@@ -42,7 +42,7 @@
 .event-row-name {
     font-size: 1rem;
     font-weight: 600;
-    color: #1c1c1e;
+    color: var(--color-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -50,7 +50,7 @@
 
 .event-row-location {
     font-size: 0.8rem;
-    color: #8e8e93;
+    color: var(--color-text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -66,7 +66,7 @@
 
 .event-row-date {
     font-size: 0.78rem;
-    color: #8e8e93;
+    color: var(--color-text-muted);
     white-space: nowrap;
 }
 
@@ -81,10 +81,10 @@
 
 .stat {
     font-size: 0.78rem;
-    color: #8e8e93;
+    color: var(--color-text-muted);
 }
 
-.stat-attending { color: #34c759; font-weight: 600; }
+.stat-attending { color: var(--color-success); font-weight: 600; }
 
 /* ── Type badges ───────────────────────────────────────────────────────────── */
 .badge {
@@ -96,30 +96,30 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: white;
-    background: #8e8e93;
+    background: var(--color-text-muted);
     white-space: nowrap;
 }
 
-.badge-dinner     { background: #af52de; }
-.badge-party      { background: #ff9500; }
-.badge-weekend    { background: #34c759; }
-.badge-hunt       { background: #ff2d55; }
-.badge-corporate  { background: #007aff; }
-.badge-other      { background: #8e8e93; }
+.badge-dinner     { background: var(--color-badge-dinner); }
+.badge-party      { background: var(--color-badge-party); }
+.badge-weekend    { background: var(--color-badge-weekend); }
+.badge-hunt       { background: var(--color-badge-hunt); }
+.badge-corporate  { background: var(--color-badge-corporate); }
+.badge-other      { background: var(--color-text-muted); }
 
 .status-pending {
     background: rgba(255,149,0,0.12);
-    color: #c77d00;
+    color: var(--color-warning-dark);
 }
 
 .status-attending {
     background: rgba(52,199,89,0.12);
-    color: #248a3d;
+    color: var(--color-success-dark);
 }
 
 .status-declined {
     background: rgba(255,59,48,0.12);
-    color: #d70015;
+    color: var(--color-danger-dark);
 }
 
 /* ── Mini progress bar (event cards) ────────────────────────────────────── */
@@ -133,12 +133,12 @@
 
 .progress-bar-mini-fill {
     height: 100%;
-    background: #34c759;
+    background: var(--color-success);
     border-radius: 3px;
     transition: width 0.3s;
 }
 
-.progress-bar-mini-fill.over-target { background: #ff9500; }
+.progress-bar-mini-fill.over-target { background: var(--color-warning); }
 
 /* ── Event card progress row ───────────────────────────────────────────── */
 .event-row-progress {
@@ -152,9 +152,9 @@
 .progress-bar-mini-value {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #1c1c1e;
+    color: var(--color-text);
     white-space: nowrap;
 }
 
-.progress-bar-mini-value.at-target { color: #248a3d; }
-.progress-bar-mini-value.over-target { color: #c77d00; }
+.progress-bar-mini-value.at-target { color: var(--color-success-dark); }
+.progress-bar-mini-value.over-target { color: var(--color-warning-dark); }

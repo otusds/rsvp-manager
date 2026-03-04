@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from flask import abort
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Guest, Invitation
@@ -23,7 +23,7 @@ def toggle_send(invitation):
         invitation.status = "Not Sent"
         invitation.date_invited = None
         invitation.date_responded = None
-    invitation.event.date_edited = datetime.now()
+    invitation.event.date_edited = datetime.now(timezone.utc)
     db.session.commit()
     return invitation
 
@@ -37,14 +37,14 @@ def update_status(invitation, new_status):
             invitation.date_responded = date.today()
         elif new_status == "Pending":
             invitation.date_responded = None
-    invitation.event.date_edited = datetime.now()
+    invitation.event.date_edited = datetime.now(timezone.utc)
     db.session.commit()
     return invitation
 
 
 def remove_invitation(invitation):
     event_id = invitation.event_id
-    invitation.event.date_edited = datetime.now()
+    invitation.event.date_edited = datetime.now(timezone.utc)
     db.session.delete(invitation)
     db.session.commit()
     return event_id
@@ -57,7 +57,7 @@ def update_field(invitation, field, value):
         invitation.notes = value
     else:
         abort(400, description="Invalid field")
-    invitation.event.date_edited = datetime.now()
+    invitation.event.date_edited = datetime.now(timezone.utc)
     db.session.commit()
 
 
@@ -79,12 +79,18 @@ def get_available_guests(event, user_id):
 
 def bulk_add_guests(event, guest_ids, user_id):
     invited_ids = {inv.guest_id for inv in event.invitations}
+    new_ids = [gid for gid in guest_ids if gid not in invited_ids]
+    if not new_ids:
+        return []
+    guests_by_id = {
+        g.id: g for g in Guest.query.filter(
+            Guest.id.in_(new_ids), Guest.user_id == user_id
+        ).all()
+    }
     added = []
-    for gid in guest_ids:
-        if gid in invited_ids:
-            continue
-        guest = db.session.get(Guest, gid)
-        if not guest or guest.user_id != user_id:
+    for gid in new_ids:
+        guest = guests_by_id.get(gid)
+        if not guest:
             continue
         inv = Invitation(event_id=event.id, guest_id=gid, status="Not Sent")
         db.session.add(inv)
@@ -99,7 +105,7 @@ def bulk_add_guests(event, guest_ids, user_id):
             "date_responded": "", "date_responded_iso": ""
         })
     if added:
-        event.date_edited = datetime.now()
+        event.date_edited = datetime.now(timezone.utc)
     db.session.commit()
     return added
 
@@ -116,7 +122,7 @@ def bulk_create_and_invite(event, guests_data, user_id):
             last_name=g_data.get("last_name", "").strip(),
             gender=g_data.get("gender", "Male"),
             notes=g_data.get("notes", "").strip(),
-            date_created=datetime.now()
+            date_created=datetime.now(timezone.utc)
         )
         db.session.add(guest)
         db.session.flush()
@@ -133,6 +139,6 @@ def bulk_create_and_invite(event, guests_data, user_id):
             "date_responded": "", "date_responded_iso": ""
         })
     if added:
-        event.date_edited = datetime.now()
+        event.date_edited = datetime.now(timezone.utc)
     db.session.commit()
     return added

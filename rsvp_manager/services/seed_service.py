@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Event, Guest, Invitation, Tag
 
@@ -19,7 +19,7 @@ def seed(user_id):
     db.session.add_all(events)
     db.session.flush()
 
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     guests = [
         Guest(user_id=user_id, first_name="Alice", last_name="Martin", gender="Female", notes="Vegetarian", date_created=now),
         Guest(user_id=user_id, first_name="James", last_name="Wilson", gender="Male", date_created=now),

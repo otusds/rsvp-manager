@@ -11,8 +11,8 @@
 }
 
 .event-info-row:last-child { border-bottom: none; }
-.event-info-label { font-size: 0.88rem; color: #8e8e93; }
-.event-info-value { font-size: 0.88rem; font-weight: 500; color: #1c1c1e; }
+.event-info-label { font-size: 0.88rem; color: var(--color-text-muted); }
+.event-info-value { font-size: 0.88rem; font-weight: 500; color: var(--color-text); }
 
 /* ── Collapsible sections ──────────────────────────────────────────────────── */
 .collapsible-header {
@@ -36,7 +36,7 @@
     align-items: center;
     justify-content: center;
     font-size: 0.7rem;
-    color: #8e8e93;
+    color: var(--color-text-muted);
     line-height: 1;
     width: 1em;
     height: 1em;
@@ -68,7 +68,7 @@
 .summary-table .row-label {
     text-align: left;
     font-weight: 600;
-    color: #3a3a3c;
+    color: var(--color-text);
 }
 
 .summary-table .total-row {
@@ -76,9 +76,9 @@
     font-weight: 600;
 }
 
-.summary-table .total-row td[data-stat="attending"] { color: #248a3d; background: rgba(52,199,89,0.08); }
-.summary-table .total-row td[data-stat="pending"] { color: #c77d00; background: rgba(255,149,0,0.08); }
-.summary-table .total-row td[data-stat="declined"] { color: #d70015; background: rgba(255,59,48,0.08); }
+.summary-table .total-row td[data-stat="attending"] { color: var(--color-success-dark); background: rgba(52,199,89,0.08); }
+.summary-table .total-row td[data-stat="pending"] { color: var(--color-warning-dark); background: rgba(255,149,0,0.08); }
+.summary-table .total-row td[data-stat="declined"] { color: var(--color-danger-dark); background: rgba(255,59,48,0.08); }
 .summary-table td[data-stat="invited"] { font-weight: 700; }
 
 /* ── Summary progress bars ──────────────────────────────────────────────── */
@@ -93,7 +93,7 @@
 
 .summary-bar-label {
     font-size: 0.78rem;
-    color: #8e8e93;
+    color: var(--color-text-muted);
     width: 130px;
     flex-shrink: 0;
     white-space: nowrap;
@@ -120,24 +120,24 @@
 .summary-bar-segment span {
     font-size: 0.65rem;
     font-weight: 600;
-    color: #fff;
+    color: var(--gc-white);
     padding: 0 3px;
 }
-.bar-attending { background: #34c759; }
-.bar-attending.over-target { background: #ff9500; }
-.bar-pending { background: #ff9500; }
-.bar-declined { background: #ff3b30; }
+.bar-attending { background: var(--color-success); }
+.bar-attending.over-target { background: var(--color-warning); }
+.bar-pending { background: var(--color-warning); }
+.bar-declined { background: var(--color-danger); }
 
 .summary-bar-value {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #1c1c1e;
+    color: var(--color-text);
     min-width: 60px;
     text-align: right;
     white-space: nowrap;
 }
-.summary-bar-value.at-target { color: #248a3d; }
-.summary-bar-value.over-target { color: #c77d00; }
+.summary-bar-value.at-target { color: var(--color-success-dark); }
+.summary-bar-value.over-target { color: var(--color-warning-dark); }
 
 /* ── Event notes ──────────────────────────────────────────────────────────── */
 .event-notes-textarea {
@@ -156,14 +156,14 @@
 
 .event-notes-textarea:focus {
     outline: none;
-    border-color: #10B981;
+    border-color: var(--gc-accent);
     box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
 }
 
 .save-indicator {
     display: inline-block;
     font-size: 0.78rem;
-    color: #34c759;
+    color: var(--color-success);
     margin-top: 0.2rem;
     opacity: 0;
     transition: opacity 0.3s;
@@ -184,7 +184,7 @@
 
 .inv-notes-input:focus {
     outline: none;
-    border-color: #10B981;
+    border-color: var(--gc-accent);
     background: white;
     box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
 }
@@ -200,7 +200,7 @@
     margin-bottom: 0.6rem;
     font-size: 0.85rem;
     font-weight: 500;
-    color: #10B981;
+    color: var(--gc-accent);
     flex-wrap: wrap;
 }
 
@@ -221,7 +221,7 @@
 }
 
 .detail-card {
-    background: #F0FDF4;
+    background: var(--gc-bg);
     border-radius: 14px 14px 0 0;
     box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
     width: 100%;
@@ -250,7 +250,7 @@
     background: rgba(118,118,128,0.12);
     border: none;
     font-size: 1.1rem;
-    color: #636366;
+    color: var(--color-text-secondary);
     cursor: pointer;
     padding: 0;
     width: 30px;
@@ -290,7 +290,7 @@
     border-radius: 10px; font-size: 0.88rem; background: rgba(118,118,128,0.08); font-family: inherit;
 }
 
-.guest-db-search-row input:focus { outline: none; border-color: #10B981; box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+.guest-db-search-row input:focus { outline: none; border-color: var(--gc-accent); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
 
 #guest-db-filters { margin-top: 0.4rem; }
 
@@ -308,11 +308,11 @@
 .guest-db-item.archived-item { opacity: 0.5; }
 .guest-db-item.archived-item .guest-db-item-name { font-style: italic; }
 
-.guest-db-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #10B981; flex-shrink: 0; }
+.guest-db-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--gc-accent); flex-shrink: 0; }
 
 .guest-db-item-info { flex: 1; min-width: 0; }
 .guest-db-item-name { font-size: 0.92rem; font-weight: 500; }
-.guest-db-item-gender { font-size: 0.78rem; color: #8e8e93; }
+.guest-db-item-gender { font-size: 0.78rem; color: var(--color-text-muted); }
 
 .guest-db-footer {
     padding: 0.75rem 1rem; border-top: 1px solid rgba(0,0,0,0.06);
@@ -322,7 +322,7 @@
 
 .modal-hint {
     font-size: 0.72rem;
-    color: #aeaeb2;
+    color: var(--color-text-muted);
     font-weight: 400;
 }
 
@@ -348,14 +348,14 @@
 .add-guest-table input:focus,
 .add-guest-table select:focus {
     outline: none;
-    border-color: #10B981;
+    border-color: var(--gc-accent);
     box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
 }
 
 .add-guest-remove-btn {
     background: none;
     border: none;
-    color: #ff3b30;
+    color: var(--color-danger);
     cursor: pointer;
     font-size: 1rem;
     padding: 0.2rem;
@@ -376,7 +376,7 @@
     top: 100%;
     left: 0;
     right: 0;
-    background: #fff;
+    background: var(--gc-white);
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 10px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
@@ -392,7 +392,7 @@
     padding: 0.45rem 0.6rem;
     cursor: pointer;
     font-size: 0.82rem;
-    color: #1c1c1e;
+    color: var(--color-text);
     transition: background 0.1s;
 }
 
@@ -404,13 +404,13 @@
 
 .ag-suggestion-gender {
     font-size: 0.75rem;
-    color: #8e8e93;
+    color: var(--color-text-muted);
 }
 
 .add-guest-table input:disabled,
 .add-guest-table select:disabled {
-    background: #f5f5f5;
-    color: #8e8e93;
+    background: var(--color-bg-disabled);
+    color: var(--color-text-muted);
     pointer-events: none;
 }
 
@@ -419,8 +419,8 @@
     bottom: calc(100% + 4px);
     left: 50%;
     transform: translateX(-50%);
-    background: #1c1c1e;
-    color: #fff;
+    background: var(--color-text);
+    color: var(--gc-white);
     font-size: 0.72rem;
     padding: 0.3rem 0.6rem;
     border-radius: 6px;
@@ -443,13 +443,13 @@
     padding: 0.45rem 1rem;
     border-bottom: 1px solid rgba(0,0,0,0.06);
     font-size: 0.85rem;
-    color: #8e8e93;
+    color: var(--color-text-muted);
 }
 
 .guest-db-select-all input[type="checkbox"] {
     width: 18px;
     height: 18px;
-    accent-color: #10B981;
+    accent-color: var(--gc-accent);
 }
 
 /* ── Include-me toggle ────────────────────────────────────────────────────── */
@@ -462,7 +462,7 @@
 
 .checkbox-row input[type="checkbox"] {
     width: auto;
-    accent-color: #10B981;
+    accent-color: var(--gc-accent);
 }
 
 .checkbox-row label {
@@ -490,7 +490,7 @@
 .ios-toggle-slider {
     position: absolute;
     inset: 0;
-    background: #e5e5ea;
+    background: var(--color-border);
     border-radius: 26px;
     transition: background 0.25s;
 }
@@ -509,7 +509,7 @@
 }
 
 .ios-toggle input:checked + .ios-toggle-slider {
-    background: #34c759;
+    background: var(--color-success);
 }
 
 .ios-toggle input:checked + .ios-toggle-slider::before {
@@ -539,15 +539,15 @@ tr[data-is-me="true"] td {
     background: rgba(0,0,0,0.03);
     border-radius: 8px;
 }
-.stat-value { font-size: 1.1rem; font-weight: 600; color: #1c1c1e; }
-.stat-color-attending { color: #248a3d; }
-.stat-color-pending { color: #c77c00; }
-.stat-color-declined { color: #d70015; }
-.stat-label { font-size: 0.7rem; color: #8e8e93; margin-top: 0.15rem; }
+.stat-value { font-size: 1.1rem; font-weight: 600; color: var(--color-text); }
+.stat-color-attending { color: var(--color-success-dark); }
+.stat-color-pending { color: var(--color-warning-dark); }
+.stat-color-declined { color: var(--color-danger-dark); }
+.stat-label { font-size: 0.7rem; color: var(--color-text-muted); margin-top: 0.15rem; }
 .guest-detail-section-title {
     font-size: 0.78rem;
     font-weight: 600;
-    color: #8e8e93;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.03em;
     margin-bottom: 0.5rem;
@@ -561,7 +561,7 @@ tr[data-is-me="true"] td {
     border-bottom: 1px solid rgba(0,0,0,0.04);
 }
 .guest-detail-inv-item:last-child { border-bottom: none; }
-.guest-detail-inv-event { font-size: 0.85rem; color: #1c1c1e; }
+.guest-detail-inv-event { font-size: 0.85rem; color: var(--color-text); }
 .status-tag {
     font-size: 0.7rem;
     font-weight: 600;
@@ -569,15 +569,15 @@ tr[data-is-me="true"] td {
     border-radius: 10px;
     white-space: nowrap;
 }
-.status-tag-attending { background: rgba(52,199,89,0.12); color: #248a3d; }
-.status-tag-pending { background: rgba(255,149,0,0.12); color: #c77c00; }
-.status-tag-declined { background: rgba(255,59,48,0.12); color: #d70015; }
-.guest-detail-dates { font-size: 0.75rem; color: #8e8e93; margin-top: 0.5rem; }
+.status-tag-attending { background: rgba(52,199,89,0.12); color: var(--color-success-dark); }
+.status-tag-pending { background: rgba(255,149,0,0.12); color: var(--color-warning-dark); }
+.status-tag-declined { background: rgba(255,59,48,0.12); color: var(--color-danger-dark); }
+.guest-detail-dates { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.5rem; }
 
 /* ── Invitation Detail layout ─────────────────────────────────────────────── */
 .inv-detail-datetime {
     font-size: 0.82rem;
-    color: #8e8e93;
+    color: var(--color-text-muted);
     display: block;
     margin-top: 0.25rem;
 }

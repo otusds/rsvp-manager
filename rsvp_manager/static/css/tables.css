@@ -27,7 +27,7 @@ th {
     font-weight: 600;
     font-size: 0.73rem;
     text-transform: uppercase;
-    color: #8e8e93;
+    color: var(--color-text-muted);
     letter-spacing: 0.04em;
     position: sticky;
     top: 0;
@@ -56,7 +56,7 @@ tr:last-child td { border-bottom: none; }
 .filter-label {
     font-size: 0.78rem;
     font-weight: 600;
-    color: #8e8e93;
+    color: var(--color-text-muted);
     white-space: nowrap;
     min-width: 48px;
 }
@@ -69,7 +69,7 @@ tr:last-child td { border-bottom: none; }
     flex: 1;
     min-width: 140px;
     background: rgba(118,118,128,0.12);
-    color: #1c1c1e;
+    color: var(--color-text);
     transition: box-shadow 0.2s;
     -webkit-appearance: none;
     appearance: none;
@@ -87,7 +87,7 @@ tr:last-child td { border-bottom: none; }
     box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
 }
 
-.search-input::placeholder { color: #8e8e93; }
+.search-input::placeholder { color: var(--color-text-muted); }
 
 .filter-select,
 .sort-select {
@@ -96,7 +96,7 @@ tr:last-child td { border-bottom: none; }
     border-radius: 10px;
     font-size: 0.78rem;
     background: rgba(118,118,128,0.12);
-    color: #1c1c1e;
+    color: var(--color-text);
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -132,17 +132,17 @@ td.center, th.center { text-align: center; }
     width: 18px;
     height: 18px;
     cursor: pointer;
-    accent-color: #34c759;
+    accent-color: var(--color-success);
 }
 
 .status-not-sent {
-    color: #8e8e93;
+    color: var(--color-text-muted);
     font-style: italic;
     font-size: 0.82rem;
 }
 
 
-.gender-tag { color: #8e8e93; font-size: 0.78rem; }
+.gender-tag { color: var(--color-text-muted); font-size: 0.78rem; }
 
 .inline-edit {
     flex: 1;
@@ -151,7 +151,7 @@ td.center, th.center { text-align: center; }
     border: 1px solid transparent;
     border-radius: 6px;
     font-size: 0.82rem;
-    color: #1c1c1e;
+    color: var(--color-text);
     background: transparent;
     transition: border-color 0.15s, background 0.15s;
     box-sizing: border-box;
@@ -159,11 +159,11 @@ td.center, th.center { text-align: center; }
 .inline-edit:hover { border-color: rgba(0,0,0,0.1); }
 .inline-edit:focus {
     outline: none;
-    border-color: #10B981;
+    border-color: var(--gc-accent);
     background: white;
     box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
 }
-.inline-edit::placeholder { color: #c7c7cc; }
+.inline-edit::placeholder { color: var(--color-placeholder); }
 
 .inline-select {
     padding: 0.3rem 1.3rem 0.3rem 0.4rem;
@@ -171,7 +171,7 @@ td.center, th.center { text-align: center; }
     border-radius: 8px;
     font-size: 0.82rem;
     background: white;
-    color: #1c1c1e;
+    color: var(--color-text);
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -205,8 +205,8 @@ td.center, th.center { text-align: center; }
 .gender-tag-select:focus { outline: none; opacity: 0.8; box-shadow: 0 0 0 2px rgba(0,0,0,0.1); }
 
 /* M = blue, F = rose */
-.gender-tag-select.gender-m { background: rgba(0,122,255,0.15); color: #0055cc; }
-.gender-tag-select.gender-f { background: rgba(255,45,85,0.15); color: #cc0029; }
+.gender-tag-select.gender-m { background: rgba(0,122,255,0.15); color: var(--color-gender-male); }
+.gender-tag-select.gender-f { background: rgba(255,45,85,0.15); color: var(--color-gender-female); }
 
 .inline-select:disabled {
     opacity: 0.4;
@@ -217,7 +217,7 @@ td.center, th.center { text-align: center; }
 .status-select[value="Attending"],
 select.status-attending {
     background-color: rgba(52,199,89,0.12);
-    color: #248a3d;
+    color: var(--color-success-dark);
     font-weight: 600;
     border-color: rgba(52,199,89,0.2);
 }
@@ -225,7 +225,7 @@ select.status-attending {
 .status-select[value="Pending"],
 select.status-pending {
     background-color: rgba(255,149,0,0.12);
-    color: #c77d00;
+    color: var(--color-warning-dark);
     font-weight: 600;
     border-color: rgba(255,149,0,0.2);
 }
@@ -233,7 +233,7 @@ select.status-pending {
 .status-select[value="Declined"],
 select.status-declined {
     background-color: rgba(255,59,48,0.12);
-    color: #d70015;
+    color: var(--color-danger-dark);
     font-weight: 600;
     border-color: rgba(255,59,48,0.2);
 }
@@ -252,7 +252,7 @@ select.status-declined {
     border-radius: 8px;
     font-size: 1.35rem;
     line-height: 1;
-    color: #8e8e93;
+    color: var(--color-text-muted);
     transition: background 0.15s;
     -webkit-tap-highlight-color: transparent;
     letter-spacing: 1.5px;
@@ -291,7 +291,7 @@ select.status-declined {
     background: none;
     text-align: left;
     font-size: 0.85rem;
-    color: #1c1c1e;
+    color: var(--color-text);
     cursor: pointer;
     text-decoration: none;
     transition: background 0.1s;
@@ -301,12 +301,12 @@ select.status-declined {
 .kebab-menu a:hover,
 .kebab-menu button:hover { background: rgba(0,0,0,0.04); }
 
-.kebab-menu .kebab-danger { color: #ff3b30; }
+.kebab-menu .kebab-danger { color: var(--color-danger); }
 
 /* ── Row select checkbox ──────────────────────────────────────────────────── */
 .row-select {
     width: 18px;
     height: 18px;
     cursor: pointer;
-    accent-color: #10B981;
+    accent-color: var(--gc-accent);
 }

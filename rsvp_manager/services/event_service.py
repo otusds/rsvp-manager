@@ -1,5 +1,6 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from flask import abort
+from sqlalchemy.orm import joinedload
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Event, Guest, Invitation, EVENT_TYPES
 
@@ -8,13 +9,17 @@ EVENTS_PER_PAGE = 20
 
 
 def get_user_events(user_id, page=1):
-    return Event.query.filter_by(user_id=user_id).order_by(Event.date).paginate(
+    return Event.query.filter_by(user_id=user_id).options(
+        joinedload(Event.invitations)
+    ).order_by(Event.date).paginate(
         page=page, per_page=EVENTS_PER_PAGE, error_out=False
     )
 
 
 def get_owned_event_or_404(event_id, user_id):
-    event = db.session.get(Event, event_id)
+    event = Event.query.options(
+        joinedload(Event.invitations).joinedload(Invitation.guest).joinedload(Guest.tags),
+    ).filter_by(id=event_id).first()
     if not event:
         abort(404)
     if event.user_id != user_id:
@@ -37,19 +42,23 @@ def _parse_target_attendees(form_data):
         return None
 
 
-def create_event(user_id, form_data):
+def _validate_event_fields(form_data):
+    """Validate and return cleaned event fields from form data."""
     name = form_data.get("name", "").strip()
     if not name or len(name) > 200:
         abort(400, description="Event name is required (max 200 characters)")
-
     event_type = form_data.get("event_type", "")
     if event_type not in EVENT_TYPES:
         abort(400, description="Invalid event type")
-
     try:
         event_date = date.fromisoformat(form_data["date"])
     except (ValueError, KeyError):
         abort(400, description="Invalid date")
+    return name, event_type, event_date
+
+
+def create_event(user_id, form_data):
+    name, event_type, event_date = _validate_event_fields(form_data)
 
     event = Event(
         user_id=user_id,
@@ -79,18 +88,7 @@ def create_event(user_id, form_data):
 
 
 def update_event(event, form_data):
-    name = form_data.get("name", "").strip()
-    if not name or len(name) > 200:
-        abort(400, description="Event name is required (max 200 characters)")
-
-    event_type = form_data.get("event_type", "")
-    if event_type not in EVENT_TYPES:
-        abort(400, description="Invalid event type")
-
-    try:
-        event_date = date.fromisoformat(form_data["date"])
-    except (ValueError, KeyError):
-        abort(400, description="Invalid date")
+    name, event_type, event_date = _validate_event_fields(form_data)
 
     event.name = name
     event.event_type = event_type
@@ -98,7 +96,7 @@ def update_event(event, form_data):
     event.date = event_date
     event.notes = form_data.get("notes", "").strip()
     event.target_attendees = _parse_target_attendees(form_data)
-    event.date_edited = datetime.now()
+    event.date_edited = datetime.now(timezone.utc)
     db.session.commit()
     return event
 
@@ -110,5 +108,5 @@ def delete_event(event):
 
 def update_event_notes(event, notes):
     event.notes = notes
-    event.date_edited = datetime.now()
+    event.date_edited = datetime.now(timezone.utc)
     db.session.commit()

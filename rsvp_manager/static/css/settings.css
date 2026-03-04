@@ -1,7 +1,7 @@
 /* ── Settings page ─────────────────────────────────────────────────────────── */
 .settings-desc {
     font-size: 0.85rem;
-    color: #8e8e93;
+    color: var(--color-text-muted);
     margin-bottom: 1rem;
 }
 

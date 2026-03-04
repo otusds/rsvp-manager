@@ -1,5 +1,6 @@
 /* ── CSS Variables ─────────────────────────────────────────────────────────── */
 :root {
+    /* ── Brand palette ── */
     --gc-dark: #064E3B;
     --gc-mid: #059669;
     --gc-accent: #10B981;
@@ -9,6 +10,38 @@
     --gc-text: #0A2E23;
     --gc-text-light: #6B7280;
     --gc-white: #FFFFFF;
+
+    /* ── Neutral text ── */
+    --color-text: #1c1c1e;
+    --color-text-secondary: #636366;
+    --color-text-muted: #8e8e93;
+    --color-placeholder: #c7c7cc;
+
+    /* ── Backgrounds ── */
+    --color-bg-secondary: #f2f2f7;
+    --color-bg-disabled: #f5f5f5;
+
+    /* ── Borders ── */
+    --color-border: #e5e5ea;
+
+    /* ── Status ── */
+    --color-success: #34c759;
+    --color-success-dark: #248a3d;
+    --color-warning: #ff9500;
+    --color-warning-dark: #c77d00;
+    --color-danger: #ff3b30;
+    --color-danger-dark: #d70015;
+
+    /* ── Event type badges ── */
+    --color-badge-dinner: #af52de;
+    --color-badge-party: #ff9500;
+    --color-badge-weekend: #34c759;
+    --color-badge-hunt: #ff2d55;
+    --color-badge-corporate: #007aff;
+
+    /* ── Gender ── */
+    --color-gender-male: #0055cc;
+    --color-gender-female: #cc0029;
 }
 
 /* ── Reset & Base ──────────────────────────────────────────────────────────── */
@@ -17,7 +50,7 @@
 body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
     background: var(--gc-white);
-    color: #1c1c1e;
+    color: var(--color-text);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -webkit-text-size-adjust: 100%;
@@ -50,8 +83,8 @@ nav .logo {
     font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    color: #fff;
-    background: #ef4444;
+    color: var(--gc-white);
+    background: var(--color-danger);
     border-radius: 6px;
     vertical-align: middle;
 }
@@ -75,7 +108,7 @@ nav .logo {
 }
 
 .nav-link:hover {
-    color: #fff;
+    color: var(--gc-white);
     background: rgba(255,255,255,0.1);
 }
 
@@ -96,7 +129,7 @@ nav .logo {
     display: block;
     width: 20px;
     height: 2px;
-    background: #fff;
+    background: var(--gc-white);
     border-radius: 2px;
     transition: transform 0.25s, opacity 0.2s;
 }
@@ -126,7 +159,7 @@ nav .logo {
 .hamburger-menu a {
     display: block;
     padding: 0.75rem 1.25rem;
-    color: #1c1c1e;
+    color: var(--color-text);
     text-decoration: none;
     font-size: 0.92rem;
     font-weight: 500;
@@ -174,14 +207,14 @@ main {
 
 h1 {
     font-size: 1.7rem;
-    color: #1c1c1e;
+    color: var(--color-text);
     font-weight: 700;
     letter-spacing: -0.02em;
 }
 
 h2 {
     font-size: 1.2rem;
-    color: #1c1c1e;
+    color: var(--color-text);
     margin-bottom: 0.75rem;
     font-weight: 600;
 }
@@ -215,8 +248,8 @@ h2 {
 }
 .btn-secondary:hover { background: rgba(16,185,129,0.18); color: var(--gc-dark); }
 
-.btn-danger { background: #ff3b30; }
-.btn-danger:hover { background: #d70015; }
+.btn-danger { background: var(--color-danger); }
+.btn-danger:hover { background: var(--color-danger-dark); }
 
 .btn-small {
     padding: 0.3rem 0.65rem;
@@ -242,7 +275,7 @@ h2 {
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    color: #8e8e93;
+    color: var(--color-text-muted);
     transition: background 0.15s, color 0.15s;
     -webkit-tap-highlight-color: transparent;
 }
@@ -263,7 +296,7 @@ h2 {
     border-radius: 8px;
     font-size: 0.82rem;
     background: rgba(118,118,128,0.08);
-    color: #1c1c1e;
+    color: var(--color-text);
     font-family: inherit;
 }
 
@@ -273,7 +306,7 @@ h2 {
     box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
 }
 
-.kebab-menu-search input::placeholder { color: #8e8e93; }
+.kebab-menu-search input::placeholder { color: var(--color-text-muted); }
 
 /* ── Sticky controls (frozen headers for long lists) ──────────────────────── */
 .sticky-controls {
@@ -299,7 +332,7 @@ h2 {
 /* ── Empty state ───────────────────────────────────────────────────────────── */
 .empty {
     text-align: center;
-    color: #8e8e93;
+    color: var(--color-text-muted);
     padding: 3rem 1rem;
     font-size: 1rem;
 }
@@ -315,7 +348,7 @@ h2 {
 .scroll-spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid #e5e5ea;
+    border: 3px solid var(--color-border);
     border-top-color: var(--gc-accent);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;

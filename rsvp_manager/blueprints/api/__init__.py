@@ -24,21 +24,9 @@ def api_error(message, code="ERROR", status_code=400):
 
 
 def api_auth_required(f):
-    """Require either a valid session or Bearer token."""
+    """Require a valid session with CSRF validation for state-changing methods."""
     @wraps(f)
     def decorated(*args, **kwargs):
-        # Check Bearer token first
-        auth_header = request.headers.get("Authorization", "")
-        if auth_header.startswith("Bearer "):
-            token = auth_header[7:]
-            from rsvp_manager.models import User
-            user = User.query.filter_by(api_token=token).first()
-            if not user:
-                return api_error("Invalid or expired token", "INVALID_TOKEN", 401)
-            g.api_user = user
-            return f(*args, **kwargs)
-
-        # Fall back to session auth (require CSRF for state-changing methods)
         if current_user.is_authenticated:
             if request.method not in ("GET", "HEAD", "OPTIONS") and current_app.config.get("WTF_CSRF_ENABLED", True):
                 csrf_token = request.headers.get("X-CSRFToken") or request.headers.get("X-CSRF-Token")
@@ -177,4 +165,4 @@ def handle_422(e):
 
 # -- Register sub-modules -----------------------------------------------------
 
-from rsvp_manager.blueprints.api import auth_api, events_api, guests_api, invitations_api, exports_api, tags_api  # noqa: E402, F401
+from rsvp_manager.blueprints.api import events_api, guests_api, invitations_api, exports_api, tags_api  # noqa: E402, F401

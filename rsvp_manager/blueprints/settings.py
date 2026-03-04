@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, current_app, abort
 from flask_login import login_required, current_user
 from rsvp_manager.extensions import db
-from rsvp_manager.models import Event, Guest, Invitation
+from rsvp_manager.models import Event, Guest, Invitation, Tag, guest_tags
 from rsvp_manager.services.seed_service import seed
 
 bp = Blueprint("settings", __name__)
@@ -29,9 +29,16 @@ def reset_sample_data():
     if current_app.config.get("APP_ENV") != "staging":
         abort(404)
     uid = current_user.id
-    Invitation.query.filter(Invitation.event.has(user_id=uid)).delete(synchronize_session=False)
+    # Delete in correct order to avoid FK violations on guest_tags
+    event_ids = [e.id for e in Event.query.filter_by(user_id=uid).with_entities(Event.id)]
+    if event_ids:
+        Invitation.query.filter(Invitation.event_id.in_(event_ids)).delete(synchronize_session=False)
+    guest_ids = [g.id for g in Guest.query.filter_by(user_id=uid).with_entities(Guest.id)]
+    if guest_ids:
+        db.session.execute(guest_tags.delete().where(guest_tags.c.guest_id.in_(guest_ids)))
     Event.query.filter_by(user_id=uid).delete()
     Guest.query.filter_by(user_id=uid).delete()
+    Tag.query.filter_by(user_id=uid).delete()
     db.session.commit()
     seed(uid)
     flash("All data reset to sample data.")
