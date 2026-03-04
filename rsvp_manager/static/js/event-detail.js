@@ -1091,13 +1091,10 @@ document.addEventListener("DOMContentLoaded", function () {
     var toggleGlExpandBtn = document.getElementById("toggle-gl-expand-btn");
     if (toggleGlExpandBtn) {
         var invTable = document.getElementById("invitations-table");
-        var isMobileGL = window.innerWidth <= 600;
         if (invTable) {
-            if (isMobileGL) {
-                invTable.classList.add("table-collapsed");
-            }
+            invTable.classList.add("table-collapsed");
         }
-        toggleGlExpandBtn.textContent = isMobileGL ? "Expand Columns" : "Collapse Columns";
+        toggleGlExpandBtn.textContent = "Expand Columns";
         toggleGlExpandBtn.addEventListener("click", function () {
             if (!invTable) return;
             var isCollapsed = invTable.classList.toggle("table-collapsed");

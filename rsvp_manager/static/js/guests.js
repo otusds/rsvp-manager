@@ -196,10 +196,18 @@ document.addEventListener("DOMContentLoaded", function () {
         // Gender editing
         var genderSelect = row.querySelector(".ge-gender");
         if (genderSelect) {
-            abbreviateGender(genderSelect);
+            if (guestsTable && guestsTable.classList.contains("table-collapsed")) {
+                abbreviateGender(genderSelect);
+            } else {
+                expandGender(genderSelect);
+            }
             updateGenderTagColor(genderSelect);
             genderSelect.addEventListener("focus", function () { expandGender(genderSelect); });
-            genderSelect.addEventListener("blur", function () { abbreviateGender(genderSelect); });
+            genderSelect.addEventListener("blur", function () {
+                if (guestsTable && guestsTable.classList.contains("table-collapsed")) {
+                    abbreviateGender(genderSelect);
+                }
+            });
             genderSelect.addEventListener("change", function () {
                 updateGenderTagColor(genderSelect);
                 var guestId = genderSelect.getAttribute("data-guest-id");
@@ -416,6 +424,9 @@ document.addEventListener("DOMContentLoaded", function () {
         toggleExpandBtn.addEventListener("click", function () {
             var isCollapsed = guestsTable.classList.toggle("table-collapsed");
             toggleExpandBtn.textContent = isCollapsed ? "Expand Columns" : "Collapse Columns";
+            guestsTable.querySelectorAll(".ge-gender").forEach(function (sel) {
+                if (isCollapsed) abbreviateGender(sel); else expandGender(sel);
+            });
             var menu = toggleExpandBtn.closest(".kebab-menu");
             if (menu) menu.classList.remove("open");
         });
