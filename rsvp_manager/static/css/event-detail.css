@@ -271,7 +271,7 @@
 }
 
 /* ── Guest Database Picker ────────────────────────────────────────────────── */
-.guest-db-card { max-height: 80vh; display: flex; flex-direction: column; overflow: visible; }
+.guest-db-card { max-height: 80vh; display: flex; flex-direction: column; overflow: visible; background: white; }
 
 .guest-db-search { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(0,0,0,0.06); }
 
