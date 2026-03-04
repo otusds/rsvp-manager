@@ -17,7 +17,7 @@
             <option value="Female"{{ ' selected' if guest.gender == 'Female' }}>Female</option>
         </select>
     </td>
-    <td class="col-expand"><input type="text" class="inline-edit ge-notes" value="{{ guest.notes or '' }}" placeholder="Add notes about guest" data-guest-id="{{ guest.id }}"></td>
+    <td class="col-expand-mobile"><input type="text" class="inline-edit ge-notes" value="{{ guest.notes or '' }}" placeholder="Add notes about guest" data-guest-id="{{ guest.id }}"></td>
     <td class="col-expand ge-tags-cell">{% for tag in guest.tags %}<span class="tag-badge" style="background:{{ tag.color }}">{{ tag.name }}</span> {% endfor %}</td>
     <td>
         <div class="kebab-wrapper">
