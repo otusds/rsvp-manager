@@ -1,5 +1,6 @@
 """Tests for authentication routes: signup, login, logout."""
-from app import db, User
+from rsvp_manager.extensions import db
+from rsvp_manager.models import User
 
 
 class TestSignup:

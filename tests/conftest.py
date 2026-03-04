@@ -1,5 +1,6 @@
 import pytest
-from app import db, User, Event, Guest, Invitation
+from rsvp_manager.extensions import db
+from rsvp_manager.models import User, Event, Guest, Invitation
 from rsvp_manager import create_app
 from rsvp_manager.config import TestConfig
 from werkzeug.security import generate_password_hash

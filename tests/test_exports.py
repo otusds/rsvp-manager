@@ -1,5 +1,6 @@
 """Tests for export routes and event notes API."""
-from app import db, Event, Guest, Invitation
+from rsvp_manager.extensions import db
+from rsvp_manager.models import Event, Guest, Invitation
 from datetime import date, datetime
 
 

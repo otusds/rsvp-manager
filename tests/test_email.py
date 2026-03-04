@@ -4,7 +4,8 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pytest
-from app import db, User
+from rsvp_manager.extensions import db
+from rsvp_manager.models import User
 from werkzeug.security import generate_password_hash, check_password_hash
 
 

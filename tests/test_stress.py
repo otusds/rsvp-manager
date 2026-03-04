@@ -1,5 +1,6 @@
 """Phase 2 stress tests — covers gaps found in Phase 1 audit."""
-from app import db, User, Event, Guest, Invitation
+from rsvp_manager.extensions import db
+from rsvp_manager.models import User, Event, Guest, Invitation
 from datetime import date, datetime
 
 

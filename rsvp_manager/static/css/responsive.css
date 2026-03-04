@@ -6,7 +6,7 @@
     /* Show mobile nav items in hamburger, hide desktop nav links */
     .nav-links { display: none !important; }
     .nav-link-mobile { display: block; }
-    .div.nav-link-mobile { display: block; }
+    div.nav-link-mobile { display: block; }
 
     main { padding: 0.75rem 0.75rem 2rem; }
 
@@ -34,8 +34,7 @@
     .btn-label-short { display: inline; }
     .btn-label-full { display: none; }
 
-    /* Hide gender & notes cols on mobile */
-    .col-hide-mobile { display: none; }
+    /* Hide expanded-only cols on mobile when collapsed */
     .table-collapsed .col-expand-mobile { display: none; }
 
     /* Collapsed table fits screen; expanded table can scroll horizontally */

@@ -1,7 +1,7 @@
 """Tests for invitation routes: toggle send, update status, remove, field update."""
-from app import db, Invitation, Event, Guest
+from rsvp_manager.extensions import db
+from rsvp_manager.models import Invitation, Event, Guest
 from datetime import date, datetime
-import json
 
 
 class TestToggleSend:

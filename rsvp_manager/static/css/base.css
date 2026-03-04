@@ -141,11 +141,6 @@ nav .logo {
     margin: 0.25rem 1rem;
 }
 
-.menu-disabled {
-    opacity: 0.35 !important;
-    pointer-events: none;
-}
-
 .hamburger-overlay {
     display: none;
     position: fixed;

@@ -246,32 +246,6 @@
     font-size: 1.05rem;
 }
 
-.detail-name-form {
-    display: flex;
-    gap: 0.35rem;
-    align-items: center;
-    flex: 1;
-    margin-right: 0.5rem;
-}
-
-.detail-name-input {
-    padding: 0.3rem 0.5rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: #1c1c1e;
-    background: rgba(118,118,128,0.12);
-    transition: box-shadow 0.2s;
-    width: 100%;
-}
-
-.detail-name-input:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
-    background: white;
-}
-
 .detail-close {
     background: rgba(118,118,128,0.12);
     border: none;
@@ -294,99 +268,6 @@
 
 .detail-card-body {
     padding: 0.75rem 1.25rem 1.5rem;
-}
-
-.detail-card-body .detail-section {
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 0.6rem;
-}
-
-.detail-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.6rem 0;
-    border-bottom: 1px solid rgba(0,0,0,0.04);
-    background: white;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    min-height: 44px;
-}
-
-.detail-row:first-child { border-radius: 10px 10px 0 0; }
-.detail-row:last-child { border-bottom: none; border-radius: 0 0 10px 10px; }
-.detail-row:only-child { border-radius: 10px; }
-
-.detail-label {
-    font-size: 0.88rem;
-    font-weight: 400;
-    color: #1c1c1e;
-    min-width: 90px;
-}
-
-.detail-value {
-    font-size: 0.88rem;
-    color: #8e8e93;
-}
-
-.detail-row select {
-    padding: 0.3rem 1.3rem 0.3rem 0.45rem;
-    border: none;
-    border-radius: 7px;
-    font-size: 0.88rem;
-    background: rgba(118,118,128,0.12);
-    color: #10B981;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%2310B981' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.35rem center;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.detail-row select:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    color: #8e8e93;
-}
-
-.detail-row-full {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.3rem;
-    padding: 0.75rem 1rem;
-}
-
-.detail-row-full .detail-label {
-    font-size: 0.82rem;
-    color: #636366;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin-bottom: 0.1rem;
-}
-
-.detail-row textarea {
-    width: 100%;
-    padding: 0.5rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.88rem;
-    font-family: inherit;
-    resize: vertical;
-    min-height: 60px;
-    background: rgba(118,118,128,0.12);
-    transition: box-shadow 0.2s;
-}
-
-.detail-row textarea:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
-    background: white;
 }
 
 /* ── Guest Database Picker ────────────────────────────────────────────────── */
@@ -448,9 +329,6 @@
 /* ── Add New Guest modal table ────────────────────────────────────────────── */
 .add-guest-table-wrapper {
     padding: 0.75rem 1rem;
-    overflow-x: auto;
-    max-height: 50vh;
-    overflow-y: auto;
 }
 
 .add-guest-table { font-size: 0.85rem; }

@@ -1,5 +1,6 @@
 """Tests for guest routes: list, add, edit, delete, inline APIs."""
-from app import db, Guest, Invitation
+from rsvp_manager.extensions import db
+from rsvp_manager.models import Guest, Invitation
 from datetime import datetime
 
 

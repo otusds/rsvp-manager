@@ -1,6 +1,4 @@
 from rsvp_manager import create_app
-from rsvp_manager.extensions import db
-from rsvp_manager.models import User, Event, Guest, Invitation, Tag, guest_tags
 
 app = create_app()
 

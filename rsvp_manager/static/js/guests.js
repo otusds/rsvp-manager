@@ -1,26 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    // ── Back-link navigation for Guest Database ────────────────────────────
-    var backLink = document.getElementById("back-link");
-    var guestsTable = document.getElementById("guests-table");
-    if (!guestsTable) {
-        // Not on guest DB — store current page info for back navigation
-        var h1 = document.querySelector("h1");
-        if (h1) {
-            sessionStorage.setItem("guestDbBackLabel", h1.textContent.trim());
-            sessionStorage.setItem("guestDbBackUrl", window.location.pathname);
-        }
-    } else if (backLink) {
-        // On guest DB — restore back link from stored info
-        var label = sessionStorage.getItem("guestDbBackLabel");
-        var url = sessionStorage.getItem("guestDbBackUrl");
-        if (label && url) {
-            backLink.textContent = "\u2190 " + label;
-            backLink.href = url;
-        }
-    }
-
     // ── Guest Database table search, filter & sort ──────────────────────────
+    var guestsTable = document.getElementById("guests-table");
     if (!guestsTable) return;
 
     var guestSearchInput = document.getElementById("guest-search");

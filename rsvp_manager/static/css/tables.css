@@ -142,22 +142,6 @@ td.center, th.center { text-align: center; }
 }
 
 
-.inline-input {
-    padding: 0.3rem 0.5rem;
-    border: 1px solid rgba(0,0,0,0.1);
-    border-radius: 8px;
-    font-size: 0.82rem;
-    width: 100%;
-    background: white;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.inline-input:focus {
-    outline: none;
-    border-color: #10B981;
-    box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
-}
-
 .gender-tag { color: #8e8e93; font-size: 0.78rem; }
 
 .inline-edit {

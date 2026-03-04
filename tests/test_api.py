@@ -4,7 +4,8 @@ import secrets
 from datetime import date, datetime
 
 import pytest
-from app import db, User, Event, Guest, Invitation
+from rsvp_manager.extensions import db
+from rsvp_manager.models import User, Event, Guest, Invitation
 from werkzeug.security import generate_password_hash
 
 
