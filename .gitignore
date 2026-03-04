@@ -4,9 +4,13 @@ __pycache__/
 instance/
 *.db
 .env
+.env.*
+.flaskenv
 venv/
 .venv/
 *.egg-info/
 dist/
 build/
 .DS_Store
+*.pem
+*.key
