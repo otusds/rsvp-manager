@@ -107,19 +107,22 @@
 .badge-corporate  { background: var(--color-badge-corporate); }
 .badge-other      { background: var(--color-text-muted); }
 
-.status-pending {
-    background: rgba(255,149,0,0.12);
-    color: var(--color-warning-dark);
+.status-pending,
+.badge-pending {
+    background: #FEF9C3;
+    color: #A16207;
 }
 
-.status-attending {
-    background: rgba(52,199,89,0.12);
-    color: var(--color-success-dark);
+.status-attending,
+.badge-confirmed {
+    background: #DCFCE7;
+    color: #15803D;
 }
 
-.status-declined {
-    background: rgba(255,59,48,0.12);
-    color: var(--color-danger-dark);
+.status-declined,
+.badge-declined {
+    background: #FFE4E6;
+    color: #BE123C;
 }
 
 /* ── Mini progress bar (event cards) ────────────────────────────────────── */
