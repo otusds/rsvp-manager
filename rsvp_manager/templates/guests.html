@@ -145,11 +145,11 @@
                 <div class="form-row">
                     <div class="form-field">
                         <label for="gd-first">First Name</label>
-                        <input type="text" id="gd-first" required autocomplete="nope">
+                        <input type="text" id="gd-first" required autocomplete="nope" readonly onfocus="this.removeAttribute('readonly')">
                     </div>
                     <div class="form-field">
                         <label for="gd-last">Last Name</label>
-                        <input type="text" id="gd-last" autocomplete="nope">
+                        <input type="text" id="gd-last" autocomplete="nope" readonly onfocus="this.removeAttribute('readonly')">
                     </div>
                 </div>
                 <div class="form-row">

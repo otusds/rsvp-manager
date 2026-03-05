@@ -9,8 +9,8 @@
     data-tags="{{ guest.tags|map(attribute='id')|join(',') }}"
     class="{{ 'archived-row' if guest.is_archived else '' }}">
     <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
-    <td><input type="text" class="inline-edit ge-first" autocomplete="nope" value="{{ guest.first_name }}" data-guest-id="{{ guest.id }}"></td>
-    <td><input type="text" class="inline-edit ge-last" autocomplete="nope" value="{{ guest.last_name or '' }}" data-guest-id="{{ guest.id }}"></td>
+    <td><input type="text" class="inline-edit ge-first" autocomplete="nope" readonly onfocus="this.removeAttribute('readonly')" value="{{ guest.first_name }}" data-guest-id="{{ guest.id }}"></td>
+    <td><input type="text" class="inline-edit ge-last" autocomplete="nope" readonly onfocus="this.removeAttribute('readonly')" value="{{ guest.last_name or '' }}" data-guest-id="{{ guest.id }}"></td>
     <td class="gender-cell">
         <select class="inline-select ge-gender gender-tag-select" data-guest-id="{{ guest.id }}">
             <option value="Male"{{ ' selected' if guest.gender == 'Male' }}>Male</option>
