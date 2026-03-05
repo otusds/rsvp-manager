@@ -10,7 +10,7 @@
 
 .form label {
     display: block;
-    margin-top: 20px;
+    margin-top: 1rem;
     margin-bottom: 0.25rem;
     font-weight: 600;
     font-size: 0.82rem;
@@ -76,7 +76,7 @@
 .form-row {
     display: flex;
     gap: 0.75rem;
-    margin-bottom: 20px;
+    margin-bottom: 0.75rem;
 }
 
 .form-field {

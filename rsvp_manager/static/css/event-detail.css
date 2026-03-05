@@ -45,7 +45,7 @@
 .collapsible.collapsed .collapse-icon { transform: rotate(-90deg); }
 .collapsible.collapsed .collapsible-body { display: none; }
 
-.section { margin-top: 32px; }
+.section { margin-top: 0.75rem; }
 
 /* ── Summary table ─────────────────────────────────────────────────────────── */
 .summary-table {

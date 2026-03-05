@@ -190,7 +190,7 @@ nav .logo {
 main {
     max-width: 800px;
     margin: 0 auto;
-    padding: 32px 1rem 3rem;
+    padding: 1.25rem 1rem 3rem;
 }
 
 /* ── Header row ────────────────────────────────────────────────────────────── */
@@ -198,7 +198,7 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 32px;
+    margin-bottom: 1.25rem;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
