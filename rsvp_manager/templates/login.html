@@ -11,33 +11,45 @@
 {% endblock %}
 
 {% block content %}
-<div class="auth-container">
-    <div class="auth-header">
-        <div style="text-align:center; margin:32px 0;">
-            <svg viewBox="0 0 310 72" width="280" height="65" xmlns="http://www.w3.org/2000/svg">
-                <rect x="6" y="4" width="56" height="56" rx="14" fill="none" stroke="#10B981" stroke-width="2"/>
-                <path d="M22 34 L32 44 L50 24" fill="none" stroke="#10B981" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
-                <text x="78" y="36" font-family="'DM Sans',sans-serif" font-size="33" font-weight="800" fill="#0A2E23" letter-spacing="-0.6">Guest<tspan fill="#10B981" font-weight="400">Check</tspan></text>
-                <text x="168" y="52" text-anchor="middle" font-family="'DM Sans',sans-serif" font-size="10" fill="#9CA3AF" letter-spacing="4" font-weight="500">RSVP MANAGEMENT</text>
-            </svg>
+<div class="login-container">
+    <div class="login-left">
+        <svg viewBox="0 0 310 72" width="260" height="60" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="4" width="56" height="56" rx="14" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
+            <path d="M22 34 L32 44 L50 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="78" y="36" font-family="'DM Sans',sans-serif" font-size="33" font-weight="800" fill="#FFFFFF" letter-spacing="-0.6">Guest<tspan fill="rgba(255,255,255,0.7)" font-weight="400">Check</tspan></text>
+        </svg>
+        <p class="login-tagline">Your events, beautifully managed</p>
+    </div>
+    <div class="login-right">
+        <div class="auth-container">
+            <div class="auth-header login-mobile-logo">
+                <div style="text-align:center; margin:32px 0;">
+                    <svg viewBox="0 0 310 72" width="280" height="65" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="6" y="4" width="56" height="56" rx="14" fill="none" stroke="#10B981" stroke-width="2"/>
+                        <path d="M22 34 L32 44 L50 24" fill="none" stroke="#10B981" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <text x="78" y="36" font-family="'DM Sans',sans-serif" font-size="33" font-weight="800" fill="#0A2E23" letter-spacing="-0.6">Guest<tspan fill="#10B981" font-weight="400">Check</tspan></text>
+                        <text x="168" y="52" text-anchor="middle" font-family="'DM Sans',sans-serif" font-size="10" fill="#9CA3AF" letter-spacing="4" font-weight="500">RSVP MANAGEMENT</text>
+                    </svg>
+                </div>
+            </div>
+            {% if error %}
+            <p class="auth-error">{{ error }}</p>
+            {% endif %}
+            <form method="POST" class="form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required placeholder="you@example.com">
+
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Your password">
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-full">Log In</button>
+                </div>
+            </form>
+            <p class="auth-switch"><a href="{{ url_for('auth.forgot_password') }}">Forgot your password?</a></p>
+            <p class="auth-switch">Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up</a></p>
         </div>
     </div>
-    {% if error %}
-    <p class="auth-error">{{ error }}</p>
-    {% endif %}
-    <form method="POST" class="form">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required placeholder="you@example.com">
-
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" required placeholder="Your password">
-
-        <div class="form-actions">
-            <button type="submit" class="btn btn-full">Log In</button>
-        </div>
-    </form>
-    <p class="auth-switch"><a href="{{ url_for('auth.forgot_password') }}">Forgot your password?</a></p>
-    <p class="auth-switch">Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up</a></p>
 </div>
 {% endblock %}

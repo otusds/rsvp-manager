@@ -1,7 +1,7 @@
 /* ── Auth pages ───────────────────────────────────────────────────────────── */
 .auth-container {
     max-width: 380px;
-    margin: 3rem auto;
+    margin: 0 auto;
     padding: 0 1.25rem;
     text-align: center;
 }
@@ -63,6 +63,73 @@
     font-weight: 500;
 }
 
+/* ── Split login layout ──────────────────────────────────────────────────── */
+.login-container {
+    display: flex;
+    min-height: calc(100vh - 52px);
+    margin: -32px -1rem -3rem;
+}
+
+.login-left {
+    flex: 1;
+    background: var(--color-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    padding: 48px;
+    gap: 24px;
+}
+
+.login-tagline {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: -0.01em;
+}
+
+.login-right {
+    flex: 1;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+}
+
+.login-right .auth-container {
+    margin: 0;
+}
+
+/* On desktop, hide the mobile logo inside the form */
+.login-mobile-logo {
+    display: none;
+}
+
+/* ── Mobile: hide left panel, show logo at top of form ───────────────────── */
+@media (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+    }
+
+    .login-left {
+        display: none;
+    }
+
+    .login-right {
+        flex: 1;
+        padding: 24px;
+        align-items: flex-start;
+        padding-top: 0;
+    }
+
+    .login-mobile-logo {
+        display: block;
+    }
+}
+
+/* ── Hamburger logout ────────────────────────────────────────────────────── */
 .hamburger-menu .nav-logout {
     color: var(--color-danger) !important;
     background: none;
