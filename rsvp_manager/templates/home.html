@@ -22,7 +22,7 @@
 {% if events %}
 <div class="table-controls" id="event-filters" style="display:none">
     <div class="filter-row">
-        <input type="search" class="search-input" id="event-search" placeholder="Search events...">
+        <input type="search" class="search-input" id="event-search" placeholder="Search events..." autocomplete="off">
     </div>
     <div class="filter-row">
         <span class="filter-label">Filter:</span>
@@ -85,13 +85,13 @@
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ne-name">Event Name</label>
-                        <input type="text" id="ne-name" name="name" required>
+                        <input type="text" id="ne-name" name="name" required autocomplete="off">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ne-location">Location</label>
-                        <input type="text" id="ne-location" name="location" placeholder="Optional" list="location-options">
+                        <input type="text" id="ne-location" name="location" placeholder="Optional" list="location-options" autocomplete="off">
                         <datalist id="location-options">
                             {% for loc in locations %}
                             <option value="{{ loc }}">
@@ -117,7 +117,7 @@
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ne-target">Target Attendees</label>
-                        <input type="number" id="ne-target" name="target_attendees" placeholder="Optional" min="1">
+                        <input type="number" id="ne-target" name="target_attendees" placeholder="Optional" min="1" autocomplete="off">
                     </div>
                     {% if me_exists %}
                     <div class="form-field form-field-checkbox">
