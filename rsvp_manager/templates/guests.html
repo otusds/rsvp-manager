@@ -25,7 +25,7 @@
 {% if guests %}
 <div class="table-controls" id="event-filters" style="display:none">
     <div class="filter-row">
-        <input type="search" class="search-input" id="guest-search" placeholder="Search guests..." autocomplete="off">
+        <input type="search" class="search-input" id="guest-search" placeholder="Search guests..." autocomplete="nope">
     </div>
     <div class="filter-row">
         <span class="filter-label">Filter:</span>
@@ -67,7 +67,7 @@
         <option value="delete">Delete</option>
     </select>
     <div class="batch-tag-autocomplete" id="guest-batch-tag-wrapper" style="display:none">
-        <input type="text" class="inline-edit" id="guest-batch-tag-input" placeholder="Search or create tag..." autocomplete="off">
+        <input type="text" class="inline-edit" id="guest-batch-tag-input" placeholder="Search or create tag..." autocomplete="nope">
         <div class="tags-suggestions" id="guest-batch-tag-suggestions" style="display:none"></div>
     </div>
     <button type="button" class="btn btn-small" id="guest-batch-apply">Apply</button>
@@ -145,11 +145,11 @@
                 <div class="form-row">
                     <div class="form-field">
                         <label for="gd-first">First Name</label>
-                        <input type="text" id="gd-first" required autocomplete="off">
+                        <input type="text" id="gd-first" required autocomplete="nope">
                     </div>
                     <div class="form-field">
                         <label for="gd-last">Last Name</label>
-                        <input type="text" id="gd-last" autocomplete="off">
+                        <input type="text" id="gd-last" autocomplete="nope">
                     </div>
                 </div>
                 <div class="form-row">
@@ -179,7 +179,7 @@
                         <label>Tags</label>
                         <div class="tags-autocomplete-wrapper">
                             <div class="tags-display" id="gd-tags-display"></div>
-                            <input type="text" id="gd-tags-input" placeholder="Add tag..." autocomplete="off">
+                            <input type="text" id="gd-tags-input" placeholder="Add tag..." autocomplete="nope">
                             <div class="tags-suggestions" id="gd-tags-suggestions" style="display:none"></div>
                         </div>
                         <p class="form-hint">Add tags to sort your guests quickly (e.g., family, cycling, single, ...)</p>

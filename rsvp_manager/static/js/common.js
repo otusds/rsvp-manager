@@ -201,8 +201,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function createBlankGuestRow() {
         var tr = document.createElement("tr");
         tr.innerHTML =
-            '<td><div class="ag-first-name-wrapper"><input type="text" class="ag-first-name" placeholder="First name" autocomplete="off"><div class="ag-suggestions" style="display:none"></div></div></td>' +
-            '<td><input type="text" class="ag-last-name" placeholder="Last name" autocomplete="off"></td>' +
+            '<td><div class="ag-first-name-wrapper"><input type="text" class="ag-first-name" placeholder="First name" autocomplete="nope"><div class="ag-suggestions" style="display:none"></div></div></td>' +
+            '<td><input type="text" class="ag-last-name" placeholder="Last name" autocomplete="nope"></td>' +
             '<td><select class="ag-gender"><option value="Male">Male</option><option value="Female">Female</option></select></td>' +
             '<td><button type="button" class="add-guest-remove-btn">&times;</button></td>';
 
