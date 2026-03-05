@@ -184,7 +184,7 @@
     }
 
     .detail-card {
-        border-radius: 14px;
+        border-radius: 16px;
         box-shadow: 0 12px 40px rgba(0,0,0,0.15);
     }
 }

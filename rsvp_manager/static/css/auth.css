@@ -91,7 +91,7 @@
 
 .login-right {
     flex: 1;
-    background: white;
+    background: var(--color-surface);
     display: flex;
     align-items: center;
     justify-content: center;
