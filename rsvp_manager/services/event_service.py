@@ -113,6 +113,19 @@ def delete_event(event):
     db.session.commit()
 
 
+def get_user_events_for_selector(user_id, exclude_event_id):
+    events = Event.query.filter(
+        Event.user_id == user_id,
+        Event.id != exclude_event_id
+    ).order_by(Event.date.desc()).all()
+    return [{
+        "id": e.id,
+        "name": e.name,
+        "date": e.date.strftime("%d %b %Y"),
+        "date_iso": e.date.isoformat(),
+    } for e in events]
+
+
 def update_event_notes(event, notes):
     event.notes = notes
     event.date_edited = datetime.now(timezone.utc)

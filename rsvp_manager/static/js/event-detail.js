@@ -1279,12 +1279,13 @@ document.addEventListener("DOMContentLoaded", function () {
                             });
                             tagsHtml += '</span>';
                         }
+                        var genderLabel = g.gender === "Male" ? "(M)" : g.gender === "Female" ? "(F)" : "";
                         div.innerHTML =
                             '<input type="checkbox" data-guest-id="' + g.id + '"' +
                             (g.already_invited ? ' checked disabled' : '') + '>' +
                             '<div class="guest-db-item-info">' +
-                            '<div class="guest-db-item-name">' + window.escapeHtml(name) + '</div>' +
-                            '<div class="guest-db-item-gender">' + window.escapeHtml(g.gender) + tagsHtml + '</div>' +
+                            '<div class="guest-db-item-name">' + window.escapeHtml(name) + ' <span class="gender-inline">' + genderLabel + '</span></div>' +
+                            (tagsHtml ? '<div class="guest-db-item-meta">' + tagsHtml + '</div>' : '') +
                             '</div>';
                         if (!g.already_invited) {
                             div.addEventListener("click", function (e) {
@@ -1342,6 +1343,289 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
                 window.refreshSummary();
                 guestDbOverlay.style.display = "none";
+            })
+            .catch(window.handleFetchError);
+        });
+    }
+
+    // ── Add from Other Events Modal ──────────────────────────────────────────
+    var addFromEventsBtn = document.getElementById("add-from-events-btn");
+    var eventGuestsOverlay = document.getElementById("event-guests-overlay");
+    var eventGuestsClose = document.getElementById("event-guests-close");
+    var eventSelector = document.getElementById("event-selector");
+    var eventGuestsList = document.getElementById("event-guests-list");
+    var eventGuestsSearchInput = document.getElementById("event-guests-search-input");
+    var eventGuestsAddBtn = document.getElementById("event-guests-add-btn");
+    var eventGuestsFilterBtn = document.getElementById("event-guests-filter-btn");
+    var eventGuestsFilters = document.getElementById("event-guests-filters");
+    var eventGuestsGenderFilter = document.getElementById("event-guests-gender-filter");
+    var eventGuestsStatusFilter = document.getElementById("event-guests-status-filter");
+    var eventGuestsSort = document.getElementById("event-guests-sort");
+    var eventGuestsTagFilterToggle = document.getElementById("event-guests-tag-filter-toggle");
+    var eventGuestsTagFilterDropdown = document.getElementById("event-guests-tag-filter-dropdown");
+    var eventGuestsSelectedTagIds = [];
+    var eventGuestsSearchSection = document.getElementById("event-guests-search-section");
+    var eventGuestsSelectAllWrapper = document.getElementById("event-guests-select-all-wrapper");
+    var eventGuestsSelectAll = document.getElementById("event-guests-select-all");
+
+    if (addFromEventsBtn && eventGuestsOverlay) {
+        var evtInvTable = document.getElementById("invitations-table");
+        var evtEventId = evtInvTable ? evtInvTable.getAttribute("data-event-id") : null;
+
+        function buildStatusBadge(status) {
+            var cls = "event-guest-status ";
+            if (status === "Attending") cls += "status-attending";
+            else if (status === "Pending") cls += "status-pending";
+            else if (status === "Declined") cls += "status-declined";
+            else cls += "status-not-sent";
+            return '<span class="' + cls + '">' + window.escapeHtml(status) + '</span>';
+        }
+
+        function buildEventGuestsTagFilter() {
+            if (!eventGuestsTagFilterDropdown || !allUserTags) return;
+            eventGuestsTagFilterDropdown.innerHTML = "";
+            allUserTags.forEach(function (tag) {
+                var option = document.createElement("label");
+                option.className = "tag-filter-option";
+                option.innerHTML =
+                    '<input type="checkbox" value="' + tag.id + '">' +
+                    '<span class="tag-badge" style="background:' + tag.color + '">' + window.escapeHtml(tag.name) + '</span>';
+                option.querySelector("input").addEventListener("change", function () {
+                    eventGuestsSelectedTagIds = [];
+                    eventGuestsTagFilterDropdown.querySelectorAll("input:checked").forEach(function (cb) {
+                        eventGuestsSelectedTagIds.push(parseInt(cb.value));
+                    });
+                    eventGuestsTagFilterToggle.textContent = eventGuestsSelectedTagIds.length > 0
+                        ? eventGuestsSelectedTagIds.length + " Tag" + (eventGuestsSelectedTagIds.length > 1 ? "s" : "")
+                        : "All Tags";
+                    applyEventGuestsFilters();
+                });
+                eventGuestsTagFilterDropdown.appendChild(option);
+            });
+        }
+
+        if (eventGuestsTagFilterToggle && eventGuestsTagFilterDropdown) {
+            eventGuestsTagFilterToggle.addEventListener("click", function (e) {
+                e.stopPropagation();
+                var showing = eventGuestsTagFilterDropdown.style.display !== "none";
+                eventGuestsTagFilterDropdown.style.display = showing ? "none" : "block";
+            });
+            document.addEventListener("click", function (e) {
+                if (!eventGuestsTagFilterDropdown.contains(e.target) && e.target !== eventGuestsTagFilterToggle) {
+                    eventGuestsTagFilterDropdown.style.display = "none";
+                }
+            });
+        }
+
+        function applyEventGuestsFilters() {
+            var q = eventGuestsSearchInput ? eventGuestsSearchInput.value.toLowerCase() : "";
+            var genderVal = eventGuestsGenderFilter ? eventGuestsGenderFilter.value : "";
+            var statusVal = eventGuestsStatusFilter ? eventGuestsStatusFilter.value : "";
+            var sortVal = eventGuestsSort ? eventGuestsSort.value : "first-asc";
+            var items = Array.from(eventGuestsList.querySelectorAll(".guest-db-item"));
+
+            var parts = sortVal.split("-");
+            var key = parts[0], dir = parts[1];
+            items.sort(function (a, b) {
+                var valA, valB;
+                if (key === "first") {
+                    valA = (a.getAttribute("data-first") || "").toLowerCase();
+                    valB = (b.getAttribute("data-first") || "").toLowerCase();
+                } else if (key === "last") {
+                    valA = (a.getAttribute("data-last") || "").toLowerCase();
+                    valB = (b.getAttribute("data-last") || "").toLowerCase();
+                } else if (key === "gender") {
+                    valA = (a.getAttribute("data-gender") || "").toLowerCase();
+                    valB = (b.getAttribute("data-gender") || "").toLowerCase();
+                } else if (key === "status") {
+                    valA = (a.getAttribute("data-status") || "").toLowerCase();
+                    valB = (b.getAttribute("data-status") || "").toLowerCase();
+                }
+                if (valA < valB) return dir === "asc" ? -1 : 1;
+                if (valA > valB) return dir === "asc" ? 1 : -1;
+                return 0;
+            });
+            items.forEach(function (item) { eventGuestsList.appendChild(item); });
+
+            items.forEach(function (item) {
+                var name = item.querySelector(".guest-db-item-name").textContent.toLowerCase();
+                var gender = item.getAttribute("data-gender") || "";
+                var status = item.getAttribute("data-status") || "";
+                var matchSearch = !q || name.indexOf(q) !== -1;
+                var matchGender = !genderVal || gender === genderVal;
+                var matchStatus = !statusVal || status === statusVal;
+                var matchTags = true;
+                if (eventGuestsSelectedTagIds.length > 0) {
+                    var itemTags = (item.getAttribute("data-tags") || "").split(",").filter(Boolean).map(Number);
+                    matchTags = eventGuestsSelectedTagIds.some(function (id) { return itemTags.indexOf(id) !== -1; });
+                }
+                item.style.display = (matchSearch && matchGender && matchStatus && matchTags) ? "" : "none";
+            });
+        }
+
+        if (eventGuestsSelectAll) {
+            eventGuestsSelectAll.addEventListener("change", function () {
+                var checked = eventGuestsSelectAll.checked;
+                eventGuestsList.querySelectorAll(".guest-db-item:not(.disabled)").forEach(function (item) {
+                    if (item.style.display === "none") return;
+                    var cb = item.querySelector("input[type=checkbox]");
+                    if (cb && !cb.disabled) cb.checked = checked;
+                });
+            });
+        }
+
+        if (eventGuestsFilterBtn && eventGuestsFilters) {
+            eventGuestsFilterBtn.addEventListener("click", function () {
+                var hidden = eventGuestsFilters.style.display === "none";
+                eventGuestsFilters.style.display = hidden ? "flex" : "none";
+                eventGuestsFilterBtn.classList.toggle("active", hidden);
+            });
+        }
+        if (eventGuestsGenderFilter) eventGuestsGenderFilter.addEventListener("change", applyEventGuestsFilters);
+        if (eventGuestsStatusFilter) eventGuestsStatusFilter.addEventListener("change", applyEventGuestsFilters);
+        if (eventGuestsSort) eventGuestsSort.addEventListener("change", applyEventGuestsFilters);
+        if (eventGuestsSearchInput) {
+            eventGuestsSearchInput.addEventListener("input", applyEventGuestsFilters);
+            eventGuestsSearchInput.addEventListener("search", applyEventGuestsFilters);
+        }
+
+        var eventGuestsClearBtn = document.getElementById("event-guests-clear-filters");
+        if (eventGuestsClearBtn) {
+            eventGuestsClearBtn.addEventListener("click", function () {
+                if (eventGuestsSearchInput) eventGuestsSearchInput.value = "";
+                if (eventGuestsGenderFilter) eventGuestsGenderFilter.selectedIndex = 0;
+                if (eventGuestsStatusFilter) eventGuestsStatusFilter.selectedIndex = 0;
+                if (eventGuestsSort) eventGuestsSort.selectedIndex = 0;
+                if (eventGuestsTagFilterToggle) eventGuestsTagFilterToggle.textContent = "All Tags";
+                eventGuestsSelectedTagIds = [];
+                if (eventGuestsTagFilterDropdown) {
+                    eventGuestsTagFilterDropdown.querySelectorAll("input[type='checkbox']").forEach(function (cb) { cb.checked = false; });
+                }
+                applyEventGuestsFilters();
+            });
+        }
+
+        function renderEventGuests(guests) {
+            eventGuestsList.innerHTML = "";
+            guests.forEach(function (g) {
+                var name = g.last_name ? g.first_name + " " + g.last_name : g.first_name;
+                var genderLabel = g.gender === "Male" ? "(M)" : g.gender === "Female" ? "(F)" : "";
+                var div = document.createElement("div");
+                div.className = "guest-db-item" + (g.already_invited ? " disabled" : "");
+                div.setAttribute("data-first", g.first_name.toLowerCase());
+                div.setAttribute("data-last", (g.last_name || "").toLowerCase());
+                div.setAttribute("data-gender", g.gender);
+                div.setAttribute("data-status", g.status);
+                var tagIds = (g.tags || []).map(function (t) { return t.id; });
+                div.setAttribute("data-tags", tagIds.join(","));
+                var tagsHtml = "";
+                if (g.tags && g.tags.length > 0) {
+                    tagsHtml = '<span class="guest-db-item-tags">';
+                    g.tags.forEach(function (t) {
+                        tagsHtml += '<span class="tag-badge tag-badge-sm" style="background:' + t.color + '">' + window.escapeHtml(t.name) + '</span>';
+                    });
+                    tagsHtml += '</span>';
+                }
+                div.innerHTML =
+                    '<input type="checkbox" data-guest-id="' + g.id + '"' +
+                    (g.already_invited ? ' checked disabled' : '') + '>' +
+                    '<div class="guest-db-item-info">' +
+                    '<div class="guest-db-item-name">' + window.escapeHtml(name) + ' <span class="gender-inline">' + genderLabel + '</span></div>' +
+                    '<div class="guest-db-item-meta">' + buildStatusBadge(g.status) + tagsHtml + '</div>' +
+                    '</div>';
+                if (!g.already_invited) {
+                    div.addEventListener("click", function (e) {
+                        if (e.target.tagName !== "INPUT") {
+                            var cb = div.querySelector("input");
+                            cb.checked = !cb.checked;
+                        }
+                    });
+                }
+                eventGuestsList.appendChild(div);
+            });
+        }
+
+        eventSelector.addEventListener("change", function () {
+            var sourceEventId = eventSelector.value;
+            if (!sourceEventId) {
+                eventGuestsList.innerHTML = "";
+                eventGuestsSearchSection.style.display = "none";
+                eventGuestsSelectAllWrapper.style.display = "none";
+                eventGuestsAddBtn.disabled = true;
+                return;
+            }
+            window.fetchWithCsrf("/api/v1/events/" + evtEventId + "/other-events-guests?source_event_id=" + sourceEventId)
+                .then(function (r) { return r.json(); })
+                .then(function (resp) {
+                    renderEventGuests(resp.data.guests);
+                    if (eventGuestsGenderFilter) eventGuestsGenderFilter.value = "";
+                    if (eventGuestsStatusFilter) eventGuestsStatusFilter.value = "";
+                    if (eventGuestsSort) eventGuestsSort.value = "first-asc";
+                    eventGuestsSelectedTagIds = [];
+                    if (eventGuestsTagFilterToggle) eventGuestsTagFilterToggle.textContent = "All Tags";
+                    buildEventGuestsTagFilter();
+                    if (eventGuestsFilters) eventGuestsFilters.style.display = "none";
+                    if (eventGuestsFilterBtn) eventGuestsFilterBtn.classList.remove("active");
+                    if (eventGuestsSelectAll) eventGuestsSelectAll.checked = false;
+                    if (eventGuestsSearchInput) eventGuestsSearchInput.value = "";
+                    eventGuestsSearchSection.style.display = "block";
+                    eventGuestsSelectAllWrapper.style.display = "flex";
+                    eventGuestsAddBtn.disabled = false;
+                    applyEventGuestsFilters();
+                })
+                .catch(window.handleFetchError);
+        });
+
+        addFromEventsBtn.addEventListener("click", function () {
+            var menu = addFromEventsBtn.closest(".kebab-menu");
+            if (menu) menu.classList.remove("open");
+            if (!evtEventId) return;
+            window.fetchWithCsrf("/api/v1/events/" + evtEventId + "/other-events-guests")
+                .then(function (r) { return r.json(); })
+                .then(function (resp) {
+                    eventSelector.innerHTML = '<option value="">Select an event...</option>';
+                    resp.data.events.forEach(function (evt) {
+                        var option = document.createElement("option");
+                        option.value = evt.id;
+                        option.textContent = evt.name + " (" + evt.date + ")";
+                        eventSelector.appendChild(option);
+                    });
+                    eventGuestsList.innerHTML = "";
+                    eventGuestsSearchSection.style.display = "none";
+                    eventGuestsSelectAllWrapper.style.display = "none";
+                    eventGuestsAddBtn.disabled = true;
+                    eventGuestsOverlay.style.display = "flex";
+                    eventSelector.focus();
+                })
+                .catch(window.handleFetchError);
+        });
+
+        eventGuestsClose.addEventListener("click", function () { eventGuestsOverlay.style.display = "none"; });
+        eventGuestsOverlay.addEventListener("click", function (e) {
+            if (e.target === eventGuestsOverlay) eventGuestsOverlay.style.display = "none";
+        });
+
+        eventGuestsAddBtn.addEventListener("click", function () {
+            var ids = [];
+            eventGuestsList.querySelectorAll("input[type=checkbox]:checked:not(:disabled)").forEach(function (cb) {
+                ids.push(parseInt(cb.getAttribute("data-guest-id")));
+            });
+            if (ids.length === 0) { eventGuestsOverlay.style.display = "none"; return; }
+
+            window.fetchWithCsrf("/api/v1/events/" + evtEventId + "/invitations/bulk", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ guest_ids: ids })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                var tbody = document.querySelector("#invitations-table tbody");
+                resp.data.forEach(function (g) {
+                    var tr = window.buildInvitationRow(g);
+                    tbody.appendChild(tr);
+                });
+                window.refreshSummary();
+                eventGuestsOverlay.style.display = "none";
             })
             .catch(window.handleFetchError);
         });

@@ -66,6 +66,22 @@ def bulk_add_invitations(event_id):
     return api_success(added, 201)
 
 
+@api_bp.route("/events/<int:event_id>/other-events-guests", methods=["GET"])
+@api_auth_required
+def other_events_guests(event_id):
+    user_id = get_api_user().id
+    current_event = event_service.get_owned_event_or_404(event_id, user_id)
+    source_event_id = request.args.get("source_event_id", type=int)
+    if source_event_id:
+        source_event = event_service.get_owned_event_or_404(source_event_id, user_id)
+        guests = invitation_service.get_event_guests_with_status(
+            source_event, current_event, user_id
+        )
+        return api_success({"guests": guests})
+    events = event_service.get_user_events_for_selector(user_id, exclude_event_id=event_id)
+    return api_success({"events": events})
+
+
 @api_bp.route("/events/<int:event_id>/invitations/bulk-create", methods=["POST"])
 @api_auth_required
 def bulk_create_and_invite(event_id):

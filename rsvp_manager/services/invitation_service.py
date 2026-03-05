@@ -108,6 +108,24 @@ def bulk_add_guests(event, guest_ids, user_id):
     return added
 
 
+def get_event_guests_with_status(source_event, current_event, user_id):
+    current_invited_ids = {inv.guest_id for inv in current_event.invitations}
+    result = []
+    for inv in source_event.invitations:
+        guest = inv.guest
+        result.append({
+            "id": guest.id,
+            "first_name": guest.first_name,
+            "last_name": guest.last_name or "",
+            "gender": guest.gender,
+            "status": inv.status,
+            "already_invited": guest.id in current_invited_ids,
+            "is_archived": guest.is_archived,
+            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
+        })
+    return result
+
+
 def bulk_create_and_invite(event, guests_data, user_id):
     added = []
     for g_data in guests_data:
