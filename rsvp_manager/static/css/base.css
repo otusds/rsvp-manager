@@ -336,6 +336,22 @@ h2 {
 
 .empty a { color: var(--color-primary); }
 
+.empty-state {
+    text-align: center;
+    padding: 64px 24px;
+    color: var(--color-text-muted);
+}
+.empty-state-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 8px;
+}
+.empty-state-sub {
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+}
+
 /* ── Scroll loader ───────────────────────────────────────────────────────── */
 .scroll-loader {
     display: flex;

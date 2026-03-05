@@ -101,7 +101,11 @@
     <div class="scroll-spinner"></div>
 </div>
 {% else %}
-<p class="empty">No guests yet. Add your first guest!</p>
+<div class="empty-state">
+    <p class="empty-state-title">No guests yet</p>
+    <p class="empty-state-sub">Start building your list — who's coming?</p>
+    <button type="button" class="btn" onclick="document.getElementById('open-add-guest-btn').click()">+ Add Guest</button>
+</div>
 {% endif %}
 
 <!-- Add New Guests modal (same as event page) -->

@@ -70,7 +70,11 @@
     <div class="scroll-spinner"></div>
 </div>
 {% else %}
-<p class="empty">No events yet. Create your first event!</p>
+<div class="empty-state">
+    <p class="empty-state-title">No events yet</p>
+    <p class="empty-state-sub">Start planning — create your first event!</p>
+    <button type="button" class="btn" onclick="document.getElementById('open-new-event-btn').click()">+ New Event</button>
+</div>
 {% endif %}
 <!-- New Event modal -->
 <div class="detail-overlay" id="new-event-overlay" style="display:none">
