@@ -40,16 +40,6 @@
 }
 
 .form textarea { resize: vertical; font-family: inherit; }
-/* Neutralize Safari search-input styling on name fields */
-.form input[type="search"] {
-    -webkit-appearance: none;
-    appearance: none;
-}
-.form input[type="search"]::-webkit-search-cancel-button,
-.form input[type="search"]::-webkit-search-decoration {
-    -webkit-appearance: none;
-    display: none;
-}
 
 .form select {
     -webkit-appearance: none;

@@ -433,6 +433,11 @@
             <span class="modal-title">Add New Guests</span>
             <button type="button" class="detail-close" id="add-guest-close">&times;</button>
         </div>
+        <form autocomplete="off" onsubmit="return false">
+        <div style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden" aria-hidden="true">
+            <input type="text" name="first_name" tabindex="-1">
+            <input type="text" name="last_name" tabindex="-1">
+        </div>
         <div class="add-guest-table-wrapper">
             <table class="add-guest-table" id="add-guest-table">
                 <thead>
@@ -451,6 +456,7 @@
             <span class="modal-hint">Press Enter to add another guest</span>
             <button type="button" class="btn" id="add-guest-save-btn">Save</button>
         </div>
+        </form>
     </div>
 </div>
 
@@ -462,15 +468,19 @@
             <button type="button" class="detail-close" id="detail-close">&times;</button>
         </div>
         <div class="detail-card-body">
-            <form class="form modal-form" id="inv-detail-form">
+            <form class="form modal-form" id="inv-detail-form" autocomplete="off">
+                <div style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden" aria-hidden="true">
+                    <input type="text" name="first_name" tabindex="-1">
+                    <input type="text" name="last_name" tabindex="-1">
+                </div>
                 <div class="form-row">
                     <div class="form-field">
                         <label for="detail-first-name">First Name</label>
-                        <input type="search" id="detail-first-name" required autocomplete="nope">
+                        <input type="text" id="detail-first-name" required autocomplete="off" name="inv_fn">
                     </div>
                     <div class="form-field">
                         <label for="detail-last-name">Last Name</label>
-                        <input type="search" id="detail-last-name" autocomplete="nope">
+                        <input type="text" id="detail-last-name" autocomplete="off" name="inv_ln">
                     </div>
                 </div>
                 <div class="form-row">
@@ -530,12 +540,12 @@
             <button type="button" class="detail-close" id="edit-event-close">&times;</button>
         </div>
         <div class="detail-card-body">
-            <form method="POST" action="{{ url_for('events.edit_event', event_id=event.id) }}" class="form modal-form">
+            <form method="POST" action="{{ url_for('events.edit_event', event_id=event.id) }}" class="form modal-form" autocomplete="off">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ee-name">Event Name</label>
-                        <input type="search" id="ee-name" name="name" value="{{ event.name }}" required autocomplete="nope">
+                        <input type="text" id="ee-name" name="name" value="{{ event.name }}" required autocomplete="off">
                     </div>
                 </div>
                 <div class="form-row">
@@ -591,16 +601,20 @@
             <button type="button" class="detail-close" id="guest-detail-close">&times;</button>
         </div>
         <div class="detail-card-body">
-            <form class="form modal-form" id="guest-detail-form">
+            <form class="form modal-form" id="guest-detail-form" autocomplete="off">
+                <div style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden" aria-hidden="true">
+                    <input type="text" name="first_name" tabindex="-1">
+                    <input type="text" name="last_name" tabindex="-1">
+                </div>
                 <input type="hidden" id="gd-guest-id">
                 <div class="form-row">
                     <div class="form-field">
                         <label for="gd-first">First Name</label>
-                        <input type="search" id="gd-first" required autocomplete="nope">
+                        <input type="text" id="gd-first" required autocomplete="off" name="gd_fn">
                     </div>
                     <div class="form-field">
                         <label for="gd-last">Last Name</label>
-                        <input type="search" id="gd-last" autocomplete="nope">
+                        <input type="text" id="gd-last" autocomplete="off" name="gd_ln">
                     </div>
                 </div>
                 <div class="form-row">

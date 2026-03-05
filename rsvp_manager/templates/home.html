@@ -80,12 +80,12 @@
             <button type="button" class="detail-close" id="new-event-close">&times;</button>
         </div>
         <div class="detail-card-body">
-            <form method="POST" action="{{ url_for('events.add_event') }}" class="form modal-form" id="new-event-form">
+            <form method="POST" action="{{ url_for('events.add_event') }}" class="form modal-form" id="new-event-form" autocomplete="off">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ne-name">Event Name</label>
-                        <input type="search" id="ne-name" name="name" required autocomplete="nope">
+                        <input type="text" id="ne-name" name="name" required autocomplete="off">
                     </div>
                 </div>
                 <div class="form-row">
