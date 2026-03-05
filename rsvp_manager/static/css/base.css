@@ -222,17 +222,16 @@ h2 {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 36px;
-    padding: 0 0.9rem;
-    background: var(--color-primary-dark);
+    padding: 10px 20px;
+    background: var(--color-primary);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     text-decoration: none;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 0.9rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
+    transition: background 0.15s ease, transform 0.1s;
     white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
 }
