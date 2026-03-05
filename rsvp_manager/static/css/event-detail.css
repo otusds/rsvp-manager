@@ -120,7 +120,7 @@
 .summary-bar-segment span {
     font-size: 0.65rem;
     font-weight: 600;
-    color: var(--gc-white);
+    color: var(--color-surface);
     padding: 0 3px;
 }
 .bar-attending { background: var(--color-success); }
@@ -156,7 +156,7 @@
 
 .event-notes-textarea:focus {
     outline: none;
-    border-color: var(--gc-accent);
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
 }
 
@@ -184,7 +184,7 @@
 
 .inv-notes-input:focus {
     outline: none;
-    border-color: var(--gc-accent);
+    border-color: var(--color-primary);
     background: white;
     box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
 }
@@ -200,7 +200,7 @@
     margin-bottom: 0.6rem;
     font-size: 0.85rem;
     font-weight: 500;
-    color: var(--gc-accent);
+    color: var(--color-primary);
     flex-wrap: wrap;
 }
 
@@ -221,7 +221,7 @@
 }
 
 .detail-card {
-    background: var(--gc-bg);
+    background: var(--color-primary-bg);
     border-radius: 14px 14px 0 0;
     box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
     width: 100%;
@@ -290,7 +290,7 @@
     border-radius: 10px; font-size: 0.88rem; background: rgba(118,118,128,0.08); font-family: inherit;
 }
 
-.guest-db-search-row input:focus { outline: none; border-color: var(--gc-accent); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+.guest-db-search-row input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
 
 #guest-db-filters { margin-top: 0.4rem; }
 
@@ -308,7 +308,7 @@
 .guest-db-item.archived-item { opacity: 0.5; }
 .guest-db-item.archived-item .guest-db-item-name { font-style: italic; }
 
-.guest-db-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--gc-accent); flex-shrink: 0; }
+.guest-db-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--color-primary); flex-shrink: 0; }
 
 .guest-db-item-info { flex: 1; min-width: 0; }
 .guest-db-item-name { font-size: 0.92rem; font-weight: 500; }
@@ -358,7 +358,7 @@
 .add-guest-table select:focus,
 .add-guest-table textarea:focus {
     outline: none;
-    border-color: var(--gc-accent);
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
 }
 
@@ -386,7 +386,7 @@
     top: 100%;
     left: 0;
     right: 0;
-    background: var(--gc-white);
+    background: var(--color-surface);
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 10px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
@@ -430,7 +430,7 @@
     left: 50%;
     transform: translateX(-50%);
     background: var(--color-text);
-    color: var(--gc-white);
+    color: var(--color-surface);
     font-size: 0.72rem;
     padding: 0.3rem 0.6rem;
     border-radius: 6px;
@@ -459,7 +459,7 @@
 .guest-db-select-all input[type="checkbox"] {
     width: 18px;
     height: 18px;
-    accent-color: var(--gc-accent);
+    accent-color: var(--color-primary);
 }
 
 /* ── Event Selector ──────────────────────────────────────────────────────── */
@@ -484,7 +484,7 @@
 
 .event-selector-select:focus {
     outline: none;
-    border-color: var(--gc-accent);
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
 }
 
@@ -543,7 +543,7 @@
 
 .checkbox-row input[type="checkbox"] {
     width: auto;
-    accent-color: var(--gc-accent);
+    accent-color: var(--color-primary);
 }
 
 .checkbox-row label {

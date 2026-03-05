@@ -35,7 +35,7 @@
 .form select:focus,
 .form textarea:focus {
     outline: none;
-    border-color: var(--gc-accent);
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
 }
 
@@ -94,7 +94,7 @@
     border-radius: 8px;
     font-size: 0.85rem;
     color: var(--color-text);
-    background: var(--gc-white);
+    background: var(--color-surface);
 }
 
 .form-field input[type="date"] {
@@ -111,7 +111,7 @@
 .form-field select:focus,
 .form-field textarea:focus {
     outline: none;
-    border-color: var(--gc-accent);
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
 }
 

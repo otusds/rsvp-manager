@@ -7,7 +7,7 @@
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 500;
-    color: var(--gc-white);
+    color: var(--color-surface);
     white-space: nowrap;
     line-height: 1.4;
 }
@@ -42,7 +42,7 @@
     height: 14px;
     border: none;
     background: rgba(255,255,255,0.3);
-    color: var(--gc-white);
+    color: var(--color-surface);
     border-radius: 50%;
     font-size: 0.65rem;
     cursor: pointer;
@@ -73,7 +73,7 @@
     top: 100%;
     left: 0;
     right: 0;
-    background: var(--gc-white);
+    background: var(--color-surface);
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 10px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
@@ -106,7 +106,7 @@
 }
 
 .tag-suggestion-create {
-    color: var(--gc-accent);
+    color: var(--color-primary);
     font-weight: 500;
 }
 
@@ -135,7 +135,7 @@
     left: 0;
     right: auto;
     min-width: 200px;
-    background: var(--gc-white);
+    background: var(--color-surface);
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 10px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
