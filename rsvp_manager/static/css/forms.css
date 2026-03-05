@@ -44,8 +44,9 @@
 .form textarea[rows="1"] {
     resize: none;
     overflow: hidden;
-    height: auto;
     white-space: nowrap;
+    field-sizing: content;
+    line-height: normal;
 }
 
 .form select {

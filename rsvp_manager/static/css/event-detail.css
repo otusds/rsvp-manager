@@ -348,9 +348,10 @@
 .add-guest-table textarea {
     resize: none;
     overflow: hidden;
-    height: 1.6em;
-    line-height: 1.4;
     white-space: nowrap;
+    field-sizing: content;
+    line-height: normal;
+    display: block;
 }
 
 .add-guest-table input:focus,

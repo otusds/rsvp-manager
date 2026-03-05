@@ -183,10 +183,10 @@ td.center, th.center { text-align: center; }
 textarea.inline-edit {
     resize: none;
     overflow: hidden;
-    height: 1.6em;
-    line-height: 1.4;
     white-space: nowrap;
     font-family: inherit;
+    field-sizing: content;
+    line-height: normal;
 }
 
 .inline-select {
