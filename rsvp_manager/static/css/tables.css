@@ -259,6 +259,9 @@ select.status-declined {
 }
 
 .kebab-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
     cursor: pointer;
