@@ -20,7 +20,7 @@ def get_user_guests(user_id, page=1, show_archived="0"):
     elif show_archived != "1":
         query = query.filter_by(is_archived=False)
     return query.order_by(
-        Guest.last_name, Guest.first_name
+        Guest.first_name, Guest.last_name
     ).paginate(page=page, per_page=GUESTS_PER_PAGE, error_out=False)
 
 

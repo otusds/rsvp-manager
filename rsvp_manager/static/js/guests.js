@@ -142,6 +142,9 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Initial sort on page load
+    applyGuestTableControls();
+
     // ── Archive filter (server-side reload) ───────────────────────────────
     var showArchived = guestsTable.getAttribute("data-show-archived") || "0";
     var guestArchiveFilter = document.getElementById("guest-archive-filter");
