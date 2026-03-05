@@ -22,7 +22,7 @@
 {% if events %}
 <div class="table-controls" id="event-filters" style="display:none">
     <div class="filter-row">
-        <input type="search" class="search-input" id="event-search" placeholder="Search events..." autocomplete="nope">
+        <input type="search" class="search-input" id="event-search" placeholder="Search events..." autocomplete="off">
     </div>
     <div class="filter-row">
         <span class="filter-label">Filter:</span>
@@ -80,18 +80,18 @@
             <button type="button" class="detail-close" id="new-event-close">&times;</button>
         </div>
         <div class="detail-card-body">
-            <form method="POST" action="{{ url_for('events.add_event') }}" class="form modal-form" id="new-event-form" autocomplete="off">
+            <form method="POST" action="{{ url_for('events.add_event') }}" class="form modal-form" id="new-event-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ne-name">Event Name</label>
-                        <input type="text" id="ne-name" name="name" required autocomplete="off">
+                        <input type="text" id="ne-name" name="name" required>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ne-location">Location</label>
-                        <input type="text" id="ne-location" name="location" placeholder="Optional" list="location-options" autocomplete="nope">
+                        <input type="text" id="ne-location" name="location" placeholder="Optional" list="location-options" autocomplete="off">
                         <datalist id="location-options">
                             {% for loc in locations %}
                             <option value="{{ loc }}">
@@ -117,7 +117,7 @@
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ne-target">Target Attendees</label>
-                        <input type="number" id="ne-target" name="target_attendees" placeholder="Optional" min="1" autocomplete="nope">
+                        <input type="number" id="ne-target" name="target_attendees" placeholder="Optional" min="1" autocomplete="off">
                     </div>
                     {% if me_exists %}
                     <div class="form-field form-field-checkbox">

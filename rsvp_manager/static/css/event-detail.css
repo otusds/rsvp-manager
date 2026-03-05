@@ -336,7 +336,8 @@
 .add-guest-table td { padding: 0.35rem 0.4rem; }
 
 .add-guest-table input,
-.add-guest-table select {
+.add-guest-table select,
+.add-guest-table textarea {
     width: 100%;
     padding: 0.3rem 0.45rem;
     border: 1px solid rgba(0,0,0,0.1);
@@ -344,9 +345,17 @@
     font-size: 0.82rem;
     font-family: inherit;
 }
+.add-guest-table textarea {
+    resize: none;
+    overflow: hidden;
+    height: 1.6em;
+    line-height: 1.4;
+    white-space: nowrap;
+}
 
 .add-guest-table input:focus,
-.add-guest-table select:focus {
+.add-guest-table select:focus,
+.add-guest-table textarea:focus {
     outline: none;
     border-color: var(--gc-accent);
     box-shadow: 0 0 0 2px rgba(16,185,129,0.15);

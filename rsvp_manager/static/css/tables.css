@@ -179,6 +179,15 @@ td.center, th.center { text-align: center; }
     box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
 }
 .inline-edit::placeholder { color: var(--color-placeholder); }
+/* Textareas used as single-line name inputs (prevents Safari Contacts autofill) */
+textarea.inline-edit {
+    resize: none;
+    overflow: hidden;
+    height: 1.6em;
+    line-height: 1.4;
+    white-space: nowrap;
+    font-family: inherit;
+}
 
 .inline-select {
     padding: 0.3rem 1.3rem 0.3rem 0.4rem;

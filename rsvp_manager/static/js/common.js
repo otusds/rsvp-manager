@@ -12,6 +12,20 @@ document.addEventListener("DOMContentLoaded", function () {
         return fetch(url, options);
     };
 
+    // ── Single-line textareas (prevent newlines, strip on paste) ─────────────
+    document.addEventListener("keydown", function (e) {
+        if (e.target.tagName === "TEXTAREA" && e.target.rows === 1 && e.key === "Enter") {
+            e.preventDefault();
+        }
+    });
+    document.addEventListener("paste", function (e) {
+        if (e.target.tagName === "TEXTAREA" && e.target.rows === 1) {
+            e.preventDefault();
+            var text = (e.clipboardData || window.clipboardData).getData("text").replace(/[\r\n]+/g, " ");
+            document.execCommand("insertText", false, text);
+        }
+    });
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     window.handleFetchError = function (err) {
@@ -201,8 +215,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function createBlankGuestRow() {
         var tr = document.createElement("tr");
         tr.innerHTML =
-            '<td><div class="ag-first-name-wrapper"><input type="text" class="ag-first-name" placeholder="First name" autocomplete="off" name="af_' + Date.now() + '_f"><div class="ag-suggestions" style="display:none"></div></div></td>' +
-            '<td><input type="text" class="ag-last-name" placeholder="Last name" autocomplete="off" name="af_' + Date.now() + '_l"></td>' +
+            '<td><div class="ag-first-name-wrapper"><textarea class="ag-first-name" placeholder="First name" rows="1"></textarea><div class="ag-suggestions" style="display:none"></div></div></td>' +
+            '<td><textarea class="ag-last-name" placeholder="Last name" rows="1"></textarea></td>' +
             '<td><select class="ag-gender"><option value="Male">Male</option><option value="Female">Female</option></select></td>' +
             '<td><button type="button" class="add-guest-remove-btn">&times;</button></td>';
 
