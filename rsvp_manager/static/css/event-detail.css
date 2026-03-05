@@ -351,6 +351,15 @@
     border-color: var(--gc-accent);
     box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
 }
+.add-guest-table input[type="search"] {
+    -webkit-appearance: none;
+    appearance: none;
+}
+.add-guest-table input[type="search"]::-webkit-search-cancel-button,
+.add-guest-table input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+    display: none;
+}
 
 .add-guest-remove-btn {
     background: none;
