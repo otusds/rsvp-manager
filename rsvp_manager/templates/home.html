@@ -111,9 +111,9 @@
                     <div class="form-field">
                         <label for="ne-type">Type</label>
                         <select id="ne-type" name="event_type" required>
-                            <option value="" disabled selected>Select type</option>
+                            <option value="" disabled>Select type</option>
                             {% for t in event_types %}
-                            <option value="{{ t }}">{{ t }}</option>
+                            <option value="{{ t }}" {{ 'selected' if t == 'Dinner' }}>{{ t }}</option>
                             {% endfor %}
                         </select>
                     </div>

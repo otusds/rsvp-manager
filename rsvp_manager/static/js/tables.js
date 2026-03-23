@@ -1,5 +1,14 @@
 document.addEventListener("DOMContentLoaded", function () {
 
+    var STATUS_ORDER = { "attending": 0, "pending": 1, "declined": 2, "not sent": 3 };
+
+    function getStatusRank(cell) {
+        if (!cell) return 99;
+        var sel = cell.querySelector("select");
+        var val = sel ? sel.value.toLowerCase() : cell.textContent.trim().toLowerCase();
+        return STATUS_ORDER[val] !== undefined ? STATUS_ORDER[val] : 99;
+    }
+
     // ── Table search ─────────────────────────────────────────────────────────
     document.querySelectorAll(".search-input[data-table]").forEach(function (input) {
         var tableId = input.getAttribute("data-table");
@@ -55,6 +64,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     var cbB = b.cells[colIndex] && b.cells[colIndex].querySelector("input[type=checkbox]");
                     valA = cbA && cbA.checked ? "1" : "0";
                     valB = cbB && cbB.checked ? "1" : "0";
+                } else if (sortType === "status") {
+                    valA = getStatusRank(a.cells[colIndex]);
+                    valB = getStatusRank(b.cells[colIndex]);
+                    return dir === "asc" ? valA - valB : valB - valA;
                 } else {
                     var cellA = a.cells[colIndex], cellB = b.cells[colIndex];
                     var selA = cellA && cellA.querySelector("select");
@@ -154,6 +167,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     var cbB = cellB.querySelector("input[type=checkbox]");
                     valA = cbA && cbA.checked ? "1" : "0";
                     valB = cbB && cbB.checked ? "1" : "0";
+                } else if (sortType === "status") {
+                    valA = getStatusRank(cellA);
+                    valB = getStatusRank(cellB);
+                    return dir === "asc" ? valA - valB : valB - valA;
                 } else {
                     var selA = cellA.querySelector("select");
                     var selB = cellB.querySelector("select");

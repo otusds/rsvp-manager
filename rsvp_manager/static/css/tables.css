@@ -177,7 +177,9 @@ td.center, th.center { text-align: center; }
 }
 
 
-.gender-tag { color: var(--color-text-muted); font-size: 0.78rem; }
+.gender-tag { font-size: 0.78rem; }
+.gender-tag.gender-m { color: var(--color-gender-male); }
+.gender-tag.gender-f { color: var(--color-gender-female); }
 
 .inline-edit {
     flex: 1;

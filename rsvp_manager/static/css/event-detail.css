@@ -49,7 +49,7 @@
 
 /* ── Summary table ─────────────────────────────────────────────────────────── */
 .summary-table {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     max-width: 100%;
     font-size: 0.82rem;
 }
@@ -57,12 +57,14 @@
 .summary-table th {
     text-align: center;
     font-size: 0.7rem;
-    padding: 0.4rem 0.5rem;
+    padding: 0.2rem 0.5rem;
+    height: auto;
 }
 
 .summary-table td {
     text-align: center;
-    padding: 0.4rem 0.5rem;
+    padding: 0.2rem 0.5rem;
+    height: auto;
 }
 
 .summary-table .row-label {
@@ -82,7 +84,7 @@
 .summary-table td[data-stat="invited"] { font-weight: 700; }
 
 /* ── Summary progress bars ──────────────────────────────────────────────── */
-.summary-bars { margin-bottom: 1rem; }
+.summary-bars { margin-bottom: 0.5rem; }
 
 .summary-bar-row {
     display: flex;

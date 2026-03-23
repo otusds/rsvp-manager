@@ -189,7 +189,7 @@
                     <option value="1:last">Last Name</option>
                     <option value="1:gender">Gender</option>
                     <option value="2:check">Sent</option>
-                    <option value="3:text">Status</option>
+                    <option value="3:status">Status</option>
                 </select>
             </div>
         </div>
@@ -217,7 +217,7 @@
                     <th class="center col-check col-multiselect" style="display:none"><input type="checkbox" id="select-all"></th>
                     <th data-sort="text" class="col-guest">Guest</th>
                     <th data-sort="check" class="center col-sent">Sent</th>
-                    <th data-sort="text" class="col-status">RSVP Status</th>
+                    <th data-sort="status" class="col-status">RSVP Status</th>
                     <th class="col-expand-mobile">Invite Notes</th>
                     <th class="col-expand">Guest Notes</th>
                     <th class="col-expand">Guest Tags</th>
@@ -235,7 +235,7 @@
                     data-date-responded="{{ inv.date_responded.strftime('%d %b %Y') if inv.date_responded else '' }}"
                     data-date-responded-iso="{{ inv.date_responded.isoformat() if inv.date_responded else '' }}">
                     <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
-                    <td class="guest-name-cell">{{ inv.guest.full_name }} <span class="gender-tag">{{ '(M)' if inv.guest.gender == 'Male' else '(F)' if inv.guest.gender == 'Female' else '' }}</span></td>
+                    <td class="guest-name-cell">{{ inv.guest.full_name }} <span class="gender-tag {% if inv.guest.gender == 'Male' %}gender-m{% elif inv.guest.gender == 'Female' %}gender-f{% endif %}">{{ '(M)' if inv.guest.gender == 'Male' else '(F)' if inv.guest.gender == 'Female' else '' }}</span></td>
                     <td class="center">
                         <input type="checkbox" class="sent-checkbox"
                                data-inv-id="{{ inv.id }}"
