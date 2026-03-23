@@ -315,26 +315,27 @@
 .guest-db-item-gender { font-size: 0.78rem; color: var(--color-text-muted); }
 
 .guest-db-footer {
-    padding: 0.75rem 1rem; border-top: 1px solid rgba(0,0,0,0.06);
+    padding: 0.75rem 1rem;
     background: var(--color-surface); border-radius: 0 0 14px 14px;
-    display: flex; flex-direction: column; gap: 0.5rem;
+    display: flex; flex-direction: column; gap: 0.6rem;
 }
 .add-guest-main-actions {
     display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; width: 100%;
 }
 .add-guest-divider {
     display: flex; align-items: center; gap: 0.75rem;
-    color: var(--color-text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--color-text-muted); font-size: 0.75rem; letter-spacing: 0.02em;
+    margin: 0.15rem 0;
 }
 .add-guest-divider::before,
 .add-guest-divider::after {
-    content: ""; flex: 1; height: 1px; background: rgba(0,0,0,0.08);
+    content: ""; flex: 1; height: 1px; background: rgba(0,0,0,0.1);
 }
 .add-guest-alt-actions {
     display: flex; gap: 0.5rem;
 }
 .add-guest-alt-actions .btn {
-    flex: 1;
+    flex: 1; text-align: center;
 }
 
 .modal-hint {
