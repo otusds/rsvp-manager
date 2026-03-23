@@ -177,9 +177,19 @@ td.center, th.center { text-align: center; }
 }
 
 
-.gender-tag { font-size: 0.78rem; }
-.gender-tag.gender-m { color: var(--color-gender-male); }
-.gender-tag.gender-f { color: var(--color-gender-female); }
+.gender-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.05rem 0.35rem;
+    border-radius: 5px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    vertical-align: middle;
+    margin-left: 0.25rem;
+}
+.gender-tag.gender-m { background: rgba(0,122,255,0.15); color: var(--color-gender-male); }
+.gender-tag.gender-f { background: rgba(255,45,85,0.15); color: var(--color-gender-female); }
 
 .inline-edit {
     flex: 1;

@@ -235,7 +235,7 @@
                     data-date-responded="{{ inv.date_responded.strftime('%d %b %Y') if inv.date_responded else '' }}"
                     data-date-responded-iso="{{ inv.date_responded.isoformat() if inv.date_responded else '' }}">
                     <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
-                    <td class="guest-name-cell">{{ inv.guest.full_name }} <span class="gender-tag {% if inv.guest.gender == 'Male' %}gender-m{% elif inv.guest.gender == 'Female' %}gender-f{% endif %}">{{ '(M)' if inv.guest.gender == 'Male' else '(F)' if inv.guest.gender == 'Female' else '' }}</span></td>
+                    <td class="guest-name-cell">{{ inv.guest.full_name }}{% if inv.guest.gender == 'Male' %} <span class="gender-tag gender-m">M</span>{% elif inv.guest.gender == 'Female' %} <span class="gender-tag gender-f">F</span>{% endif %}</td>
                     <td class="center">
                         <input type="checkbox" class="sent-checkbox"
                                data-inv-id="{{ inv.id }}"
