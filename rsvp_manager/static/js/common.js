@@ -323,12 +323,10 @@ document.addEventListener("DOMContentLoaded", function () {
         fetchGuestListForAutocomplete();
     };
 
-    // Event page trigger (inside kebab menu)
-    var addNewGuestBtn = document.getElementById("add-new-guest-btn");
-    if (addNewGuestBtn && addGuestOverlay) {
-        addNewGuestBtn.addEventListener("click", function () {
-            var menu = addNewGuestBtn.closest(".kebab-menu");
-            if (menu) menu.classList.remove("open");
+    // Event page trigger (direct button)
+    var newInviteBtn = document.getElementById("new-invite-btn");
+    if (newInviteBtn && addGuestOverlay) {
+        newInviteBtn.addEventListener("click", function () {
             window.openAddGuestModal();
         });
     }

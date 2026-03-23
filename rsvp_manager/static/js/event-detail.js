@@ -1254,8 +1254,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         selectFromDbBtn.addEventListener("click", function () {
-            var menu = selectFromDbBtn.closest(".kebab-menu");
-            if (menu) menu.classList.remove("open");
+            var addGuestOverlay = document.getElementById("add-guest-overlay");
+            if (addGuestOverlay) addGuestOverlay.style.display = "none";
             if (!eventId) return;
             window.fetchWithCsrf("/api/v1/events/" + eventId + "/available-guests")
                 .then(function (r) { return r.json(); })
@@ -1577,8 +1577,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         addFromEventsBtn.addEventListener("click", function () {
-            var menu = addFromEventsBtn.closest(".kebab-menu");
-            if (menu) menu.classList.remove("open");
+            var addGuestOverlay = document.getElementById("add-guest-overlay");
+            if (addGuestOverlay) addGuestOverlay.style.display = "none";
             if (!evtEventId) return;
             window.fetchWithCsrf("/api/v1/events/" + evtEventId + "/other-events-guests")
                 .then(function (r) { return r.json(); })
