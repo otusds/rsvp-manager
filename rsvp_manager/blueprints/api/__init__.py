@@ -58,7 +58,6 @@ def serialize_event(event):
         "date": event.date.isoformat(),
         "date_created": event.date_created.isoformat() if event.date_created else None,
         "notes": event.notes or "",
-        "target_attendees": event.target_attendees,
         "invitation_count": len(event.invitations),
         "attending_count": attending,
     }

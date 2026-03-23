@@ -10,18 +10,6 @@ class TestEdgeCases:
         r = logged_in_client.get(f"/event/{sample_event}")
         assert r.status_code == 200
 
-    def test_event_with_zero_target(self, logged_in_client, test_app, user):
-        """Target attendees = 0 should be treated as None."""
-        r = logged_in_client.post("/event/add", data={
-            "name": "Zero Target", "event_type": "Dinner",
-            "date": "2026-08-01", "target_attendees": "0"
-        })
-        assert r.status_code == 302
-        with test_app.app_context():
-            e = Event.query.filter_by(name="Zero Target").first()
-            # 0 is falsy, so `or None` makes it None
-            assert e.target_attendees is None
-
     def test_guest_with_no_last_name(self, logged_in_client, test_app, user):
         with test_app.app_context():
             g = Guest(user_id=user, first_name="Solo", gender="Male",
@@ -146,27 +134,3 @@ class TestEdgeCases:
         assert r.status_code == 200
         assert b"Past Party" in r.data
 
-    def test_event_target_with_over_capacity(self, logged_in_client, test_app, user):
-        """More attending than target should render without error."""
-        with test_app.app_context():
-            e = Event(user_id=user, name="Overcrowded", event_type="Party",
-                      date=date(2026, 8, 1), date_created=date.today(),
-                      target_attendees=2)
-            db.session.add(e)
-            db.session.flush()
-            for i in range(5):
-                g = Guest(user_id=user, first_name=f"G{i}", gender="Male",
-                          date_created=datetime.now())
-                db.session.add(g)
-                db.session.flush()
-                inv = Invitation(event_id=e.id, guest_id=g.id, status="Attending",
-                                 date_invited=date.today(), date_responded=date.today())
-                db.session.add(inv)
-            db.session.commit()
-            eid = e.id
-        # Home page
-        r = logged_in_client.get("/")
-        assert r.status_code == 200
-        # Event detail
-        r = logged_in_client.get(f"/event/{eid}")
-        assert r.status_code == 200

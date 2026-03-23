@@ -46,16 +46,6 @@ class TestAddEvent:
             assert e.event_type == "Party"
             assert e.location == "Test Loc"
 
-    def test_add_event_with_target(self, logged_in_client, test_app):
-        r = logged_in_client.post("/event/add", data={
-            "name": "Target Event", "event_type": "Dinner",
-            "date": "2026-08-01", "target_attendees": "25"
-        })
-        assert r.status_code == 302
-        with test_app.app_context():
-            e = Event.query.filter_by(name="Target Event").first()
-            assert e.target_attendees == 25
-
     def test_add_event_with_include_me(self, logged_in_client, test_app, user):
         with test_app.app_context():
             me = Guest(user_id=user, first_name="Me", gender="Male", is_me=True)
@@ -89,16 +79,6 @@ class TestAddEvent:
         })
         assert r.status_code == 500 or r.status_code == 400
 
-    def test_add_event_empty_target(self, logged_in_client, test_app):
-        r = logged_in_client.post("/event/add", data={
-            "name": "No Target", "event_type": "Dinner",
-            "date": "2026-08-01", "target_attendees": ""
-        })
-        assert r.status_code == 302
-        with test_app.app_context():
-            e = Event.query.filter_by(name="No Target").first()
-            assert e.target_attendees is None
-
     def test_add_event_very_long_name(self, logged_in_client, test_app):
         long_name = "A" * 500
         r = logged_in_client.post("/event/add", data={
@@ -130,14 +110,13 @@ class TestEditEvent:
         r = logged_in_client.post(f"/event/{sample_event}/edit", data={
             "name": "Updated Event", "event_type": "Weekend",
             "location": "New Loc", "date": "2026-09-01",
-            "notes": "Updated notes", "target_attendees": "50"
+            "notes": "Updated notes"
         })
         assert r.status_code == 302
         with test_app.app_context():
             e = db.session.get(Event,sample_event)
             assert e.name == "Updated Event"
             assert e.event_type == "Weekend"
-            assert e.target_attendees == 50
             assert e.date_edited is not None
 
     def test_edit_event_other_user(self, logged_in_client, test_app, user2):
@@ -168,16 +147,6 @@ class TestEditEvent:
             "name": "Bad Date", "event_type": "Party", "date": "invalid"
         })
         assert r.status_code in (400, 500)
-
-    def test_edit_event_clear_target(self, logged_in_client, sample_event, test_app):
-        r = logged_in_client.post(f"/event/{sample_event}/edit", data={
-            "name": "Test Event", "event_type": "Dinner",
-            "date": "2026-06-15", "target_attendees": ""
-        })
-        assert r.status_code == 302
-        with test_app.app_context():
-            e = db.session.get(Event,sample_event)
-            assert e.target_attendees is None
 
 
 class TestDeleteEvent:

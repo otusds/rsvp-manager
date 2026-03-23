@@ -38,16 +38,6 @@ def check_me_exists(user_id):
     return Guest.query.filter_by(user_id=user_id, is_me=True).first() is not None
 
 
-def _parse_target_attendees(form_data):
-    raw = form_data.get("target_attendees")
-    if not raw:
-        return None
-    try:
-        val = int(raw)
-        return val if val > 0 else None
-    except (ValueError, TypeError):
-        return None
-
 
 def _validate_event_fields(form_data):
     """Validate and return cleaned event fields from form data."""
@@ -75,7 +65,6 @@ def create_event(user_id, form_data):
         date=event_date,
         date_created=date.today(),
         notes=form_data.get("notes", "").strip(),
-        target_attendees=_parse_target_attendees(form_data),
     )
     db.session.add(event)
     db.session.commit()
@@ -102,7 +91,6 @@ def update_event(event, form_data):
     event.location = form_data.get("location", "").strip()[:200]
     event.date = event_date
     event.notes = form_data.get("notes", "").strip()
-    event.target_attendees = _parse_target_attendees(form_data)
     event.date_edited = datetime.now(timezone.utc)
     db.session.commit()
     return event

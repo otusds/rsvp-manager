@@ -43,12 +43,6 @@
                     <span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span>
                 </span>
             </div>
-            {% if event.target_attendees %}
-            <div class="event-info-row">
-                <span class="event-info-label">Target Attendees</span>
-                <span class="event-info-value">{{ event.target_attendees }}</span>
-            </div>
-            {% endif %}
             {% if event.date_created %}
             <div class="event-info-row">
                 <span class="event-info-label">Date Created</span>
@@ -83,18 +77,7 @@
         {% set pend_count = all_inv|selectattr('status', 'equalto', 'Pending')|list|length %}
         {% set decl_count = all_inv|selectattr('status', 'equalto', 'Declined')|list|length %}
         {% set invited_count = att_count + pend_count + decl_count %}
-        <div class="summary-bars" id="summary-bars" data-target="{{ event.target_attendees or 0 }}">
-            {% if event.target_attendees %}
-            {% set target_pct = [((att_count / event.target_attendees) * 100)|round|int, 100]|min if event.target_attendees else 0 %}
-            <div class="summary-bar-row" id="target-bar-row">
-                <span class="summary-bar-label">Attending vs Target</span>
-                <div class="summary-bar">
-                    <div class="summary-bar-segment bar-attending{% if att_count > event.target_attendees %} over-target{% endif %}" id="target-bar-fill"
-                         style="width: {{ target_pct }}%"><span>{{ target_pct }}%</span></div>
-                </div>
-                <span class="summary-bar-value{% if att_count > event.target_attendees %} over-target{% elif att_count == event.target_attendees %} at-target{% endif %}" id="target-bar-value">{% if att_count > event.target_attendees %}⚠ {% elif att_count == event.target_attendees %}✓ {% endif %}{{ att_count }}/{{ event.target_attendees }}</span>
-            </div>
-            {% endif %}
+        <div class="summary-bars" id="summary-bars">
             {% set att_pct = ((att_count / invited_count) * 100)|round|int if invited_count else 0 %}
             {% set pend_pct = ((pend_count / invited_count) * 100)|round|int if invited_count else 0 %}
             {% set decl_pct = ((decl_count / invited_count) * 100)|round|int if invited_count else 0 %}
@@ -559,12 +542,6 @@
                             <option value="{{ t }}"{{ ' selected' if event.event_type == t }}>{{ t }}</option>
                             {% endfor %}
                         </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-field">
-                        <label for="ee-target">Target Attendees</label>
-                        <input type="number" id="ee-target" name="target_attendees" value="{{ event.target_attendees if event.target_attendees else '' }}" placeholder="Optional" min="1" autocomplete="off">
                     </div>
                 </div>
                 <div class="form-row">

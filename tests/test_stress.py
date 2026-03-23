@@ -315,16 +315,6 @@ class TestAddEventEdgeCases:
         })
         assert r.status_code == 400
 
-    def test_add_event_negative_target(self, logged_in_client, test_app):
-        r = logged_in_client.post("/event/add", data={
-            "name": "Neg Target", "event_type": "Dinner",
-            "date": "2026-08-01", "target_attendees": "-5"
-        })
-        # Negative target is treated as None by validation
-        assert r.status_code == 302
-        with test_app.app_context():
-            e = Event.query.filter_by(name="Neg Target").first()
-            assert e.target_attendees is None
 
 
 # ── Seed data idempotency ───────────────────────────────────────────────────
@@ -432,8 +422,7 @@ class TestEventDetailRendering:
     def test_detail_shows_correct_counts(self, logged_in_client, test_app, user):
         with test_app.app_context():
             e = Event(user_id=user, name="CountTest", event_type="Party",
-                      date=date(2026, 8, 1), date_created=date.today(),
-                      target_attendees=5)
+                      date=date(2026, 8, 1), date_created=date.today())
             db.session.add(e)
             db.session.flush()
             for i, status in enumerate(["Attending", "Attending", "Pending", "Declined", "Not Sent"]):

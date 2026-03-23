@@ -124,7 +124,6 @@
     padding: 0 3px;
 }
 .bar-attending { background: var(--color-success); }
-.bar-attending.over-target { background: var(--color-warning); }
 .bar-pending { background: var(--color-warning); }
 .bar-declined { background: var(--color-danger); }
 
@@ -136,8 +135,6 @@
     text-align: right;
     white-space: nowrap;
 }
-.summary-bar-value.at-target { color: var(--color-success-dark); }
-.summary-bar-value.over-target { color: var(--color-warning-dark); }
 
 /* ── Event notes ──────────────────────────────────────────────────────────── */
 .event-notes-textarea {

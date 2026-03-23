@@ -52,7 +52,7 @@ def sample_event(test_app, user):
         e = Event(
             user_id=user, name="Test Event", event_type="Dinner",
             location="Test Location", date=date(2026, 6, 15),
-            date_created=date.today(), notes="Test notes", target_attendees=10
+            date_created=date.today(), notes="Test notes"
         )
         db.session.add(e)
         db.session.commit()

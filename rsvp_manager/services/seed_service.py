@@ -7,14 +7,14 @@ def seed(user_id):
     """Populate a user's account with sample data."""
     today = date.today()
     events = [
-        Event(user_id=user_id, name="New Year's Eve Bash", event_type="Party", location="Rooftop Lounge, Miami", date=date(2025, 12, 31), date_created=date(2025, 11, 15), notes="Great turnout!", target_attendees=20),
+        Event(user_id=user_id, name="New Year's Eve Bash", event_type="Party", location="Rooftop Lounge, Miami", date=date(2025, 12, 31), date_created=date(2025, 11, 15), notes="Great turnout!"),
         Event(user_id=user_id, name="Q4 Board Meeting", event_type="Corporate", location="HQ Boardroom, Chicago", date=date(2026, 1, 15), date_created=date(2025, 12, 1), notes="Quarterly review completed"),
-        Event(user_id=user_id, name="Valentine's Dinner", event_type="Dinner", location="Le Petit Bistro, Paris", date=date(2026, 2, 14), date_created=date(2026, 1, 10), notes="Intimate dinner for couples", target_attendees=8),
-        Event(user_id=user_id, name="Annual Gala Dinner", event_type="Dinner", location="Grand Hotel, New York", date=date(2026, 4, 12), date_created=today, notes="Black tie event", target_attendees=10),
-        Event(user_id=user_id, name="Team Building Retreat", event_type="Corporate", location="Lakehouse Resort, Vermont", date=date(2026, 5, 20), date_created=today, notes="Outdoor activities planned", target_attendees=6),
+        Event(user_id=user_id, name="Valentine's Dinner", event_type="Dinner", location="Le Petit Bistro, Paris", date=date(2026, 2, 14), date_created=date(2026, 1, 10), notes="Intimate dinner for couples"),
+        Event(user_id=user_id, name="Annual Gala Dinner", event_type="Dinner", location="Grand Hotel, New York", date=date(2026, 4, 12), date_created=today, notes="Black tie event"),
+        Event(user_id=user_id, name="Team Building Retreat", event_type="Corporate", location="Lakehouse Resort, Vermont", date=date(2026, 5, 20), date_created=today, notes="Outdoor activities planned"),
         Event(user_id=user_id, name="Summer Garden Party", event_type="Party", location="Riverside Park, Boston", date=date(2026, 7, 4), date_created=today, notes="Casual dress code"),
-        Event(user_id=user_id, name="Lake House Weekend", event_type="Weekend", location="Lakehouse Resort, Vermont", date=date(2026, 8, 22), date_created=today, notes="Arrive Friday evening, depart Sunday", target_attendees=15),
-        Event(user_id=user_id, name="Fall Pheasant Hunt", event_type="Hunt", location="Highland Estate, Montana", date=date(2026, 9, 15), date_created=today, notes="Bring warm layers", target_attendees=4),
+        Event(user_id=user_id, name="Lake House Weekend", event_type="Weekend", location="Lakehouse Resort, Vermont", date=date(2026, 8, 22), date_created=today, notes="Arrive Friday evening, depart Sunday"),
+        Event(user_id=user_id, name="Fall Pheasant Hunt", event_type="Hunt", location="Highland Estate, Montana", date=date(2026, 9, 15), date_created=today, notes="Bring warm layers"),
     ]
     db.session.add_all(events)
     db.session.flush()

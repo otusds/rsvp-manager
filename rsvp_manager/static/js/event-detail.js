@@ -75,29 +75,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // Update progress bars
         var summaryBars = document.getElementById("summary-bars");
         if (summaryBars) {
-            var target = parseInt(summaryBars.getAttribute("data-target")) || 0;
             var t = counts.total;
 
-            // Bar 1: Attending vs Target
-            if (target > 0) {
-                var pct = Math.min(100, (t.attending / target) * 100);
-                var fill = document.getElementById("target-bar-fill");
-                if (fill) {
-                    fill.style.width = pct + "%";
-                    fill.innerHTML = "<span>" + Math.round(pct) + "%</span>";
-                    fill.classList.toggle("over-target", t.attending > target);
-                }
-                var val = document.getElementById("target-bar-value");
-                if (val) {
-                    val.classList.remove("at-target", "over-target");
-                    var prefix = "";
-                    if (t.attending > target) { val.classList.add("over-target"); prefix = "\u26a0 "; }
-                    else if (t.attending === target) { val.classList.add("at-target"); prefix = "\u2713 "; }
-                    val.textContent = prefix + t.attending + "/" + target;
-                }
-            }
-
-            // Bar 2: RSVP Status breakdown
+            // RSVP Status breakdown
             var invited = t.invited;
             var attBar = document.getElementById("invited-bar-attending");
             var pendBar = document.getElementById("invited-bar-pending");

@@ -23,13 +23,5 @@
         <span class="stat">{{ total }} invited</span>
         <span class="stat stat-attending">{{ attending }} attending</span>
     </div>
-    {% if event.target_attendees %}
-    <div class="event-row-progress">
-        <div class="progress-bar-mini">
-            <div class="progress-bar-mini-fill{% if attending > event.target_attendees %} over-target{% endif %}" style="width: {{ [((attending / event.target_attendees) * 100)|round|int, 100]|min }}%"></div>
-        </div>
-        <span class="progress-bar-mini-value{% if attending > event.target_attendees %} over-target{% elif attending == event.target_attendees %} at-target{% endif %}">{% if attending > event.target_attendees %}⚠ {% elif attending == event.target_attendees %}✓ {% endif %}{{ attending }}/{{ event.target_attendees }}</span>
-    </div>
-    {% endif %}
 </a>
 {% endfor %}

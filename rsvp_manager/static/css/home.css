@@ -125,39 +125,3 @@
     color: #BE123C;
 }
 
-/* ── Mini progress bar (event cards) ────────────────────────────────────── */
-.progress-bar-mini {
-    flex: 1;
-    height: 6px;
-    background: rgba(0,0,0,0.06);
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.progress-bar-mini-fill {
-    height: 100%;
-    background: var(--color-success);
-    border-radius: 3px;
-    transition: width 0.3s;
-}
-
-.progress-bar-mini-fill.over-target { background: var(--color-warning); }
-
-/* ── Event card progress row ───────────────────────────────────────────── */
-.event-row-progress {
-    grid-column: 1 / -1;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding-top: 0.35rem;
-}
-
-.progress-bar-mini-value {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--color-text);
-    white-space: nowrap;
-}
-
-.progress-bar-mini-value.at-target { color: var(--color-success-dark); }
-.progress-bar-mini-value.over-target { color: var(--color-warning-dark); }

@@ -37,7 +37,6 @@ class Event(db.Model):
     date_created = db.Column(db.Date, nullable=True)
     date_edited = db.Column(db.DateTime, nullable=True)
     notes = db.Column(db.Text, default="")
-    target_attendees = db.Column(db.Integer, nullable=True)
     invitations = db.relationship("Invitation", backref="event", cascade="all, delete-orphan")
 
     def __repr__(self):
