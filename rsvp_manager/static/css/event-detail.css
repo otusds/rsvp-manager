@@ -321,11 +321,11 @@
 }
 .add-guest-save-row {
     display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem;
-    padding: 0.5rem 1rem 0.6rem;
+    padding: 0.5rem 1rem 0.75rem;
 }
 .add-guest-divider {
     display: flex; align-items: center; gap: 0.75rem;
-    padding: 0 1rem;
+    padding: 0 1rem; margin: 0;
     color: var(--color-text-muted); font-size: 0.75rem; letter-spacing: 0.02em;
 }
 .add-guest-divider::before,
@@ -340,6 +340,8 @@
 .add-guest-alt-actions .btn {
     flex: 1; text-align: center;
 }
+/* Remove bottom border on last row inside add-guest table */
+.add-guest-table tr td { border-bottom: none; }
 
 .modal-hint {
     font-size: 0.72rem;
