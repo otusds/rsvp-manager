@@ -59,6 +59,12 @@ def create_app(config_class=Config):
     app.register_blueprint(api_bp)
     csrf.exempt(api_bp)
 
+    ASSET_VERSION = "52"
+
+    @app.context_processor
+    def inject_asset_version():
+        return {"v": ASSET_VERSION}
+
     @app.route("/health")
     def health():
         return jsonify({"status": "ok"})
