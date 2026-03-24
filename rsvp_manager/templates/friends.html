@@ -77,7 +77,7 @@
 
 {% if guests %}
 <div class="table-scroll">
-<table id="guests-table" class="sortable" data-page="{{ pagination.page }}" data-pages="{{ pagination.pages }}" data-show-archived="{{ show_archived }}">
+<table id="guests-table" class="sortable" data-page="{{ pagination.page }}" data-pages="{{ pagination.pages }}" data-total="{{ pagination.total }}" data-show-archived="{{ show_archived }}">
     <thead>
         <tr>
             <th class="center col-check col-multiselect" style="display:none"><input type="checkbox" id="guest-select-all"></th>
