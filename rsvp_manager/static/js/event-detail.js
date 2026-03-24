@@ -342,7 +342,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var newFirst = document.getElementById("detail-first-name").value.trim();
             var newLast = document.getElementById("detail-last-name").value.trim();
             if (!newFirst) return;
-            window.fetchWithCsrf("/api/v1/guests/" + guestId, {
+            window.fetchWithCsrf("/api/v1/friends/" + guestId, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ first_name: newFirst, last_name: newLast })
@@ -366,7 +366,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!currentDetailRow) return;
             var guestId = currentDetailRow.getAttribute("data-guest-id");
             var newGender = this.value;
-            window.fetchWithCsrf("/api/v1/guests/" + guestId, {
+            window.fetchWithCsrf("/api/v1/friends/" + guestId, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ gender: newGender })
@@ -461,7 +461,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!newFirst) return;
 
             // Save guest fields
-            var guestSave = window.fetchWithCsrf("/api/v1/guests/" + guestId, {
+            var guestSave = window.fetchWithCsrf("/api/v1/friends/" + guestId, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ first_name: newFirst, last_name: newLast, gender: newGender })
@@ -736,7 +736,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function openGuestDetail(guestId, row) {
         gdActiveRow = row;
-        window.fetchWithCsrf("/api/v1/guests/" + guestId)
+        window.fetchWithCsrf("/api/v1/friends/" + guestId)
             .then(function (res) { return res.json(); })
             .then(function (resp) {
                 var g = resp.data;
@@ -816,7 +816,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!firstName) return;
 
             var tagNames = currentGuestTags.map(function (t) { return t.name; });
-            window.fetchWithCsrf("/api/v1/guests/" + guestId, {
+            window.fetchWithCsrf("/api/v1/friends/" + guestId, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ first_name: firstName, last_name: lastName, gender: gender, notes: notes, is_me: isMe, tag_names: tagNames })
@@ -1095,29 +1095,29 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ── Guest Database Picker ────────────────────────────────────────────────
+    // ── Friends Picker ────────────────────────────────────────────────
     var selectFromDbBtn = document.getElementById("select-from-db-btn");
-    var guestDbOverlay = document.getElementById("guest-db-overlay");
-    var guestDbClose = document.getElementById("guest-db-close");
-    var guestDbList = document.getElementById("guest-db-list");
-    var guestDbSearchInput = document.getElementById("guest-db-search-input");
-    var guestDbAddBtn = document.getElementById("guest-db-add-btn");
-    var guestDbFilterBtn = document.getElementById("guest-db-filter-btn");
-    var guestDbFilters = document.getElementById("guest-db-filters");
-    var guestDbGenderFilter = document.getElementById("guest-db-gender-filter");
-    var guestDbSort = document.getElementById("guest-db-sort");
-    var guestDbTagFilterToggle = document.getElementById("guest-db-tag-filter-toggle");
-    var guestDbTagFilterDropdown = document.getElementById("guest-db-tag-filter-dropdown");
-    var guestDbSelectedTagIds = [];
-    var guestDbArchiveFilter = document.getElementById("guest-db-archive-filter");
+    var friendsOverlay = document.getElementById("friends-overlay");
+    var friendsClose = document.getElementById("friends-close");
+    var friendsList = document.getElementById("friends-list");
+    var friendsSearchInput = document.getElementById("friends-search-input");
+    var friendsAddBtn = document.getElementById("friends-add-btn");
+    var friendsFilterBtn = document.getElementById("friends-filter-btn");
+    var friendsFilters = document.getElementById("friends-filters");
+    var friendsGenderFilter = document.getElementById("friends-gender-filter");
+    var friendsSort = document.getElementById("friends-sort");
+    var friendsTagFilterToggle = document.getElementById("friends-tag-filter-toggle");
+    var friendsTagFilterDropdown = document.getElementById("friends-tag-filter-dropdown");
+    var friendsSelectedTagIds = [];
+    var friendsArchiveFilter = document.getElementById("friends-archive-filter");
 
-    if (selectFromDbBtn && guestDbOverlay) {
+    if (selectFromDbBtn && friendsOverlay) {
         var invTable = document.getElementById("invitations-table");
         var eventId = invTable ? invTable.getAttribute("data-event-id") : null;
 
-        function buildGuestDbTagFilter() {
-            if (!guestDbTagFilterDropdown || !allUserTags) return;
-            guestDbTagFilterDropdown.innerHTML = "";
+        function buildFriendsTagFilter() {
+            if (!friendsTagFilterDropdown || !allUserTags) return;
+            friendsTagFilterDropdown.innerHTML = "";
             allUserTags.forEach(function (tag) {
                 var option = document.createElement("label");
                 option.className = "tag-filter-option";
@@ -1125,38 +1125,38 @@ document.addEventListener("DOMContentLoaded", function () {
                     '<input type="checkbox" value="' + tag.id + '">' +
                     '<span class="tag-badge" style="background:' + tag.color + '">' + window.escapeHtml(tag.name) + '</span>';
                 option.querySelector("input").addEventListener("change", function () {
-                    guestDbSelectedTagIds = [];
-                    guestDbTagFilterDropdown.querySelectorAll("input:checked").forEach(function (cb) {
-                        guestDbSelectedTagIds.push(parseInt(cb.value));
+                    friendsSelectedTagIds = [];
+                    friendsTagFilterDropdown.querySelectorAll("input:checked").forEach(function (cb) {
+                        friendsSelectedTagIds.push(parseInt(cb.value));
                     });
-                    guestDbTagFilterToggle.textContent = guestDbSelectedTagIds.length > 0
-                        ? guestDbSelectedTagIds.length + " Tag" + (guestDbSelectedTagIds.length > 1 ? "s" : "") + ""
+                    friendsTagFilterToggle.textContent = friendsSelectedTagIds.length > 0
+                        ? friendsSelectedTagIds.length + " Tag" + (friendsSelectedTagIds.length > 1 ? "s" : "") + ""
                         : "All Tags";
-                    applyGuestDbFilters();
+                    applyFriendsFilters();
                 });
-                guestDbTagFilterDropdown.appendChild(option);
+                friendsTagFilterDropdown.appendChild(option);
             });
         }
 
-        if (guestDbTagFilterToggle && guestDbTagFilterDropdown) {
-            guestDbTagFilterToggle.addEventListener("click", function (e) {
+        if (friendsTagFilterToggle && friendsTagFilterDropdown) {
+            friendsTagFilterToggle.addEventListener("click", function (e) {
                 e.stopPropagation();
-                var showing = guestDbTagFilterDropdown.style.display !== "none";
-                guestDbTagFilterDropdown.style.display = showing ? "none" : "block";
+                var showing = friendsTagFilterDropdown.style.display !== "none";
+                friendsTagFilterDropdown.style.display = showing ? "none" : "block";
             });
             document.addEventListener("click", function (e) {
-                if (!guestDbTagFilterDropdown.contains(e.target) && e.target !== guestDbTagFilterToggle) {
-                    guestDbTagFilterDropdown.style.display = "none";
+                if (!friendsTagFilterDropdown.contains(e.target) && e.target !== friendsTagFilterToggle) {
+                    friendsTagFilterDropdown.style.display = "none";
                 }
             });
         }
 
-        function applyGuestDbFilters() {
-            var q = guestDbSearchInput ? guestDbSearchInput.value.toLowerCase() : "";
-            var genderVal = guestDbGenderFilter ? guestDbGenderFilter.value : "";
-            var archiveVal = guestDbArchiveFilter ? guestDbArchiveFilter.value : "active";
-            var sortVal = guestDbSort ? guestDbSort.value : "first-asc";
-            var items = Array.from(guestDbList.querySelectorAll(".guest-db-item"));
+        function applyFriendsFilters() {
+            var q = friendsSearchInput ? friendsSearchInput.value.toLowerCase() : "";
+            var genderVal = friendsGenderFilter ? friendsGenderFilter.value : "";
+            var archiveVal = friendsArchiveFilter ? friendsArchiveFilter.value : "active";
+            var sortVal = friendsSort ? friendsSort.value : "first-asc";
+            var items = Array.from(friendsList.querySelectorAll(".friends-item"));
 
             var parts = sortVal.split("-");
             var key = parts[0], dir = parts[1];
@@ -1176,29 +1176,29 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (valA > valB) return dir === "asc" ? 1 : -1;
                 return 0;
             });
-            items.forEach(function (item) { guestDbList.appendChild(item); });
+            items.forEach(function (item) { friendsList.appendChild(item); });
 
             items.forEach(function (item) {
-                var name = item.querySelector(".guest-db-item-name").textContent.toLowerCase();
+                var name = item.querySelector(".friends-item-name").textContent.toLowerCase();
                 var gender = item.getAttribute("data-gender") || "";
                 var isArchived = item.getAttribute("data-is-archived") === "true";
                 var matchSearch = !q || name.indexOf(q) !== -1;
                 var matchGender = !genderVal || gender === genderVal;
                 var matchArchive = archiveVal === "all" || !isArchived;
                 var matchTags = true;
-                if (guestDbSelectedTagIds.length > 0) {
+                if (friendsSelectedTagIds.length > 0) {
                     var itemTags = (item.getAttribute("data-tags") || "").split(",").filter(Boolean).map(Number);
-                    matchTags = guestDbSelectedTagIds.some(function (id) { return itemTags.indexOf(id) !== -1; });
+                    matchTags = friendsSelectedTagIds.some(function (id) { return itemTags.indexOf(id) !== -1; });
                 }
                 item.style.display = (matchSearch && matchGender && matchArchive && matchTags) ? "" : "none";
             });
         }
 
-        var guestDbSelectAll = document.getElementById("guest-db-select-all");
-        if (guestDbSelectAll) {
-            guestDbSelectAll.addEventListener("change", function () {
-                var checked = guestDbSelectAll.checked;
-                guestDbList.querySelectorAll(".guest-db-item:not(.disabled)").forEach(function (item) {
+        var friendsSelectAll = document.getElementById("friends-select-all");
+        if (friendsSelectAll) {
+            friendsSelectAll.addEventListener("change", function () {
+                var checked = friendsSelectAll.checked;
+                friendsList.querySelectorAll(".friends-item:not(.disabled)").forEach(function (item) {
                     if (item.style.display === "none") return;
                     var cb = item.querySelector("input[type=checkbox]");
                     if (cb && !cb.disabled) cb.checked = checked;
@@ -1206,30 +1206,30 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        if (guestDbFilterBtn && guestDbFilters) {
-            guestDbFilterBtn.addEventListener("click", function () {
-                var hidden = guestDbFilters.style.display === "none";
-                guestDbFilters.style.display = hidden ? "flex" : "none";
-                guestDbFilterBtn.classList.toggle("active", hidden);
+        if (friendsFilterBtn && friendsFilters) {
+            friendsFilterBtn.addEventListener("click", function () {
+                var hidden = friendsFilters.style.display === "none";
+                friendsFilters.style.display = hidden ? "flex" : "none";
+                friendsFilterBtn.classList.toggle("active", hidden);
             });
         }
-        if (guestDbGenderFilter) guestDbGenderFilter.addEventListener("change", applyGuestDbFilters);
-        if (guestDbArchiveFilter) guestDbArchiveFilter.addEventListener("change", applyGuestDbFilters);
-        if (guestDbSort) guestDbSort.addEventListener("change", applyGuestDbFilters);
+        if (friendsGenderFilter) friendsGenderFilter.addEventListener("change", applyFriendsFilters);
+        if (friendsArchiveFilter) friendsArchiveFilter.addEventListener("change", applyFriendsFilters);
+        if (friendsSort) friendsSort.addEventListener("change", applyFriendsFilters);
 
-        var guestDbClearBtn = document.getElementById("guest-db-clear-filters");
-        if (guestDbClearBtn) {
-            guestDbClearBtn.addEventListener("click", function () {
-                if (guestDbSearchInput) guestDbSearchInput.value = "";
-                if (guestDbGenderFilter) guestDbGenderFilter.selectedIndex = 0;
-                if (guestDbArchiveFilter) guestDbArchiveFilter.selectedIndex = 0;
-                if (guestDbSort) guestDbSort.selectedIndex = 0;
-                if (guestDbTagFilterToggle) guestDbTagFilterToggle.textContent = "All Tags";
-                guestDbSelectedTagIds = [];
-                if (guestDbTagFilterDropdown) {
-                    guestDbTagFilterDropdown.querySelectorAll("input[type='checkbox']").forEach(function (cb) { cb.checked = false; });
+        var friendsClearBtn = document.getElementById("friends-clear-filters");
+        if (friendsClearBtn) {
+            friendsClearBtn.addEventListener("click", function () {
+                if (friendsSearchInput) friendsSearchInput.value = "";
+                if (friendsGenderFilter) friendsGenderFilter.selectedIndex = 0;
+                if (friendsArchiveFilter) friendsArchiveFilter.selectedIndex = 0;
+                if (friendsSort) friendsSort.selectedIndex = 0;
+                if (friendsTagFilterToggle) friendsTagFilterToggle.textContent = "All Tags";
+                friendsSelectedTagIds = [];
+                if (friendsTagFilterDropdown) {
+                    friendsTagFilterDropdown.querySelectorAll("input[type='checkbox']").forEach(function (cb) { cb.checked = false; });
                 }
-                applyGuestDbFilters();
+                applyFriendsFilters();
             });
         }
 
@@ -1240,11 +1240,11 @@ document.addEventListener("DOMContentLoaded", function () {
             window.fetchWithCsrf("/api/v1/events/" + eventId + "/available-guests")
                 .then(function (r) { return r.json(); })
                 .then(function (resp) {
-                    guestDbList.innerHTML = "";
+                    friendsList.innerHTML = "";
                     resp.data.forEach(function (g) {
                         var name = g.last_name ? g.first_name + " " + g.last_name : g.first_name;
                         var div = document.createElement("div");
-                        div.className = "guest-db-item" + (g.already_invited ? " disabled" : "") + (g.is_archived ? " archived-item" : "");
+                        div.className = "friends-item" + (g.already_invited ? " disabled" : "") + (g.is_archived ? " archived-item" : "");
                         div.setAttribute("data-first", g.first_name.toLowerCase());
                         div.setAttribute("data-last", (g.last_name || "").toLowerCase());
                         div.setAttribute("data-gender", g.gender);
@@ -1253,7 +1253,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         div.setAttribute("data-tags", tagIds.join(","));
                         var tagsHtml = "";
                         if (g.tags && g.tags.length > 0) {
-                            tagsHtml = '<span class="guest-db-item-tags">';
+                            tagsHtml = '<span class="friends-item-tags">';
                             g.tags.forEach(function (t) {
                                 tagsHtml += '<span class="tag-badge tag-badge-sm" style="background:' + t.color + '">' + window.escapeHtml(t.name) + '</span>';
                             });
@@ -1263,9 +1263,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         div.innerHTML =
                             '<input type="checkbox" data-guest-id="' + g.id + '"' +
                             (g.already_invited ? ' checked disabled' : '') + '>' +
-                            '<div class="guest-db-item-info">' +
-                            '<div class="guest-db-item-name">' + window.escapeHtml(name) + ' <span class="gender-inline">' + genderLabel + '</span></div>' +
-                            (tagsHtml ? '<div class="guest-db-item-meta">' + tagsHtml + '</div>' : '') +
+                            '<div class="friends-item-info">' +
+                            '<div class="friends-item-name">' + window.escapeHtml(name) + ' <span class="gender-inline">' + genderLabel + '</span></div>' +
+                            (tagsHtml ? '<div class="friends-item-meta">' + tagsHtml + '</div>' : '') +
                             '</div>';
                         if (!g.already_invited) {
                             div.addEventListener("click", function (e) {
@@ -1275,39 +1275,39 @@ document.addEventListener("DOMContentLoaded", function () {
                                 }
                             });
                         }
-                        guestDbList.appendChild(div);
+                        friendsList.appendChild(div);
                     });
-                    if (guestDbGenderFilter) guestDbGenderFilter.value = "";
-                    if (guestDbArchiveFilter) guestDbArchiveFilter.value = "active";
-                    if (guestDbSort) guestDbSort.value = "first-asc";
-                    guestDbSelectedTagIds = [];
-                    if (guestDbTagFilterToggle) guestDbTagFilterToggle.textContent = "All Tags";
-                    buildGuestDbTagFilter();
-                    if (guestDbFilters) { guestDbFilters.style.display = "none"; }
-                    if (guestDbFilterBtn) guestDbFilterBtn.classList.remove("active");
-                    if (guestDbSelectAll) guestDbSelectAll.checked = false;
-                    guestDbOverlay.style.display = "flex";
-                    guestDbSearchInput.value = "";
-                    applyGuestDbFilters();
-                    guestDbSearchInput.focus();
+                    if (friendsGenderFilter) friendsGenderFilter.value = "";
+                    if (friendsArchiveFilter) friendsArchiveFilter.value = "active";
+                    if (friendsSort) friendsSort.value = "first-asc";
+                    friendsSelectedTagIds = [];
+                    if (friendsTagFilterToggle) friendsTagFilterToggle.textContent = "All Tags";
+                    buildFriendsTagFilter();
+                    if (friendsFilters) { friendsFilters.style.display = "none"; }
+                    if (friendsFilterBtn) friendsFilterBtn.classList.remove("active");
+                    if (friendsSelectAll) friendsSelectAll.checked = false;
+                    friendsOverlay.style.display = "flex";
+                    friendsSearchInput.value = "";
+                    applyFriendsFilters();
+                    friendsSearchInput.focus();
                 })
                 .catch(window.handleFetchError);
         });
 
-        guestDbClose.addEventListener("click", function () { guestDbOverlay.style.display = "none"; });
-        guestDbOverlay.addEventListener("click", function (e) {
-            if (e.target === guestDbOverlay) guestDbOverlay.style.display = "none";
+        friendsClose.addEventListener("click", function () { friendsOverlay.style.display = "none"; });
+        friendsOverlay.addEventListener("click", function (e) {
+            if (e.target === friendsOverlay) friendsOverlay.style.display = "none";
         });
 
-        guestDbSearchInput.addEventListener("input", applyGuestDbFilters);
-        guestDbSearchInput.addEventListener("search", applyGuestDbFilters);
+        friendsSearchInput.addEventListener("input", applyFriendsFilters);
+        friendsSearchInput.addEventListener("search", applyFriendsFilters);
 
-        guestDbAddBtn.addEventListener("click", function () {
+        friendsAddBtn.addEventListener("click", function () {
             var ids = [];
-            guestDbList.querySelectorAll("input[type=checkbox]:checked:not(:disabled)").forEach(function (cb) {
+            friendsList.querySelectorAll("input[type=checkbox]:checked:not(:disabled)").forEach(function (cb) {
                 ids.push(parseInt(cb.getAttribute("data-guest-id")));
             });
-            if (ids.length === 0) { guestDbOverlay.style.display = "none"; return; }
+            if (ids.length === 0) { friendsOverlay.style.display = "none"; return; }
 
             window.fetchWithCsrf("/api/v1/events/" + eventId + "/invitations/bulk", {
                 method: "POST",
@@ -1322,7 +1322,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     tbody.appendChild(tr);
                 });
                 window.refreshSummary();
-                guestDbOverlay.style.display = "none";
+                friendsOverlay.style.display = "none";
             })
             .catch(window.handleFetchError);
         });
@@ -1402,7 +1402,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var genderVal = eventGuestsGenderFilter ? eventGuestsGenderFilter.value : "";
             var statusVal = eventGuestsStatusFilter ? eventGuestsStatusFilter.value : "";
             var sortVal = eventGuestsSort ? eventGuestsSort.value : "first-asc";
-            var items = Array.from(eventGuestsList.querySelectorAll(".guest-db-item"));
+            var items = Array.from(eventGuestsList.querySelectorAll(".friends-item"));
 
             var parts = sortVal.split("-");
             var key = parts[0], dir = parts[1];
@@ -1428,7 +1428,7 @@ document.addEventListener("DOMContentLoaded", function () {
             items.forEach(function (item) { eventGuestsList.appendChild(item); });
 
             items.forEach(function (item) {
-                var name = item.querySelector(".guest-db-item-name").textContent.toLowerCase();
+                var name = item.querySelector(".friends-item-name").textContent.toLowerCase();
                 var gender = item.getAttribute("data-gender") || "";
                 var status = item.getAttribute("data-status") || "";
                 var matchSearch = !q || name.indexOf(q) !== -1;
@@ -1446,7 +1446,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (eventGuestsSelectAll) {
             eventGuestsSelectAll.addEventListener("change", function () {
                 var checked = eventGuestsSelectAll.checked;
-                eventGuestsList.querySelectorAll(".guest-db-item:not(.disabled)").forEach(function (item) {
+                eventGuestsList.querySelectorAll(".friends-item:not(.disabled)").forEach(function (item) {
                     if (item.style.display === "none") return;
                     var cb = item.querySelector("input[type=checkbox]");
                     if (cb && !cb.disabled) cb.checked = checked;
@@ -1491,7 +1491,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 var name = g.last_name ? g.first_name + " " + g.last_name : g.first_name;
                 var genderLabel = g.gender === "Male" ? "(M)" : g.gender === "Female" ? "(F)" : "";
                 var div = document.createElement("div");
-                div.className = "guest-db-item" + (g.already_invited ? " disabled" : "");
+                div.className = "friends-item" + (g.already_invited ? " disabled" : "");
                 div.setAttribute("data-first", g.first_name.toLowerCase());
                 div.setAttribute("data-last", (g.last_name || "").toLowerCase());
                 div.setAttribute("data-gender", g.gender);
@@ -1500,7 +1500,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 div.setAttribute("data-tags", tagIds.join(","));
                 var tagsHtml = "";
                 if (g.tags && g.tags.length > 0) {
-                    tagsHtml = '<span class="guest-db-item-tags">';
+                    tagsHtml = '<span class="friends-item-tags">';
                     g.tags.forEach(function (t) {
                         tagsHtml += '<span class="tag-badge tag-badge-sm" style="background:' + t.color + '">' + window.escapeHtml(t.name) + '</span>';
                     });
@@ -1509,9 +1509,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 div.innerHTML =
                     '<input type="checkbox" data-guest-id="' + g.id + '"' +
                     (g.already_invited ? ' checked disabled' : '') + '>' +
-                    '<div class="guest-db-item-info">' +
-                    '<div class="guest-db-item-name">' + window.escapeHtml(name) + ' <span class="gender-inline">' + genderLabel + '</span></div>' +
-                    '<div class="guest-db-item-meta">' + buildStatusBadge(g.status) + tagsHtml + '</div>' +
+                    '<div class="friends-item-info">' +
+                    '<div class="friends-item-name">' + window.escapeHtml(name) + ' <span class="gender-inline">' + genderLabel + '</span></div>' +
+                    '<div class="friends-item-meta">' + buildStatusBadge(g.status) + tagsHtml + '</div>' +
                     '</div>';
                 if (!g.already_invited) {
                     div.addEventListener("click", function (e) {

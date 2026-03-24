@@ -6,17 +6,17 @@ from datetime import datetime
 
 class TestGuestList:
     def test_guests_requires_login(self, client):
-        r = client.get("/guests")
+        r = client.get("/friends")
         assert r.status_code == 302
         assert "login" in r.headers["Location"]
 
     def test_guests_empty(self, logged_in_client):
-        r = logged_in_client.get("/guests")
+        r = logged_in_client.get("/friends")
         assert r.status_code == 200
-        assert b"No guests yet" in r.data
+        assert b"No friends yet" in r.data
 
     def test_guests_with_data(self, logged_in_client, sample_guest):
-        r = logged_in_client.get("/guests")
+        r = logged_in_client.get("/friends")
         assert r.status_code == 200
         assert b"Alice" in r.data
 
@@ -28,13 +28,13 @@ class TestGuestList:
             )
             db.session.add(other_guest)
             db.session.commit()
-        r = logged_in_client.get("/guests")
+        r = logged_in_client.get("/friends")
         assert b"Other" not in r.data
 
 
 class TestDeleteGuest:
     def test_delete_guest(self, logged_in_client, sample_guest, test_app):
-        r = logged_in_client.post(f"/guest/{sample_guest}/delete")
+        r = logged_in_client.post(f"/friend/{sample_guest}/delete")
         assert r.status_code == 302
         with test_app.app_context():
             assert db.session.get(Guest,sample_guest) is None
@@ -47,25 +47,25 @@ class TestDeleteGuest:
             db.session.add(other_guest)
             db.session.commit()
             gid = other_guest.id
-        r = logged_in_client.post(f"/guest/{gid}/delete")
+        r = logged_in_client.post(f"/friend/{gid}/delete")
         assert r.status_code == 403
         with test_app.app_context():
             assert db.session.get(Guest,gid) is not None  # not deleted
 
     def test_delete_cascades_invitations(self, logged_in_client, sample_invitation, sample_guest, test_app):
-        r = logged_in_client.post(f"/guest/{sample_guest}/delete")
+        r = logged_in_client.post(f"/friend/{sample_guest}/delete")
         assert r.status_code == 302
         with test_app.app_context():
             assert db.session.get(Invitation, sample_invitation) is None
 
     def test_delete_nonexistent(self, logged_in_client):
-        r = logged_in_client.post("/guest/99999/delete")
+        r = logged_in_client.post("/friend/99999/delete")
         assert r.status_code == 404
 
 
 class TestGuestNameAPI:
     def test_update_name(self, logged_in_client, sample_guest, test_app):
-        r = logged_in_client.post(f"/api/guest/{sample_guest}/name",
+        r = logged_in_client.post(f"/api/friend/{sample_guest}/name",
             json={"first_name": "Bob", "last_name": "Jones"})
         assert r.status_code == 200
         data = r.get_json()
@@ -78,7 +78,7 @@ class TestGuestNameAPI:
 
     def test_update_name_empty_first(self, logged_in_client, sample_guest, test_app):
         # Empty first_name - the API accepts it (no validation)
-        r = logged_in_client.post(f"/api/guest/{sample_guest}/name",
+        r = logged_in_client.post(f"/api/friend/{sample_guest}/name",
             json={"first_name": "", "last_name": "Jones"})
         assert r.status_code == 200
 
@@ -88,12 +88,12 @@ class TestGuestNameAPI:
             db.session.add(g)
             db.session.commit()
             gid = g.id
-        r = logged_in_client.post(f"/api/guest/{gid}/name",
+        r = logged_in_client.post(f"/api/friend/{gid}/name",
             json={"first_name": "Hacked"})
         assert r.status_code == 403
 
     def test_update_name_special_chars(self, logged_in_client, sample_guest, test_app):
-        r = logged_in_client.post(f"/api/guest/{sample_guest}/name",
+        r = logged_in_client.post(f"/api/friend/{sample_guest}/name",
             json={"first_name": "O'Brien", "last_name": "Müller-Schmidt"})
         assert r.status_code == 200
         with test_app.app_context():
@@ -103,7 +103,7 @@ class TestGuestNameAPI:
 
 class TestGuestGenderAPI:
     def test_update_gender(self, logged_in_client, sample_guest, test_app):
-        r = logged_in_client.post(f"/api/guest/{sample_guest}/gender",
+        r = logged_in_client.post(f"/api/friend/{sample_guest}/gender",
             json={"gender": "Male"})
         assert r.status_code == 200
         with test_app.app_context():
@@ -116,13 +116,13 @@ class TestGuestGenderAPI:
             db.session.add(g)
             db.session.commit()
             gid = g.id
-        r = logged_in_client.post(f"/api/guest/{gid}/gender",
+        r = logged_in_client.post(f"/api/friend/{gid}/gender",
             json={"gender": "Female"})
         assert r.status_code == 403
 
     def test_update_gender_arbitrary_value(self, logged_in_client, sample_guest, test_app):
         # Validation rejects invalid gender values
-        r = logged_in_client.post(f"/api/guest/{sample_guest}/gender",
+        r = logged_in_client.post(f"/api/friend/{sample_guest}/gender",
             json={"gender": "InvalidGender"})
         assert r.status_code == 400
         with test_app.app_context():
@@ -132,7 +132,7 @@ class TestGuestGenderAPI:
 
 class TestGuestNotesAPI:
     def test_update_notes(self, logged_in_client, sample_guest, test_app):
-        r = logged_in_client.post(f"/api/guest/{sample_guest}/notes",
+        r = logged_in_client.post(f"/api/friend/{sample_guest}/notes",
             json={"notes": "Updated notes"})
         assert r.status_code == 200
         with test_app.app_context():
@@ -141,7 +141,7 @@ class TestGuestNotesAPI:
 
     def test_update_notes_very_long(self, logged_in_client, sample_guest, test_app):
         long_notes = "A" * 10000
-        r = logged_in_client.post(f"/api/guest/{sample_guest}/notes",
+        r = logged_in_client.post(f"/api/friend/{sample_guest}/notes",
             json={"notes": long_notes})
         assert r.status_code == 200
         with test_app.app_context():
@@ -151,7 +151,7 @@ class TestGuestNotesAPI:
 
 class TestGuestIsMeAPI:
     def test_set_is_me(self, logged_in_client, sample_guest, test_app):
-        r = logged_in_client.post(f"/api/guest/{sample_guest}/is-me",
+        r = logged_in_client.post(f"/api/friend/{sample_guest}/is-me",
             json={"is_me": True})
         assert r.status_code == 200
         data = r.get_json()
@@ -165,7 +165,7 @@ class TestGuestIsMeAPI:
             g = db.session.get(Guest,sample_guest)
             g.is_me = True
             db.session.commit()
-        r = logged_in_client.post(f"/api/guest/{sample_guest}/is-me",
+        r = logged_in_client.post(f"/api/friend/{sample_guest}/is-me",
             json={"is_me": False})
         assert r.status_code == 200
         with test_app.app_context():
@@ -179,7 +179,7 @@ class TestGuestIsMeAPI:
             db.session.add_all([g1, g2])
             db.session.commit()
             g1_id, g2_id = g1.id, g2.id
-        r = logged_in_client.post(f"/api/guest/{g2_id}/is-me",
+        r = logged_in_client.post(f"/api/friend/{g2_id}/is-me",
             json={"is_me": True})
         assert r.status_code == 200
         with test_app.app_context():
@@ -189,7 +189,7 @@ class TestGuestIsMeAPI:
 
 class TestBulkCreateGuests:
     def test_bulk_create(self, logged_in_client, test_app):
-        r = logged_in_client.post("/api/guests/bulk-create", json={
+        r = logged_in_client.post("/api/friends/bulk-create", json={
             "guests": [
                 {"first_name": "Bob", "last_name": "Smith", "gender": "Male", "notes": ""},
                 {"first_name": "Carol", "gender": "Female"}
@@ -200,7 +200,7 @@ class TestBulkCreateGuests:
         assert len(data["added"]) == 2
 
     def test_bulk_create_skips_empty_names(self, logged_in_client):
-        r = logged_in_client.post("/api/guests/bulk-create", json={
+        r = logged_in_client.post("/api/friends/bulk-create", json={
             "guests": [
                 {"first_name": "", "gender": "Male"},
                 {"first_name": "  ", "gender": "Male"},
@@ -213,12 +213,12 @@ class TestBulkCreateGuests:
         assert len(data["added"]) == 1
 
     def test_bulk_create_empty_list(self, logged_in_client):
-        r = logged_in_client.post("/api/guests/bulk-create", json={"guests": []})
+        r = logged_in_client.post("/api/friends/bulk-create", json={"guests": []})
         assert r.status_code == 200
         data = r.get_json()
         assert len(data["added"]) == 0
 
     def test_bulk_create_no_json(self, logged_in_client):
-        r = logged_in_client.post("/api/guests/bulk-create",
+        r = logged_in_client.post("/api/friends/bulk-create",
             data="not json", content_type="text/plain")
         assert r.status_code in (400, 415, 500)

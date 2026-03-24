@@ -13,9 +13,9 @@ def export_events():
     return export_service.export_events_xlsx(events)
 
 
-@bp.route("/export/guests")
+@bp.route("/export/friends")
 @login_required
-def export_guests():
+def export_friends():
     guests = Guest.query.filter_by(user_id=current_user.id).order_by(
         Guest.last_name, Guest.first_name
     ).all()

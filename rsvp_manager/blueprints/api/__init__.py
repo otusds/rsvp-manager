@@ -63,7 +63,7 @@ def serialize_event(event):
     }
 
 
-def serialize_guest(guest):
+def serialize_friend(guest):
     attending = sum(1 for inv in guest.invitations if inv.status == "Attending")
     pending = sum(1 for inv in guest.invitations if inv.status == "Pending")
     declined = sum(1 for inv in guest.invitations if inv.status == "Declined")
@@ -162,4 +162,4 @@ def handle_422(e):
 
 # -- Register sub-modules -----------------------------------------------------
 
-from rsvp_manager.blueprints.api import events_api, guests_api, invitations_api, exports_api, tags_api  # noqa: E402, F401
+from rsvp_manager.blueprints.api import events_api, friends_api, invitations_api, exports_api, tags_api  # noqa: E402, F401

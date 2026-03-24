@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    // ── Guest Database table search, filter & sort ──────────────────────────
+    // ── Friends table search, filter & sort ──────────────────────────────────
     var guestsTable = document.getElementById("guests-table");
     if (!guestsTable) return;
 
@@ -204,7 +204,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (!firstName) return;
                 row.setAttribute("data-first", firstName.toLowerCase());
                 row.setAttribute("data-last", lastName.toLowerCase());
-                window.fetchWithCsrf("/api/v1/guests/" + guestId, {
+                window.fetchWithCsrf("/api/v1/friends/" + guestId, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ first_name: firstName, last_name: lastName })
@@ -231,7 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 updateGenderTagColor(genderSelect);
                 var guestId = genderSelect.getAttribute("data-guest-id");
                 row.setAttribute("data-gender", genderSelect.value);
-                window.fetchWithCsrf("/api/v1/guests/" + guestId, {
+                window.fetchWithCsrf("/api/v1/friends/" + guestId, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ gender: genderSelect.value })
@@ -247,7 +247,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 clearTimeout(timer);
                 timer = setTimeout(function () {
                     var guestId = notesInput.getAttribute("data-guest-id");
-                    window.fetchWithCsrf("/api/v1/guests/" + guestId, {
+                    window.fetchWithCsrf("/api/v1/friends/" + guestId, {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ notes: notesInput.value.trim() })
@@ -272,7 +272,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 var guestId = archiveBtn.getAttribute("data-guest-id");
                 var isArchived = row.getAttribute("data-is-archived") === "true";
                 archiveBtn.closest(".kebab-menu").classList.remove("open");
-                window.fetchWithCsrf("/api/v1/guests/" + guestId, {
+                window.fetchWithCsrf("/api/v1/friends/" + guestId, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ is_archived: !isArchived })
@@ -320,7 +320,7 @@ document.addEventListener("DOMContentLoaded", function () {
         currentPage++;
         scrollLoader.style.display = "flex";
 
-        var scrollUrl = "/guests?page=" + currentPage + "&partial=1";
+        var scrollUrl = "/friends?page=" + currentPage + "&partial=1";
         if (showArchived !== "0") scrollUrl += "&show_archived=" + showArchived;
         window.fetchWithCsrf(scrollUrl)
             .then(function (res) { return res.text(); })
@@ -572,7 +572,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (action === "delete") {
                 if (!confirm("Delete " + rows.length + " guest(s)? They will also be removed from all events.")) return;
-                window.fetchWithCsrf("/api/v1/guests/bulk-delete", {
+                window.fetchWithCsrf("/api/v1/friends/bulk-delete", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ guest_ids: ids })
@@ -587,7 +587,7 @@ document.addEventListener("DOMContentLoaded", function () {
             } else if (action === "add-tag") {
                 var tagName = batchSelectedTagName || (guestBatchTagInput ? guestBatchTagInput.value.trim() : "");
                 if (!tagName) { if (guestBatchTagInput) guestBatchTagInput.focus(); return; }
-                window.fetchWithCsrf("/api/v1/guests/bulk-tag", {
+                window.fetchWithCsrf("/api/v1/friends/bulk-tag", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ guest_ids: ids, tag_name: tagName })
@@ -636,7 +636,7 @@ document.addEventListener("DOMContentLoaded", function () {
             } else if (action === "remove-tag") {
                 var tagName = batchSelectedTagName || (guestBatchTagInput ? guestBatchTagInput.value.trim() : "");
                 if (!tagName) { if (guestBatchTagInput) guestBatchTagInput.focus(); return; }
-                window.fetchWithCsrf("/api/v1/guests/bulk-untag", {
+                window.fetchWithCsrf("/api/v1/friends/bulk-untag", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ guest_ids: ids, tag_name: tagName })
@@ -676,7 +676,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .catch(window.handleFetchError);
             } else if (action === "archive") {
                 if (!confirm("Archive " + rows.length + " guest(s)? They will be hidden from the guest list but remain in existing events.")) return;
-                window.fetchWithCsrf("/api/v1/guests/bulk-archive", {
+                window.fetchWithCsrf("/api/v1/friends/bulk-archive", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ guest_ids: ids })
@@ -850,7 +850,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function openGuestDetail(guestId, row) {
         gdActiveRow = row;
-        window.fetchWithCsrf("/api/v1/guests/" + guestId)
+        window.fetchWithCsrf("/api/v1/friends/" + guestId)
             .then(function (res) { return res.json(); })
             .then(function (resp) {
                 var g = resp.data;
@@ -920,7 +920,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!firstName) return;
 
             var tagNames = currentGuestTags.map(function (t) { return t.name; });
-            window.fetchWithCsrf("/api/v1/guests/" + guestId, {
+            window.fetchWithCsrf("/api/v1/friends/" + guestId, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ first_name: firstName, last_name: lastName, gender: gender, notes: notes, is_me: isMe, tag_names: tagNames })

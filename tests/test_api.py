@@ -126,7 +126,7 @@ class TestEventsAPI:
 
 class TestGuestsAPI:
     def test_list_guests(self, logged_in_client, sample_guest):
-        resp = logged_in_client.get("/api/v1/guests")
+        resp = logged_in_client.get("/api/v1/friends")
         assert resp.status_code == 200
         data = resp.get_json()
         assert len(data["data"]["items"]) == 1
@@ -135,14 +135,14 @@ class TestGuestsAPI:
         assert data["data"]["total"] == 1
 
     def test_get_guest(self, logged_in_client, sample_guest):
-        resp = logged_in_client.get(f"/api/v1/guests/{sample_guest}")
+        resp = logged_in_client.get(f"/api/v1/friends/{sample_guest}")
         assert resp.status_code == 200
         data = resp.get_json()["data"]
         assert data["first_name"] == "Alice"
         assert data["full_name"] == "Alice Smith"
 
     def test_create_guest(self, logged_in_client):
-        resp = api_post(logged_in_client, "/api/v1/guests", {
+        resp = api_post(logged_in_client, "/api/v1/friends", {
             "first_name": "Bob",
             "last_name": "Jones",
             "gender": "Male",
@@ -151,7 +151,7 @@ class TestGuestsAPI:
         assert resp.get_json()["data"]["first_name"] == "Bob"
 
     def test_update_guest_name(self, logged_in_client, sample_guest):
-        resp = api_put(logged_in_client, f"/api/v1/guests/{sample_guest}", {
+        resp = api_put(logged_in_client, f"/api/v1/friends/{sample_guest}", {
             "first_name": "Alicia",
             "last_name": "Johnson",
         })
@@ -160,38 +160,38 @@ class TestGuestsAPI:
         assert data["full_name"] == "Alicia Johnson"
 
     def test_update_guest_gender(self, logged_in_client, sample_guest):
-        resp = api_put(logged_in_client, f"/api/v1/guests/{sample_guest}", {
+        resp = api_put(logged_in_client, f"/api/v1/friends/{sample_guest}", {
             "gender": "Male",
         })
         assert resp.status_code == 200
         assert resp.get_json()["data"]["gender"] == "Male"
 
     def test_update_guest_invalid_gender(self, logged_in_client, sample_guest):
-        resp = api_put(logged_in_client, f"/api/v1/guests/{sample_guest}", {
+        resp = api_put(logged_in_client, f"/api/v1/friends/{sample_guest}", {
             "gender": "Other",
         })
         assert resp.status_code == 400
 
     def test_update_guest_notes(self, logged_in_client, sample_guest):
-        resp = api_put(logged_in_client, f"/api/v1/guests/{sample_guest}", {
+        resp = api_put(logged_in_client, f"/api/v1/friends/{sample_guest}", {
             "notes": "VIP guest",
         })
         assert resp.status_code == 200
         assert resp.get_json()["data"]["notes"] == "VIP guest"
 
     def test_update_guest_is_me(self, logged_in_client, sample_guest):
-        resp = api_put(logged_in_client, f"/api/v1/guests/{sample_guest}", {
+        resp = api_put(logged_in_client, f"/api/v1/friends/{sample_guest}", {
             "is_me": True,
         })
         assert resp.status_code == 200
         assert resp.get_json()["data"]["is_me"] is True
 
     def test_delete_guest(self, logged_in_client, sample_guest):
-        resp = api_delete(logged_in_client, f"/api/v1/guests/{sample_guest}")
+        resp = api_delete(logged_in_client, f"/api/v1/friends/{sample_guest}")
         assert resp.status_code == 204
 
     def test_bulk_create_guests(self, logged_in_client):
-        resp = api_post(logged_in_client, "/api/v1/guests/bulk", {
+        resp = api_post(logged_in_client, "/api/v1/friends/bulk", {
             "guests": [
                 {"first_name": "Charlie", "last_name": "Brown", "gender": "Male"},
                 {"first_name": "Diana", "gender": "Female"},
@@ -330,7 +330,7 @@ class TestExportsAPI:
         assert "spreadsheet" in resp.content_type
 
     def test_export_guests(self, logged_in_client, sample_guest):
-        resp = logged_in_client.get("/api/v1/guests/export")
+        resp = logged_in_client.get("/api/v1/friends/export")
         assert resp.status_code == 200
         assert "spreadsheet" in resp.content_type
 

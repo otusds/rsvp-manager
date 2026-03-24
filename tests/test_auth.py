@@ -106,11 +106,11 @@ class TestLogin:
         assert r.status_code == 302
 
     def test_login_next_redirect(self, client, user):
-        r = client.post("/login?next=/guests", data={
+        r = client.post("/login?next=/friends", data={
             "email": "test@test.com", "password": "password123"
         })
         assert r.status_code == 302
-        assert "/guests" in r.headers["Location"]
+        assert "/friends" in r.headers["Location"]
 
     def test_login_rejects_external_next(self, client, user):
         r = client.post("/login?next=http://evil.com", data={

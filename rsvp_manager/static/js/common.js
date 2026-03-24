@@ -125,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function fetchGuestListForAutocomplete() {
         if (cachedGuestList) return Promise.resolve(cachedGuestList);
-        return window.fetchWithCsrf("/api/v1/guests?show_archived=0&page=1")
+        return window.fetchWithCsrf("/api/v1/friends?show_archived=0&page=1")
             .then(function (r) { return r.json(); })
             .then(function (resp) {
                 cachedGuestList = resp.data.items || [];
@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     var promises = [];
                     for (var p = 2; p <= resp.data.pages; p++) {
                         promises.push(
-                            window.fetchWithCsrf("/api/v1/guests?show_archived=0&page=" + p)
+                            window.fetchWithCsrf("/api/v1/friends?show_archived=0&page=" + p)
                                 .then(function (r2) { return r2.json(); })
                         );
                     }
@@ -412,7 +412,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     addGuestOverlay.style.display = "none";
                     return;
                 }
-                window.fetchWithCsrf("/api/v1/guests/bulk", {
+                window.fetchWithCsrf("/api/v1/friends/bulk", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ guests: newGuests })

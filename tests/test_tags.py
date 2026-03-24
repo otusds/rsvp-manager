@@ -40,7 +40,7 @@ class TestTagAPI:
 
 class TestBulkTag:
     def test_bulk_add_tag(self, logged_in_client, sample_guest):
-        resp = logged_in_client.post("/api/v1/guests/bulk-tag",
+        resp = logged_in_client.post("/api/v1/friends/bulk-tag",
             data=json.dumps({"guest_ids": [sample_guest], "tag_name": "Family"}),
             content_type="application/json")
         assert resp.status_code == 200
@@ -49,7 +49,7 @@ class TestBulkTag:
         assert any(t["name"] == "Family" for t in data[0]["tags"])
 
     def test_bulk_add_tag_creates_tag(self, logged_in_client, sample_guest, test_app):
-        logged_in_client.post("/api/v1/guests/bulk-tag",
+        logged_in_client.post("/api/v1/friends/bulk-tag",
             data=json.dumps({"guest_ids": [sample_guest], "tag_name": "NewTag"}),
             content_type="application/json")
 
@@ -59,9 +59,9 @@ class TestBulkTag:
 
     def test_bulk_add_tag_idempotent(self, logged_in_client, sample_guest):
         payload = json.dumps({"guest_ids": [sample_guest], "tag_name": "Double"})
-        logged_in_client.post("/api/v1/guests/bulk-tag",
+        logged_in_client.post("/api/v1/friends/bulk-tag",
             data=payload, content_type="application/json")
-        resp = logged_in_client.post("/api/v1/guests/bulk-tag",
+        resp = logged_in_client.post("/api/v1/friends/bulk-tag",
             data=payload, content_type="application/json")
         data = resp.get_json()["data"]
         tag_names = [t["name"] for t in data[0]["tags"]]
@@ -69,11 +69,11 @@ class TestBulkTag:
 
     def test_bulk_remove_tag(self, logged_in_client, sample_guest):
         # First add
-        logged_in_client.post("/api/v1/guests/bulk-tag",
+        logged_in_client.post("/api/v1/friends/bulk-tag",
             data=json.dumps({"guest_ids": [sample_guest], "tag_name": "Temp"}),
             content_type="application/json")
         # Then remove
-        resp = logged_in_client.post("/api/v1/guests/bulk-untag",
+        resp = logged_in_client.post("/api/v1/friends/bulk-untag",
             data=json.dumps({"guest_ids": [sample_guest], "tag_name": "Temp"}),
             content_type="application/json")
         assert resp.status_code == 200
@@ -81,20 +81,20 @@ class TestBulkTag:
         assert not any(t["name"] == "Temp" for t in data[0]["tags"])
 
     def test_bulk_remove_nonexistent_tag(self, logged_in_client, sample_guest):
-        resp = logged_in_client.post("/api/v1/guests/bulk-untag",
+        resp = logged_in_client.post("/api/v1/friends/bulk-untag",
             data=json.dumps({"guest_ids": [sample_guest], "tag_name": "NoSuchTag"}),
             content_type="application/json")
         assert resp.status_code == 200
         assert resp.get_json()["data"] == []
 
     def test_bulk_tag_missing_fields(self, logged_in_client):
-        resp = logged_in_client.post("/api/v1/guests/bulk-tag",
+        resp = logged_in_client.post("/api/v1/friends/bulk-tag",
             data=json.dumps({"guest_ids": [1]}),
             content_type="application/json")
         assert resp.status_code == 400
 
     def test_bulk_tag_empty_name(self, logged_in_client, sample_guest):
-        resp = logged_in_client.post("/api/v1/guests/bulk-tag",
+        resp = logged_in_client.post("/api/v1/friends/bulk-tag",
             data=json.dumps({"guest_ids": [sample_guest], "tag_name": "  "}),
             content_type="application/json")
         assert resp.status_code == 400
@@ -102,7 +102,7 @@ class TestBulkTag:
 
 class TestGuestTagsViaAPI:
     def test_update_guest_tags(self, logged_in_client, sample_guest):
-        resp = logged_in_client.put(f"/api/v1/guests/{sample_guest}",
+        resp = logged_in_client.put(f"/api/v1/friends/{sample_guest}",
             data=json.dumps({"tag_names": ["Alpha", "Beta"]}),
             content_type="application/json")
         assert resp.status_code == 200
@@ -112,11 +112,11 @@ class TestGuestTagsViaAPI:
 
     def test_update_guest_tags_replace(self, logged_in_client, sample_guest):
         # Set initial tags
-        logged_in_client.put(f"/api/v1/guests/{sample_guest}",
+        logged_in_client.put(f"/api/v1/friends/{sample_guest}",
             data=json.dumps({"tag_names": ["Old"]}),
             content_type="application/json")
         # Replace with new tags
-        resp = logged_in_client.put(f"/api/v1/guests/{sample_guest}",
+        resp = logged_in_client.put(f"/api/v1/friends/{sample_guest}",
             data=json.dumps({"tag_names": ["New"]}),
             content_type="application/json")
         tags = resp.get_json()["data"]["tags"]
@@ -126,11 +126,11 @@ class TestGuestTagsViaAPI:
 
     def test_update_guest_tags_clear(self, logged_in_client, sample_guest):
         # Set tags
-        logged_in_client.put(f"/api/v1/guests/{sample_guest}",
+        logged_in_client.put(f"/api/v1/friends/{sample_guest}",
             data=json.dumps({"tag_names": ["Remove"]}),
             content_type="application/json")
         # Clear all
-        resp = logged_in_client.put(f"/api/v1/guests/{sample_guest}",
+        resp = logged_in_client.put(f"/api/v1/friends/{sample_guest}",
             data=json.dumps({"tag_names": []}),
             content_type="application/json")
         assert resp.get_json()["data"]["tags"] == []
