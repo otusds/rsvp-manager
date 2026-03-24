@@ -1022,9 +1022,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var eventNotesArea = document.getElementById("event-notes");
     if (eventNotesArea) {
+        // Auto-resize to fit content
+        function autoResizeNotes() {
+            eventNotesArea.style.height = "auto";
+            eventNotesArea.style.height = eventNotesArea.scrollHeight + "px";
+        }
+        autoResizeNotes();
+
         var saveIndicator = document.getElementById("notes-save-indicator");
         var notesTimer;
         eventNotesArea.addEventListener("input", function () {
+            autoResizeNotes();
             clearTimeout(notesTimer);
             notesTimer = setTimeout(function () {
                 var evId = eventNotesArea.getAttribute("data-event-id");

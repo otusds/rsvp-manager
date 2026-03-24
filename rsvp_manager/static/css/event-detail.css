@@ -34,9 +34,9 @@
     padding: 0.25rem 0.5rem;
     resize: none;
     overflow: hidden;
-    field-sizing: content;
     line-height: 1.4;
     width: 100%;
+    min-height: 1.8em;
 }
 
 .event-notes-inline:focus {
