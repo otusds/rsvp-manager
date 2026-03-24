@@ -61,7 +61,7 @@ def create_app(config_class=Config):
     app.register_blueprint(api_bp)
     csrf.exempt(api_bp)
 
-    ASSET_VERSION = "59"
+    ASSET_VERSION = "60"
 
     @app.context_processor
     def inject_asset_version():

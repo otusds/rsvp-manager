@@ -432,14 +432,11 @@
 /* ── Guest name autocomplete ─────────────────────────────────────────────── */
 .ag-first-name-wrapper { position: relative; }
 
-.add-guest-table-wrapper { overflow: visible; max-height: none; }
-.add-guest-table-wrapper .add-guest-table { max-height: 50vh; }
+.add-guest-table-wrapper { overflow-y: auto; max-height: 60vh; }
+.add-guest-table-wrapper .add-guest-table { max-height: none; }
 
 .ag-suggestions {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
+    position: fixed;
     background: var(--color-surface);
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 10px;
