@@ -114,8 +114,15 @@ document.addEventListener("DOMContentLoaded", function () {
         if (guestNoResults) guestNoResults.style.display = visibleCount === 0 ? "" : "none";
         var guestCountEl = document.getElementById("guest-count");
         if (guestCountEl) {
+            var dbTotal = parseInt(guestsTable.getAttribute("data-total")) || 0;
             var totalRows = guestsTable.querySelectorAll("tbody tr").length;
-            guestCountEl.textContent = visibleCount < totalRows ? "(" + visibleCount + "/" + totalRows + ")" : "(" + totalRows + ")";
+            var displayTotal = Math.max(dbTotal, totalRows);
+            var isFiltering = query || genderVal || selectedTagIds.length > 0;
+            if (isFiltering) {
+                guestCountEl.textContent = "(" + visibleCount + "/" + displayTotal + ")";
+            } else {
+                guestCountEl.textContent = "(" + displayTotal + ")";
+            }
         }
     }
 
