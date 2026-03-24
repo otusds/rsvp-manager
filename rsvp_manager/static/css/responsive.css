@@ -130,7 +130,7 @@
     .batch-bar { font-size: 0.8rem; padding: 0.4rem 0.6rem; }
 
     /* "+" buttons: 36x36 rounded square on mobile */
-    .new-invite-icon-btn.btn-small,
+    .new-invite-icon-btn,
     .btn:has(.btn-label-short) {
         width: 36px;
         height: 36px;

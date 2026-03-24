@@ -1,6 +1,7 @@
 /* ── Guest list controls bar ──────────────────────────────────────────────── */
 .guest-list-controls { display: flex; gap: 0.4rem; margin-bottom: 0.6rem; align-items: center; }
 .guest-list-controls .search-input { flex: 1; min-width: 120px; }
+.guest-list-controls .btn { height: 36px; padding: 0 0.75rem; font-size: 0.82rem; border-radius: 10px; }
 
 /* ── Past events section ──────────────────────────────────────────────────── */
 .past-events-section { margin-top: 1.5rem; display: none; }

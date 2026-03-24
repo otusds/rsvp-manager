@@ -107,8 +107,8 @@
         <div class="sticky-controls">
         <div class="guest-list-controls">
             <input type="search" class="search-input" data-table="invitations-table" placeholder="Search guests..." autocomplete="off">
-            <button type="button" class="btn btn-small new-invite-icon-btn" id="new-invite-btn">
-                <span class="btn-label-full">+ New Invite</span>
+            <button type="button" class="btn new-invite-icon-btn" id="new-invite-btn">
+                <span class="btn-label-full">+ New Guest</span>
                 <span class="btn-label-short">+</span>
             </button>
             <button type="button" class="icon-btn" id="gl-toggle-filters-btn" title="Filters">
@@ -228,7 +228,7 @@
                         <div class="kebab-wrapper">
                             <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>
                             <div class="kebab-menu">
-                                <button type="button" class="inv-guest-detail-btn" data-guest-id="{{ inv.guest.id }}">Friend detail</button>
+                                <button type="button" class="inv-guest-detail-btn" data-guest-id="{{ inv.guest.id }}">Guest detail</button>
                                 <button type="button" class="edit-btn">Invitation detail</button>
                                 <button type="button" class="kebab-danger remove-btn" data-inv-id="{{ inv.id }}">Remove</button>
                             </div>
