@@ -20,9 +20,13 @@
 
 /* ── Mobile responsive ────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
-    /* Mobile: icon-only nav tabs, show hamburger mobile items */
-    .nav-tab-label { display: none; }
-    .nav-tab { padding: 0.3rem 0.55rem; }
+    /* Mobile: stacked icon + label nav tabs (app-style tab bar) */
+    .nav-tab {
+        flex-direction: column;
+        gap: 0.1rem;
+        padding: 0.3rem 0.7rem;
+    }
+    .nav-tab-label { font-size: 0.65rem; }
     .nav-link-mobile { display: block; }
     div.nav-link-mobile { display: block; }
 
