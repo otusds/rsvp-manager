@@ -45,6 +45,7 @@ def create_app(config_class=Config):
     limiter.init_app(app)
 
     login_manager.login_view = "auth.login"
+    login_manager.login_message = None
 
     from rsvp_manager.blueprints import auth, events, guests, invitations, exports, settings, errors
     app.register_blueprint(auth.bp)
