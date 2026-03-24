@@ -271,9 +271,10 @@ h2 {
 .btn-danger:hover { background: var(--color-danger-dark); }
 
 .btn-small {
-    padding: 0.3rem 0.65rem;
+    padding: 0.35rem 0.65rem;
     font-size: 0.78rem;
-    border-radius: 7px;
+    border-radius: 8px;
+    height: 36px;
 }
 
 .btn-group {
@@ -282,6 +283,7 @@ h2 {
     align-items: center;
     flex-wrap: wrap;
 }
+.btn-group .btn { height: 36px; padding: 0 0.75rem; font-size: 0.82rem; border-radius: 10px; }
 
 /* ── Icon buttons (filter, 3-dot) ────────────────────────────────────────── */
 .icon-btn {

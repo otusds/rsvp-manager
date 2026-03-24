@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", function () {
             '<td><div class="kebab-wrapper">' +
             '<button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>' +
             '<div class="kebab-menu">' +
-            '<button type="button" class="inv-guest-detail-btn" data-guest-id="' + data.guest_id + '">Guest detail</button>' +
+            '<button type="button" class="inv-guest-detail-btn" data-guest-id="' + data.guest_id + '">Friend detail</button>' +
             '<button type="button" class="edit-btn">Invitation detail</button>' +
             '<button type="button" class="kebab-danger remove-btn" data-inv-id="' + data.invitation_id + '">Remove</button>' +
             '</div></div></td>';
@@ -1022,9 +1022,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var eventNotesArea = document.getElementById("event-notes");
     if (eventNotesArea) {
+        // Auto-resize to fit content
+        function autoResizeNotes() {
+            eventNotesArea.style.height = "auto";
+            eventNotesArea.style.height = eventNotesArea.scrollHeight + "px";
+        }
+        autoResizeNotes();
+
         var saveIndicator = document.getElementById("notes-save-indicator");
         var notesTimer;
         eventNotesArea.addEventListener("input", function () {
+            autoResizeNotes();
             clearTimeout(notesTimer);
             notesTimer = setTimeout(function () {
                 var evId = eventNotesArea.getAttribute("data-event-id");
