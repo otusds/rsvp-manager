@@ -92,6 +92,19 @@ class Tag(db.Model):
         return f"<Tag {self.id} {self.name!r}>"
 
 
+class ActivityLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    action = db.Column(db.String(50), nullable=False)
+    entity_type = db.Column(db.String(20), nullable=False)
+    entity_id = db.Column(db.Integer, nullable=True)
+    description = db.Column(db.String(500), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, index=True)
+
+    def __repr__(self):
+        return f"<ActivityLog {self.id} {self.action}>"
+
+
 class Invitation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False, index=True)
