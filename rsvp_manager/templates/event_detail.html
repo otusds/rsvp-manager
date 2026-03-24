@@ -20,8 +20,8 @@
 </div>
 <div class="event-subtitle">
     <span>{{ event.event_type }}</span>
-    {% if event.location %}<span class="event-subtitle-sep">·</span> <span>{{ event.location }}</span>{% endif %}
-    <span class="event-subtitle-sep">·</span> <span>{{ event.date.strftime('%d %B %Y') }}</span>
+    {% if event.location %}<span class="event-subtitle-sep">•</span> <span>{{ event.location }}</span>{% endif %}
+    <span class="event-subtitle-sep">•</span> <span>{{ event.date.strftime('%d %B %Y') }}</span>
 </div>
 <div class="event-inline-notes">
     <textarea id="event-notes" class="event-notes-inline" data-event-id="{{ event.id }}" rows="1" placeholder="Add a note...">{{ event.notes or '' }}</textarea>

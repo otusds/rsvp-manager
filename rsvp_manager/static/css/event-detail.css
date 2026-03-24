@@ -11,10 +11,9 @@
 }
 
 .event-subtitle-sep {
-    color: rgba(0,0,0,0.35);
-    font-weight: 700;
-    font-size: 1.1rem;
-    margin: 0 0.15rem;
+    color: rgba(0,0,0,0.3);
+    font-weight: 400;
+    margin: 0 0.1rem;
 }
 
 /* ── Inline event notes (single-line, auto-width) ─────────────────────────── */
