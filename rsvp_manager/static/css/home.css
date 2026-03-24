@@ -8,7 +8,7 @@
 .event-row-card {
     display: grid;
     grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
+    grid-template-rows: auto auto auto;
     gap: 0 1rem;
     background: var(--color-surface);
     border: none;
