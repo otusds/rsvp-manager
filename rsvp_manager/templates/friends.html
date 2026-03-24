@@ -3,9 +3,9 @@
 {% block content %}
 <div class="sticky-controls">
 <div class="header-row">
-    <h1>Guest Database <span id="guest-count">({{ pagination.total }})</span></h1>
+    <h1>Friends <span id="guest-count">({{ pagination.total }})</span></h1>
     <div class="btn-group">
-        <button type="button" class="btn" id="open-add-guest-btn"><span class="btn-label-short">+</span><span class="btn-label-full">+ Add New Guest</span></button>
+        <button type="button" class="btn" id="open-add-guest-btn"><span class="btn-label-short">+</span><span class="btn-label-full">+ Add New Friend</span></button>
         <button type="button" class="icon-btn" id="toggle-filters-btn" title="Filters">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
         </button>
@@ -14,7 +14,7 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
             </button>
             <div class="kebab-menu kebab-menu-right" id="page-menu">
-                <a href="{{ url_for('exports.export_guests') }}">Export to Excel</a>
+                <a href="{{ url_for('exports.export_friends') }}">Export to Excel</a>
                 <button type="button" id="toggle-guest-multiselect-btn">Multi-Select</button>
                 <button type="button" id="toggle-guest-expand-btn">Collapse</button>
             </div>
@@ -25,7 +25,7 @@
 {% if guests %}
 <div class="table-controls" id="event-filters" style="display:none">
     <div class="filter-row">
-        <input type="search" class="search-input" id="guest-search" placeholder="Search guests..." autocomplete="off">
+        <input type="search" class="search-input" id="guest-search" placeholder="Search friends..." autocomplete="off">
     </div>
     <div class="filter-row">
         <span class="filter-label">Filter:</span>
@@ -84,35 +84,35 @@
             <th data-sort="text" class="col-name">First Name</th>
             <th data-sort="text" class="col-name">Last Name</th>
             <th data-sort="text" class="col-gender"><span class="col-gender-text">Gender</span><span class="col-gender-symbol" title="Gender"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="11" r="5"/><line x1="12" y1="16" x2="12" y2="23"/><line x1="9.5" y1="20.5" x2="14.5" y2="20.5"/><line x1="15.54" y1="7.46" x2="19.5" y2="3.5"/><line x1="16" y1="3.5" x2="19.5" y2="3.5"/><line x1="19.5" y1="3.5" x2="19.5" y2="7"/></svg></span></th>
-            <th data-sort="text" class="col-expand-mobile">Guest Notes</th>
+            <th data-sort="text" class="col-expand-mobile">Notes</th>
             <th class="col-expand">Tags</th>
             <th class="col-kebab"><span class="col-expand">Action</span></th>
         </tr>
     </thead>
     <tbody>
-        {% include "partials/guest_rows.html" %}
+        {% include "partials/friend_rows.html" %}
     </tbody>
 </table>
 </div>
 
-<p class="empty" id="no-results" style="display:none;">No guests match your filters.</p>
+<p class="empty" id="no-results" style="display:none;">No friends match your filters.</p>
 
 <div class="scroll-loader" id="scroll-loader" style="display:none">
     <div class="scroll-spinner"></div>
 </div>
 {% else %}
 <div class="empty-state">
-    <p class="empty-state-title">No guests yet</p>
-    <p class="empty-state-sub">Start building your list — who's coming?</p>
-    <button type="button" class="btn" onclick="document.getElementById('open-add-guest-btn').click()">+ Add Guest</button>
+    <p class="empty-state-title">No friends yet</p>
+    <p class="empty-state-sub">Start building your list — add your first friend!</p>
+    <button type="button" class="btn" onclick="document.getElementById('open-add-guest-btn').click()">+ Add Friend</button>
 </div>
 {% endif %}
 
-<!-- Add New Guests modal (same as event page) -->
+<!-- Add New Friends modal -->
 <div class="detail-overlay" id="add-guest-overlay" style="display:none">
-    <div class="detail-card guest-db-card">
+    <div class="detail-card friends-card">
         <div class="detail-card-header">
-            <span class="modal-title">Add New Guests</span>
+            <span class="modal-title">Add New Friends</span>
             <button type="button" class="detail-close" id="add-guest-close">&times;</button>
         </div>
         <div class="add-guest-table-wrapper">
@@ -129,18 +129,18 @@
                 </tbody>
             </table>
         </div>
-        <div class="guest-db-footer">
-            <span class="modal-hint">Press Enter to add another guest</span>
+        <div class="friends-footer">
+            <span class="modal-hint">Press Enter to add another friend</span>
             <button type="button" class="btn" id="add-guest-save-btn">Save</button>
         </div>
     </div>
 </div>
 
-<!-- Guest Detail overlay -->
+<!-- Friend Detail overlay -->
 <div class="detail-overlay" id="guest-detail-overlay" style="display:none">
     <div class="detail-card">
         <div class="detail-card-header">
-            <span class="modal-title">Guest Detail</span>
+            <span class="modal-title">Friend Detail</span>
             <button type="button" class="detail-close" id="guest-detail-close">&times;</button>
         </div>
         <div class="detail-card-body">
@@ -175,7 +175,7 @@
                 <div class="form-row">
                     <div class="form-field">
                         <label for="gd-notes">Notes</label>
-                        <textarea id="gd-notes" rows="3" placeholder="Add notes about guest"></textarea>
+                        <textarea id="gd-notes" rows="3" placeholder="Add notes about this friend"></textarea>
                     </div>
                 </div>
                 <div class="form-row">
@@ -186,7 +186,7 @@
                             <input type="text" id="gd-tags-input" placeholder="Add tag..." autocomplete="off">
                             <div class="tags-suggestions" id="gd-tags-suggestions" style="display:none"></div>
                         </div>
-                        <p class="form-hint">Add tags to sort your guests quickly (e.g., family, cycling, single, ...)</p>
+                        <p class="form-hint">Add tags to sort your friends quickly (e.g., family, cycling, single, ...)</p>
                     </div>
                 </div>
                 <div class="form-actions">

@@ -16,7 +16,7 @@ class TestEdgeCases:
                       date_created=datetime.now())
             db.session.add(g)
             db.session.commit()
-        r = logged_in_client.get("/guests")
+        r = logged_in_client.get("/friends")
         assert r.status_code == 200
         assert b"Solo" in r.data
 
@@ -48,7 +48,7 @@ class TestEdgeCases:
                       gender="Male", date_created=datetime.now())
             db.session.add(g)
             db.session.commit()
-        r = logged_in_client.get("/guests")
+        r = logged_in_client.get("/friends")
         assert r.status_code == 200
         # Jinja auto-escapes, so raw <script> should not appear
         assert b"<script>" not in r.data

@@ -21,12 +21,12 @@ class TestExportEvents:
 
 class TestExportGuests:
     def test_export_guests(self, logged_in_client, sample_guest):
-        r = logged_in_client.get("/export/guests")
+        r = logged_in_client.get("/export/friends")
         assert r.status_code == 200
         assert "spreadsheetml" in r.content_type
 
     def test_export_guests_empty(self, logged_in_client):
-        r = logged_in_client.get("/export/guests")
+        r = logged_in_client.get("/export/friends")
         assert r.status_code == 200
 
 

@@ -17,9 +17,9 @@ def export_event_guests(event_id):
     return export_service.export_event_guests_xlsx(event)
 
 
-@api_bp.route("/guests/export", methods=["GET"])
+@api_bp.route("/friends/export", methods=["GET"])
 @api_auth_required
-def export_guests():
+def export_friends():
     guests = Guest.query.filter_by(user_id=get_api_user().id).order_by(
         Guest.last_name, Guest.first_name
     ).all()

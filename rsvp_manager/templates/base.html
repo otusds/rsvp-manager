@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tables.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/event-detail.css') }}?v={{ v }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/guests.css') }}?v={{ v }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/friends.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tags.css') }}?v={{ v }}">
@@ -40,14 +40,14 @@
         {% if current_user.is_authenticated %}
         <div class="nav-links">
             <a href="{{ url_for('events.home') }}" class="nav-link">All Events</a>
-            <a href="{{ url_for('guests.guests') }}" class="nav-link">Guest Database</a>
+            <a href="{{ url_for('friends.friends') }}" class="nav-link">Friends</a>
         </div>
         <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu">
             <span></span><span></span><span></span>
         </button>
         <div class="hamburger-menu" id="hamburger-menu">
             <a href="{{ url_for('events.home') }}" class="nav-link-mobile">All Events</a>
-            <a href="{{ url_for('guests.guests') }}" class="nav-link-mobile">Guest Database</a>
+            <a href="{{ url_for('friends.friends') }}" class="nav-link-mobile">Friends</a>
             <div class="hamburger-divider nav-link-mobile"></div>
             <a href="{{ url_for('settings.settings') }}">Settings</a>
             <div class="hamburger-divider"></div>
@@ -69,6 +69,6 @@
     <script src="{{ url_for('static', filename='js/tables.js') }}?v={{ v }}"></script>
     <script src="{{ url_for('static', filename='js/event-detail.js') }}?v={{ v }}"></script>
     <script src="{{ url_for('static', filename='js/home.js') }}?v={{ v }}"></script>
-    <script src="{{ url_for('static', filename='js/guests.js') }}?v={{ v }}"></script>
+    <script src="{{ url_for('static', filename='js/friends.js') }}?v={{ v }}"></script>
 </body>
 </html>

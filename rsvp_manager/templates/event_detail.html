@@ -287,41 +287,41 @@
     </div>
 </div>
 
-<!-- Guest Database Picker Modal -->
-<div class="detail-overlay" id="guest-db-overlay" style="display:none">
-    <div class="detail-card guest-db-card">
+<!-- Friends Picker Modal -->
+<div class="detail-overlay" id="friends-overlay" style="display:none">
+    <div class="detail-card friends-card">
         <div class="detail-card-header">
-            <span class="modal-title">Add from Guest Database</span>
-            <button type="button" class="detail-close" id="guest-db-close">&times;</button>
+            <span class="modal-title">Add from Friends</span>
+            <button type="button" class="detail-close" id="friends-close">&times;</button>
         </div>
-        <div class="guest-db-search">
-            <div class="guest-db-search-row">
-                <input type="search" id="guest-db-search-input" placeholder="Search guests..." autocomplete="off">
-                <button type="button" class="icon-btn" id="guest-db-filter-btn" title="Filters">
+        <div class="friends-search">
+            <div class="friends-search-row">
+                <input type="search" id="friends-search-input" placeholder="Search friends..." autocomplete="off">
+                <button type="button" class="icon-btn" id="friends-filter-btn" title="Filters">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
                 </button>
             </div>
-            <div class="table-controls" id="guest-db-filters" style="display:none">
+            <div class="table-controls" id="friends-filters" style="display:none">
                 <div class="filter-row">
                     <span class="filter-label">Filter:</span>
-                    <select class="filter-select" id="guest-db-gender-filter">
+                    <select class="filter-select" id="friends-gender-filter">
                         <option value="">All Genders</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                     </select>
-                    <div class="tag-filter-wrapper" id="guest-db-tag-filter-wrapper">
-                        <button type="button" class="filter-select tag-filter-toggle" id="guest-db-tag-filter-toggle">All Tags</button>
-                        <div class="tag-filter-dropdown" id="guest-db-tag-filter-dropdown" style="display:none"></div>
+                    <div class="tag-filter-wrapper" id="friends-tag-filter-wrapper">
+                        <button type="button" class="filter-select tag-filter-toggle" id="friends-tag-filter-toggle">All Tags</button>
+                        <div class="tag-filter-dropdown" id="friends-tag-filter-dropdown" style="display:none"></div>
                     </div>
-                    <select class="filter-select" id="guest-db-archive-filter">
+                    <select class="filter-select" id="friends-archive-filter">
                         <option value="active" selected>Hide Archived</option>
                         <option value="all">Show Archived</option>
                     </select>
-                    <button type="button" class="filter-clear-btn" id="guest-db-clear-filters">Clear</button>
+                    <button type="button" class="filter-clear-btn" id="friends-clear-filters">Clear</button>
                 </div>
                 <div class="filter-row">
                     <span class="filter-label">Sort by:</span>
-                    <select class="filter-select" id="guest-db-sort">
+                    <select class="filter-select" id="friends-sort">
                         <option value="first-asc">First Name (A-Z)</option>
                         <option value="last-asc">Last Name (A-Z)</option>
                         <option value="gender-asc">Gender</option>
@@ -329,20 +329,20 @@
                 </div>
             </div>
         </div>
-        <div class="guest-db-select-all">
-            <input type="checkbox" id="guest-db-select-all">
-            <label for="guest-db-select-all">Select All</label>
+        <div class="friends-select-all">
+            <input type="checkbox" id="friends-select-all">
+            <label for="friends-select-all">Select All</label>
         </div>
-        <div class="guest-db-list" id="guest-db-list"></div>
-        <div class="guest-db-footer">
-            <button type="button" class="btn" id="guest-db-add-btn">Add Selected</button>
+        <div class="friends-list" id="friends-list"></div>
+        <div class="friends-footer">
+            <button type="button" class="btn" id="friends-add-btn">Add Selected</button>
         </div>
     </div>
 </div>
 
 <!-- Add from Other Events Modal -->
 <div class="detail-overlay" id="event-guests-overlay" style="display:none">
-    <div class="detail-card guest-db-card">
+    <div class="detail-card friends-card">
         <div class="detail-card-header">
             <span class="modal-title">Add from Other Events</span>
             <button type="button" class="detail-close" id="event-guests-close">&times;</button>
@@ -352,8 +352,8 @@
                 <option value="">Select an event...</option>
             </select>
         </div>
-        <div class="guest-db-search" id="event-guests-search-section" style="display:none">
-            <div class="guest-db-search-row">
+        <div class="friends-search" id="event-guests-search-section" style="display:none">
+            <div class="friends-search-row">
                 <input type="search" id="event-guests-search-input" placeholder="Search guests..." autocomplete="off">
                 <button type="button" class="icon-btn" id="event-guests-filter-btn" title="Filters">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
@@ -391,12 +391,12 @@
                 </div>
             </div>
         </div>
-        <div class="guest-db-select-all" id="event-guests-select-all-wrapper" style="display:none">
+        <div class="friends-select-all" id="event-guests-select-all-wrapper" style="display:none">
             <input type="checkbox" id="event-guests-select-all">
             <label for="event-guests-select-all">Select All</label>
         </div>
-        <div class="guest-db-list" id="event-guests-list"></div>
-        <div class="guest-db-footer">
+        <div class="friends-list" id="event-guests-list"></div>
+        <div class="friends-footer">
             <button type="button" class="btn" id="event-guests-add-btn" disabled>Add Selected</button>
         </div>
     </div>
@@ -404,7 +404,7 @@
 
 <!-- Add New Guest Modal -->
 <div class="detail-overlay" id="add-guest-overlay" style="display:none">
-    <div class="detail-card guest-db-card">
+    <div class="detail-card friends-card">
         <div class="detail-card-header">
             <span class="modal-title">Add New Guests</span>
             <button type="button" class="detail-close" id="add-guest-close">&times;</button>
@@ -429,7 +429,7 @@
         </div>
         <div class="add-guest-divider"><span>OR multi-select from</span></div>
         <div class="add-guest-alt-actions">
-            <button type="button" class="btn" id="select-from-db-btn">Guest Database</button>
+            <button type="button" class="btn" id="select-from-db-btn">Friends</button>
             <button type="button" class="btn" id="add-from-events-btn">Past Events</button>
         </div>
     </div>
