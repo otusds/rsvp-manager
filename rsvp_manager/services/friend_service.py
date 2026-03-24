@@ -3,6 +3,7 @@ from flask import abort
 from sqlalchemy.orm import joinedload
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Guest, Invitation
+from rsvp_manager.services.history_service import log_action
 
 VALID_GENDERS = ("Male", "Female")
 
@@ -60,6 +61,8 @@ def create_guest(user_id, form_data):
         date_created=datetime.now(timezone.utc),
     )
     db.session.add(guest)
+    db.session.flush()
+    log_action(user_id, "created_guest", "guest", guest.id, f"You added {guest.full_name} to your friends")
     db.session.commit()
     return guest
 
@@ -76,11 +79,13 @@ def update_guest(guest, user_id, form_data):
     guest.is_me = is_me
     guest.notes = form_data.get("notes", "").strip()
     guest.date_edited = datetime.now(timezone.utc)
+    log_action(user_id, "edited_guest", "guest", guest.id, f"You edited {guest.full_name}")
     db.session.commit()
     return guest
 
 
 def delete_guest(guest):
+    log_action(guest.user_id, "deleted_guest", "guest", guest.id, f"You deleted {guest.full_name}")
     db.session.delete(guest)
     db.session.commit()
 
@@ -118,12 +123,14 @@ def update_guest_is_me(guest, user_id, is_me):
 def archive_guest(guest):
     guest.is_archived = True
     guest.date_edited = datetime.now(timezone.utc)
+    log_action(guest.user_id, "archived_guest", "guest", guest.id, f"You archived {guest.full_name}")
     db.session.commit()
 
 
 def unarchive_guest(guest):
     guest.is_archived = False
     guest.date_edited = datetime.now(timezone.utc)
+    log_action(guest.user_id, "unarchived_guest", "guest", guest.id, f"You unarchived {guest.full_name}")
     db.session.commit()
 
 
@@ -143,6 +150,7 @@ def bulk_archive_guests(user_id, guest_ids):
         if not guest.is_archived:
             guest.is_archived = True
             guest.date_edited = datetime.now(timezone.utc)
+            log_action(user_id, "archived_guest", "guest", guest.id, f"You archived {guest.full_name}")
             archived += 1
     db.session.commit()
     return archived
@@ -151,6 +159,7 @@ def bulk_archive_guests(user_id, guest_ids):
 def bulk_delete_guests(user_id, guest_ids):
     guests = _get_owned_guests_by_ids(user_id, guest_ids)
     for guest in guests:
+        log_action(user_id, "deleted_guest", "guest", guest.id, f"You deleted {guest.full_name}")
         db.session.delete(guest)
     db.session.commit()
     return len(guests)
@@ -164,6 +173,7 @@ def bulk_add_tag(user_id, guest_ids, tag_name):
     for guest in guests:
         if tag not in guest.tags:
             guest.tags.append(tag)
+            log_action(user_id, "tagged_guest", "guest", guest.id, f"You tagged {guest.full_name} as {tag_name}")
         updated.append({
             "id": guest.id,
             "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
@@ -186,6 +196,7 @@ def bulk_remove_tag(user_id, guest_ids, tag_name):
     for guest in guests:
         if tag in guest.tags:
             guest.tags.remove(tag)
+            log_action(user_id, "untagged_guest", "guest", guest.id, f"You removed tag {tag_name} from {guest.full_name}")
         updated.append({
             "id": guest.id,
             "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
@@ -210,6 +221,7 @@ def bulk_create_guests(user_id, guests_data):
         )
         db.session.add(guest)
         db.session.flush()
+        log_action(user_id, "created_guest", "guest", guest.id, f"You added {guest.full_name} to your friends")
         added.append({
             "id": guest.id, "first_name": guest.first_name,
             "last_name": guest.last_name or "", "gender": guest.gender,

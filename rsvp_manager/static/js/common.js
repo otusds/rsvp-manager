@@ -174,6 +174,10 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             suggestionsDiv.appendChild(div);
         });
+        var rect = input.getBoundingClientRect();
+        suggestionsDiv.style.top = rect.bottom + "px";
+        suggestionsDiv.style.left = rect.left + "px";
+        suggestionsDiv.style.width = rect.width + "px";
         suggestionsDiv.style.display = "block";
     }
 

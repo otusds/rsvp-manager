@@ -2,6 +2,7 @@ from datetime import date, datetime, timezone
 from flask import abort
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Guest, Invitation
+from rsvp_manager.services.history_service import log_action
 
 VALID_STATUSES = ("Attending", "Pending", "Declined")
 
@@ -19,10 +20,14 @@ def toggle_send(invitation):
     if invitation.status == "Not Sent":
         invitation.status = "Pending"
         invitation.date_invited = date.today()
+        log_action(invitation.event.user_id, "sent_invitation", "invitation", invitation.id,
+                   f"You sent an invitation to {invitation.guest.full_name} for {invitation.event.name}")
     else:
         invitation.status = "Not Sent"
         invitation.date_invited = None
         invitation.date_responded = None
+        log_action(invitation.event.user_id, "unsent_invitation", "invitation", invitation.id,
+                   f"You unsent the invitation to {invitation.guest.full_name} for {invitation.event.name}")
     invitation.event.date_edited = datetime.now(timezone.utc)
     db.session.commit()
     return invitation
@@ -37,6 +42,10 @@ def update_status(invitation, new_status):
             invitation.date_responded = date.today()
         elif new_status == "Pending":
             invitation.date_responded = None
+        status_labels = {"Attending": "attending", "Declined": "declined", "Pending": "pending"}
+        label = status_labels.get(new_status, new_status.lower())
+        log_action(invitation.event.user_id, "status_changed", "invitation", invitation.id,
+                   f"You marked {invitation.guest.full_name} as {label} for {invitation.event.name}")
     invitation.event.date_edited = datetime.now(timezone.utc)
     db.session.commit()
     return invitation
@@ -44,6 +53,8 @@ def update_status(invitation, new_status):
 
 def remove_invitation(invitation):
     event_id = invitation.event_id
+    log_action(invitation.event.user_id, "removed_from_event", "invitation", invitation.id,
+               f"You removed {invitation.guest.full_name} from {invitation.event.name}")
     invitation.event.date_edited = datetime.now(timezone.utc)
     db.session.delete(invitation)
     db.session.commit()
@@ -93,6 +104,8 @@ def bulk_add_guests(event, guest_ids, user_id):
         inv = Invitation(event_id=event.id, guest_id=gid, status="Not Sent")
         db.session.add(inv)
         db.session.flush()
+        log_action(event.user_id, "added_to_event", "invitation", inv.id,
+                   f"You added {guest.full_name} to {event.name}")
         added.append({
             "invitation_id": inv.id, "guest_id": guest.id,
             "first_name": guest.first_name, "last_name": guest.last_name or "",
@@ -145,6 +158,8 @@ def bulk_create_and_invite(event, guests_data, user_id):
         inv = Invitation(event_id=event.id, guest_id=guest.id, status="Not Sent")
         db.session.add(inv)
         db.session.flush()
+        log_action(user_id, "created_guest", "guest", guest.id, f"You added {guest.full_name} to your friends")
+        log_action(user_id, "added_to_event", "invitation", inv.id, f"You added {guest.full_name} to {event.name}")
         added.append({
             "invitation_id": inv.id, "guest_id": guest.id,
             "first_name": guest.first_name, "last_name": guest.last_name or "",
