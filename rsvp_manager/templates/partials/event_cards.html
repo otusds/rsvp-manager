@@ -1,6 +1,8 @@
 {% for event in events %}
 {% set attending = event.invitations|selectattr('status', 'equalto', 'Attending')|list|length %}
-{% set total = event.invitations|rejectattr('status', 'equalto', 'Not Sent')|list|length %}
+{% set pending = event.invitations|selectattr('status', 'equalto', 'Pending')|list|length %}
+{% set declined = event.invitations|selectattr('status', 'equalto', 'Declined')|list|length %}
+{% set total = attending + pending + declined %}
 <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="event-row-card"
    data-name="{{ event.name|lower }}"
    data-type="{{ event.event_type }}"
@@ -23,5 +25,15 @@
         <span class="stat">{{ total }} invited</span>
         <span class="stat stat-attending">{{ attending }} attending</span>
     </div>
+    {% if total > 0 %}
+    {% set pct_attending = (attending * 100 / total)|round|int %}
+    {% set pct_pending = (pending * 100 / total)|round|int %}
+    {% set pct_declined = 100 - pct_attending - pct_pending %}
+    <div class="rsvp-bar">
+        {% if attending > 0 %}<div class="rsvp-seg rsvp-attending" style="width:{{ pct_attending }}%">{{ pct_attending }}%</div>{% endif %}
+        {% if pending > 0 %}<div class="rsvp-seg rsvp-pending" style="width:{{ pct_pending }}%">{{ pct_pending }}%</div>{% endif %}
+        {% if declined > 0 %}<div class="rsvp-seg rsvp-declined" style="width:{{ pct_declined }}%">{{ pct_declined }}%</div>{% endif %}
+    </div>
+    {% endif %}
 </a>
 {% endfor %}
