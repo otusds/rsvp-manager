@@ -50,11 +50,11 @@ document.addEventListener("DOMContentLoaded", function () {
     var pastToggle = document.getElementById("past-events-toggle");
     var pastCount = document.getElementById("past-events-count");
 
-    function sortCards(cards) {
+    function sortCards(cards, dirOverride) {
         if (!sortSelect) return;
         var sortVal = sortSelect.value;
         var parts = sortVal.split("-");
-        var key = parts[0], dir = parts[1];
+        var key = parts[0], dir = dirOverride || parts[1];
 
         cards.sort(function (a, b) {
             var valA, valB;
@@ -102,8 +102,9 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        sortCards(futureCards);
-        sortCards(pastCards);
+        var isDefaultSort = sortSelect && sortSelect.value === "date-asc";
+        sortCards(futureCards, isDefaultSort ? "asc" : undefined);
+        sortCards(pastCards, isDefaultSort ? "desc" : undefined);
 
         futureCards.forEach(function (c) { grid.appendChild(c); });
 
