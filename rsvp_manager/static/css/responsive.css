@@ -1,4 +1,4 @@
-/* ── Desktop nav links: hide mobile-only hamburger items ─────────────────── */
+/* ── Desktop nav: hide mobile-only hamburger items ───────────────────────── */
 .nav-link-mobile { display: none; }
 
 /* ── Gender header symbol (replaces "Gender" text) ───────────────────────── */
@@ -20,8 +20,9 @@
 
 /* ── Mobile responsive ────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
-    /* Show mobile nav items in hamburger, hide desktop nav links */
-    .nav-links { display: none !important; }
+    /* Mobile: icon-only nav tabs, show hamburger mobile items */
+    .nav-tab-label { display: none; }
+    .nav-tab { padding: 0.3rem 0.55rem; }
     .nav-link-mobile { display: block; }
     div.nav-link-mobile { display: block; }
 
