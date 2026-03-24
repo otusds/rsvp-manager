@@ -37,8 +37,7 @@
     white-space: nowrap;
     field-sizing: content;
     line-height: 1.4;
-    min-width: 120px;
-    max-width: 100%;
+    width: 100%;
 }
 
 .event-notes-inline:focus {
