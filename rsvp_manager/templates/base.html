@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tags.css') }}?v={{ v }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}?v={{ v }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
@@ -52,6 +53,7 @@
             <span></span><span></span><span></span>
         </button>
         <div class="hamburger-menu" id="hamburger-menu">
+            <a href="{{ url_for('history.history') }}">History</a>
             <a href="{{ url_for('settings.settings') }}">Settings</a>
             <div class="hamburger-divider"></div>
             <form method="POST" action="{{ url_for('auth.logout') }}" class="inline">

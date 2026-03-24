@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-row">
+    <h1>History</h1>
+</div>
+
+{% if entries %}
+<div class="history-list">
+    {% for entry in entries %}
+    <div class="history-entry">
+        <div class="history-dot"></div>
+        <div class="history-content">
+            <p class="history-desc">{{ entry.description }}</p>
+            <time class="history-time" datetime="{{ entry.created_at.isoformat() }}">{{ entry.created_at.strftime('%d %b %Y, %H:%M') }}</time>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if pagination.pages > 1 %}
+<div class="history-pagination">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('history.history', page=pagination.prev_num) }}" class="btn btn-small btn-secondary">Previous</a>
+    {% endif %}
+    <span class="history-page-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+    <a href="{{ url_for('history.history', page=pagination.next_num) }}" class="btn btn-small btn-secondary">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <p class="empty-state-title">No history yet</p>
+    <p class="empty-state-sub">Your activity will appear here as you use the app.</p>
+</div>
+{% endif %}
+{% endblock %}

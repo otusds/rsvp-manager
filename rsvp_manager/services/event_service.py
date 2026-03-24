@@ -3,6 +3,7 @@ from flask import abort
 from sqlalchemy.orm import joinedload
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Event, Guest, Invitation, EVENT_TYPES
+from rsvp_manager.services.history_service import log_action
 
 
 EVENTS_PER_PAGE = 20
@@ -67,6 +68,8 @@ def create_event(user_id, form_data):
         notes=form_data.get("notes", "").strip(),
     )
     db.session.add(event)
+    db.session.flush()
+    log_action(user_id, "created_event", "event", event.id, f"You created event {event.name}")
     db.session.commit()
 
     if form_data.get("include_me"):
@@ -92,11 +95,13 @@ def update_event(event, form_data):
     event.date = event_date
     event.notes = form_data.get("notes", "").strip()
     event.date_edited = datetime.now(timezone.utc)
+    log_action(event.user_id, "edited_event", "event", event.id, f"You edited event {event.name}")
     db.session.commit()
     return event
 
 
 def delete_event(event):
+    log_action(event.user_id, "deleted_event", "event", event.id, f"You deleted event {event.name}")
     db.session.delete(event)
     db.session.commit()
 

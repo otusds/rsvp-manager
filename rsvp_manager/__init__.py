@@ -47,20 +47,21 @@ def create_app(config_class=Config):
     login_manager.login_view = "auth.login"
     login_manager.login_message = None
 
-    from rsvp_manager.blueprints import auth, events, friends, invitations, exports, settings, errors
+    from rsvp_manager.blueprints import auth, events, friends, invitations, exports, settings, history, errors
     app.register_blueprint(auth.bp)
     app.register_blueprint(events.bp)
     app.register_blueprint(friends.bp)
     app.register_blueprint(invitations.bp)
     app.register_blueprint(exports.bp)
     app.register_blueprint(settings.bp)
+    app.register_blueprint(history.bp)
     app.register_blueprint(errors.bp)
 
     from rsvp_manager.blueprints.api import api_bp
     app.register_blueprint(api_bp)
     csrf.exempt(api_bp)
 
-    ASSET_VERSION = "58"
+    ASSET_VERSION = "59"
 
     @app.context_processor
     def inject_asset_version():
