@@ -39,14 +39,14 @@
         </a>{% if config.APP_ENV == 'staging' %}<span class="env-badge">TEST</span>{% endif %}{% endblock %}
         {% if current_user.is_authenticated %}
         <div class="nav-links">
-            <a href="{{ url_for('events.home') }}" class="nav-link">All Events</a>
+            <a href="{{ url_for('events.home') }}" class="nav-link">Events</a>
             <a href="{{ url_for('friends.friends') }}" class="nav-link">Friends</a>
         </div>
         <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu">
             <span></span><span></span><span></span>
         </button>
         <div class="hamburger-menu" id="hamburger-menu">
-            <a href="{{ url_for('events.home') }}" class="nav-link-mobile">All Events</a>
+            <a href="{{ url_for('events.home') }}" class="nav-link-mobile">Events</a>
             <a href="{{ url_for('friends.friends') }}" class="nav-link-mobile">Friends</a>
             <div class="hamburger-divider nav-link-mobile"></div>
             <a href="{{ url_for('settings.settings') }}">Settings</a>
