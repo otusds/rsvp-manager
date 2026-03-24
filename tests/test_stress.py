@@ -4,11 +4,11 @@ from rsvp_manager.models import User, Event, Guest, Invitation
 from datetime import date, datetime
 
 
-# ── /guest/add route (previously untested) ────────────────────────────────────
+# ── /friend/add route (previously untested) ────────────────────────────────────
 
 class TestAddGuest:
     def test_add_guest(self, logged_in_client, test_app):
-        r = logged_in_client.post("/guest/add", data={
+        r = logged_in_client.post("/friend/add", data={
             "first_name": "Bob", "last_name": "Jones", "gender": "Male",
             "notes": "Some note"
         })
@@ -21,7 +21,7 @@ class TestAddGuest:
             assert g.date_created is not None
 
     def test_add_guest_is_me(self, logged_in_client, test_app, user):
-        r = logged_in_client.post("/guest/add", data={
+        r = logged_in_client.post("/friend/add", data={
             "first_name": "Myself", "gender": "Male", "is_me": "on"
         })
         assert r.status_code == 302
@@ -37,7 +37,7 @@ class TestAddGuest:
             db.session.commit()
             old_id = old.id
         # Add new guest as me
-        logged_in_client.post("/guest/add", data={
+        logged_in_client.post("/friend/add", data={
             "first_name": "NewMe", "gender": "Male", "is_me": "on"
         })
         with test_app.app_context():
@@ -46,7 +46,7 @@ class TestAddGuest:
             assert new.is_me is True
 
     def test_add_guest_no_last_name(self, logged_in_client, test_app):
-        r = logged_in_client.post("/guest/add", data={
+        r = logged_in_client.post("/friend/add", data={
             "first_name": "Solo", "gender": "Female"
         })
         assert r.status_code == 302
@@ -55,30 +55,30 @@ class TestAddGuest:
             assert g.last_name == ""
 
     def test_add_guest_missing_first_name(self, logged_in_client):
-        r = logged_in_client.post("/guest/add", data={
+        r = logged_in_client.post("/friend/add", data={
             "gender": "Male"
         })
         assert r.status_code == 400
 
     def test_add_guest_missing_gender(self, logged_in_client):
-        r = logged_in_client.post("/guest/add", data={
+        r = logged_in_client.post("/friend/add", data={
             "first_name": "NoGender"
         })
         assert r.status_code == 400
 
     def test_add_guest_requires_login(self, client):
-        r = client.post("/guest/add", data={
+        r = client.post("/friend/add", data={
             "first_name": "Unauth", "gender": "Male"
         })
         assert r.status_code == 302
         assert "login" in r.headers["Location"]
 
 
-# ── /guest/<id>/edit route (previously untested) ─────────────────────────────
+# ── /friend/<id>/edit route (previously untested) ─────────────────────────────
 
 class TestEditGuest:
     def test_edit_guest(self, logged_in_client, sample_guest, test_app):
-        r = logged_in_client.post(f"/guest/{sample_guest}/edit", data={
+        r = logged_in_client.post(f"/friend/{sample_guest}/edit", data={
             "first_name": "Alicia", "last_name": "Smith-Johnson",
             "gender": "Female", "notes": "Updated"
         })
@@ -91,7 +91,7 @@ class TestEditGuest:
             assert g.date_edited is not None
 
     def test_edit_guest_set_is_me(self, logged_in_client, sample_guest, test_app):
-        r = logged_in_client.post(f"/guest/{sample_guest}/edit", data={
+        r = logged_in_client.post(f"/friend/{sample_guest}/edit", data={
             "first_name": "Alice", "gender": "Female", "is_me": "on"
         })
         assert r.status_code == 302
@@ -104,7 +104,7 @@ class TestEditGuest:
             db.session.add(prev)
             db.session.commit()
             prev_id = prev.id
-        logged_in_client.post(f"/guest/{sample_guest}/edit", data={
+        logged_in_client.post(f"/friend/{sample_guest}/edit", data={
             "first_name": "Alice", "gender": "Female", "is_me": "on"
         })
         with test_app.app_context():
@@ -116,7 +116,7 @@ class TestEditGuest:
             g = db.session.get(Guest,sample_guest)
             g.is_me = True
             db.session.commit()
-        r = logged_in_client.post(f"/guest/{sample_guest}/edit", data={
+        r = logged_in_client.post(f"/friend/{sample_guest}/edit", data={
             "first_name": "Alice", "gender": "Female"
             # no is_me field = unchecked
         })
@@ -130,7 +130,7 @@ class TestEditGuest:
             db.session.add(g)
             db.session.commit()
             gid = g.id
-        r = logged_in_client.post(f"/guest/{gid}/edit", data={
+        r = logged_in_client.post(f"/friend/{gid}/edit", data={
             "first_name": "Hacked", "gender": "Male"
         })
         assert r.status_code == 403
@@ -138,13 +138,13 @@ class TestEditGuest:
             assert db.session.get(Guest,gid).first_name == "Other"  # unchanged
 
     def test_edit_nonexistent_guest(self, logged_in_client):
-        r = logged_in_client.post("/guest/99999/edit", data={
+        r = logged_in_client.post("/friend/99999/edit", data={
             "first_name": "Ghost", "gender": "Male"
         })
         assert r.status_code == 404
 
     def test_edit_guest_requires_login(self, client, sample_guest):
-        r = client.post(f"/guest/{sample_guest}/edit", data={
+        r = client.post(f"/friend/{sample_guest}/edit", data={
             "first_name": "Unauth", "gender": "Male"
         })
         assert r.status_code == 302
@@ -209,7 +209,7 @@ class TestSettingsAuth:
 
 class TestExportAuth:
     def test_export_guests_requires_login(self, client):
-        r = client.get("/export/guests")
+        r = client.get("/export/friends")
         assert r.status_code == 302
         assert "login" in r.headers["Location"]
 
@@ -385,7 +385,7 @@ class TestCrossUserIsolation:
             db.session.add(g)
             db.session.commit()
             gid = g.id
-        r = logged_in_client.post(f"/guest/{gid}/delete")
+        r = logged_in_client.post(f"/friend/{gid}/delete")
         assert r.status_code == 403
         with test_app.app_context():
             assert db.session.get(Guest,gid) is not None
@@ -396,7 +396,7 @@ class TestCrossUserIsolation:
             db.session.add(g)
             db.session.commit()
             gid = g.id
-        r = logged_in_client.post(f"/api/guest/{gid}/notes",
+        r = logged_in_client.post(f"/api/friend/{gid}/notes",
             json={"notes": "hacked"})
         assert r.status_code == 403
 
@@ -406,7 +406,7 @@ class TestCrossUserIsolation:
             db.session.add(g)
             db.session.commit()
             gid = g.id
-        r = logged_in_client.post(f"/api/guest/{gid}/is-me",
+        r = logged_in_client.post(f"/api/friend/{gid}/is-me",
             json={"is_me": True})
         assert r.status_code == 403
 
@@ -477,7 +477,7 @@ class TestBulkEdgeCases:
         assert len(data["added"]) == 0
 
     def test_bulk_create_guests_default_gender(self, logged_in_client, test_app):
-        r = logged_in_client.post("/api/guests/bulk-create", json={
+        r = logged_in_client.post("/api/friends/bulk-create", json={
             "guests": [{"first_name": "NoGender"}]
         })
         data = r.get_json()

@@ -17,7 +17,7 @@
     padding: 0.1rem 0.4rem;
 }
 
-.guest-db-item-tags {
+.friends-item-tags {
     display: inline-flex;
     flex-wrap: wrap;
     gap: 0.2rem;
@@ -120,7 +120,7 @@
     min-width: 220px;
 }
 
-/* ── Tag filter dropdown (Guest Database page) ────────────────────────────── */
+/* ── Tag filter dropdown (Friends page) ───────────────────────────────────── */
 .tag-filter-wrapper {
     position: relative;
 }
@@ -163,8 +163,8 @@
     cursor: pointer;
 }
 
-/* Inside guest-db picker, align dropdown to right edge */
-#guest-db-filters .tag-filter-dropdown,
+/* Inside friends picker, align dropdown to right edge */
+#friends-filters .tag-filter-dropdown,
 #gl-filters .tag-filter-dropdown {
     left: auto;
     right: 0;
