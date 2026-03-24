@@ -19,7 +19,7 @@
     </div>
 </div>
 <div class="event-subtitle">
-    <span class="badge badge-{{ event.event_type|lower }}">{{ event.event_type }}</span>
+    <span>{{ event.event_type }}</span>
     {% if event.location %}<span class="event-subtitle-sep">·</span> <span>{{ event.location }}</span>{% endif %}
     <span class="event-subtitle-sep">·</span> <span>{{ event.date.strftime('%d %B %Y') }}</span>
 </div>
