@@ -93,7 +93,7 @@ nav .logo {
     gap: 0.25rem;
     margin-left: auto;
     margin-right: 0.75rem;
-    background: rgba(255,255,255,0.1);
+    background: none;
     border-radius: 10px;
     padding: 0.2rem;
 }
@@ -118,14 +118,14 @@ nav .logo {
 }
 
 .nav-tab.active {
-    color: var(--color-primary);
-    background: var(--color-surface);
+    color: var(--color-surface);
+    background: var(--color-primary);
     font-weight: 600;
     box-shadow: 0 1px 3px rgba(0,0,0,0.12);
 }
 
 .nav-tab.active .nav-tab-icon {
-    stroke: var(--color-primary);
+    stroke: var(--color-surface);
 }
 
 .nav-tab-icon {
