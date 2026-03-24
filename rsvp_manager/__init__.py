@@ -45,6 +45,7 @@ def create_app(config_class=Config):
     limiter.init_app(app)
 
     login_manager.login_view = "auth.login"
+    login_manager.login_message = None
 
     from rsvp_manager.blueprints import auth, events, guests, invitations, exports, settings, errors
     app.register_blueprint(auth.bp)
@@ -59,7 +60,7 @@ def create_app(config_class=Config):
     app.register_blueprint(api_bp)
     csrf.exempt(api_bp)
 
-    ASSET_VERSION = "57"
+    ASSET_VERSION = "58"
 
     @app.context_processor
     def inject_asset_version():
