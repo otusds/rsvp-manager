@@ -1,18 +1,56 @@
-/* ── Event info details ────────────────────────────────────────────────────── */
-.event-info-details { padding: 0.5rem 0; }
-.event-details-notes { padding: 0.25rem 1rem 0.75rem; }
-
-.event-info-row {
+/* ── Event subtitle (type · location · date) ──────────────────────────────── */
+.event-subtitle {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 0.45rem 1rem;
-    border-bottom: 1px solid rgba(0,0,0,0.04);
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-top: -0.15rem;
+    padding-bottom: 0.25rem;
 }
 
-.event-info-row:last-child { border-bottom: none; }
-.event-info-label { font-size: 0.88rem; color: var(--color-text-muted); }
-.event-info-value { font-size: 0.88rem; font-weight: 500; color: var(--color-text); }
+.event-subtitle-sep {
+    color: rgba(0,0,0,0.2);
+    font-weight: 400;
+}
+
+/* ── Inline event notes (single-line, auto-width) ─────────────────────────── */
+.event-inline-notes {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.15rem 0 0.5rem;
+}
+
+.event-notes-inline {
+    font-family: inherit;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    border: none;
+    background: transparent;
+    padding: 0.2rem 0;
+    resize: none;
+    overflow: hidden;
+    white-space: nowrap;
+    field-sizing: content;
+    line-height: 1.4;
+    min-width: 120px;
+    max-width: 100%;
+}
+
+.event-notes-inline:focus {
+    outline: none;
+    color: var(--color-text);
+}
+
+.event-notes-inline::placeholder {
+    color: rgba(0,0,0,0.25);
+    font-style: italic;
+}
+
+/* Tighten header when subtitle follows */
+.header-row + .event-subtitle { margin-top: -1rem; }
 
 /* ── Collapsible sections ──────────────────────────────────────────────────── */
 .collapsible-header {
@@ -138,26 +176,7 @@
     white-space: nowrap;
 }
 
-/* ── Event notes ──────────────────────────────────────────────────────────── */
-.event-notes-textarea {
-    width: 100%;
-    min-height: 80px;
-    padding: 0.65rem;
-    border: 1px solid rgba(0,0,0,0.1);
-    border-radius: 10px;
-    font-size: 0.92rem;
-    font-family: inherit;
-    line-height: 1.5;
-    resize: vertical;
-    margin-top: 0.4rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.event-notes-textarea:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
-}
+/* ── Event notes (legacy, kept for other pages if needed) ─────────────────── */
 
 .save-indicator {
     display: inline-block;
