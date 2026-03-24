@@ -28,9 +28,10 @@
     font-family: inherit;
     font-size: 0.85rem;
     color: var(--color-text-muted);
-    border: none;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
     background: transparent;
-    padding: 0.2rem 0;
+    padding: 0.25rem 0.5rem;
     resize: none;
     overflow: hidden;
     white-space: nowrap;
