@@ -63,73 +63,53 @@
     font-weight: 500;
 }
 
-/* ── Remember me + Forgot password ─────────────────────────────────────── */
-.remember-forgot-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 0.4rem 0 0.25rem;
-    font-size: 0.85rem;
-}
-
-.remember-label {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    cursor: pointer;
-    color: var(--color-text-muted);
-    font-weight: 400;
-    white-space: nowrap;
-}
-
-.remember-label input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
-    accent-color: var(--color-primary);
-    cursor: pointer;
-    margin: 0;
+/* ── Forgot password link ────────────────────────────────────────────────── */
+.forgot-row {
+    margin: 0.25rem 0 0;
 }
 
 .forgot-link {
     color: var(--color-primary);
     text-decoration: none;
     font-weight: 500;
-    font-size: 0.82rem;
-    white-space: nowrap;
-    margin-left: 1rem;
+    font-size: 0.85rem;
 }
 
 .forgot-link:hover {
     text-decoration: underline;
 }
 
-/* ── Split login layout ──────────────────────────────────────────────────── */
+/* ── Remember me row ───────────────────────────────────────────────────── */
+.remember-row {
+    margin: 0.5rem 0 0.25rem;
+    font-size: 0.88rem;
+}
+
+.remember-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-weight: 400;
+}
+
+.remember-label input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+    margin: 0;
+}
+
+/* ── Login layout ──────────────────────────────────────────────────────── */
 .login-container {
     display: flex;
     min-height: calc(100vh - 52px);
     margin: -32px -1rem -3rem;
 }
 
-.login-left {
-    flex: 1;
-    background: var(--color-primary);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    padding: 48px;
-    gap: 24px;
-}
-
-.login-tagline {
-    font-size: 1.2rem;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.85);
-    letter-spacing: -0.01em;
-}
-
-.login-right {
+.login-panel {
     flex: 1;
     background: var(--color-surface);
     display: flex;
@@ -138,34 +118,20 @@
     padding: 48px;
 }
 
-.login-right .auth-container {
+.login-panel .auth-container {
     margin: 0;
 }
 
-/* On desktop, hide the mobile logo inside the form */
-.login-mobile-logo {
-    display: none;
+.login-logo {
+    display: block;
 }
 
-/* ── Mobile: hide left panel, show logo at top of form ───────────────────── */
+/* ── Mobile adjustments ─────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-    .login-container {
-        flex-direction: column;
-    }
-
-    .login-left {
-        display: none;
-    }
-
-    .login-right {
-        flex: 1;
+    .login-panel {
         padding: 24px;
         align-items: flex-start;
         padding-top: 0;
-    }
-
-    .login-mobile-logo {
-        display: block;
     }
 }
 
