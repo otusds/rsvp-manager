@@ -50,11 +50,12 @@ def login():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
+        remember = request.form.get("remember") == "on"
         user = User.query.filter_by(email=email).first()
         if not user or not check_password_hash(user.password_hash, password):
             logger.warning("Failed login attempt for %s", email)
             return render_template("login.html", error="Invalid email or password")
-        login_user(user)
+        login_user(user, remember=remember)
         logger.info("User logged in: %s", email)
         next_page = request.args.get("next")
         if next_page and (not next_page.startswith("/") or next_page.startswith("//")):
