@@ -166,9 +166,9 @@
     color: var(--color-surface);
     padding: 0 3px;
 }
-.bar-attending { background: var(--color-success); }
-.bar-pending { background: var(--color-warning); }
-.bar-declined { background: var(--color-danger); }
+.bar-attending { background: var(--color-success-dark); }
+.bar-pending { background: var(--color-warning-dark); }
+.bar-declined { background: var(--color-danger-dark); }
 
 .summary-bar-value {
     font-size: 0.75rem;
