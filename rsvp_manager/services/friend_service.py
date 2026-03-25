@@ -12,7 +12,7 @@ GUESTS_PER_PAGE = 50
 
 
 def get_user_guests(user_id, page=1, show_archived="0"):
-    query = Guest.query.filter_by(user_id=user_id).options(
+    query = Guest.query.filter_by(user_id=user_id).filter(Guest.deleted_at.is_(None)).options(
         joinedload(Guest.invitations).joinedload(Invitation.event),
         joinedload(Guest.tags),
     )
@@ -27,7 +27,7 @@ def get_user_guests(user_id, page=1, show_archived="0"):
 
 def get_owned_guest_or_404(guest_id, user_id):
     guest = db.session.get(Guest, guest_id)
-    if not guest:
+    if not guest or guest.deleted_at is not None:
         abort(404)
     if guest.user_id != user_id:
         abort(403)
@@ -86,7 +86,7 @@ def update_guest(guest, user_id, form_data):
 
 def delete_guest(guest):
     log_action(guest.user_id, "deleted_guest", "guest", guest.id, f"You deleted {guest.full_name}")
-    db.session.delete(guest)
+    guest.deleted_at = datetime.now(timezone.utc)
     db.session.commit()
 
 
@@ -139,7 +139,8 @@ def _get_owned_guests_by_ids(user_id, guest_ids):
     if not guest_ids:
         return []
     return Guest.query.filter(
-        Guest.id.in_(guest_ids), Guest.user_id == user_id
+        Guest.id.in_(guest_ids), Guest.user_id == user_id,
+        Guest.deleted_at.is_(None)
     ).all()
 
 
@@ -158,9 +159,10 @@ def bulk_archive_guests(user_id, guest_ids):
 
 def bulk_delete_guests(user_id, guest_ids):
     guests = _get_owned_guests_by_ids(user_id, guest_ids)
+    now = datetime.now(timezone.utc)
     for guest in guests:
         log_action(user_id, "deleted_guest", "guest", guest.id, f"You deleted {guest.full_name}")
-        db.session.delete(guest)
+        guest.deleted_at = now
     db.session.commit()
     return len(guests)
 
@@ -176,7 +178,7 @@ def bulk_add_tag(user_id, guest_ids, tag_name):
             log_action(user_id, "tagged_guest", "guest", guest.id, f"You tagged {guest.full_name} as {tag_name}")
         updated.append({
             "id": guest.id,
-            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
+            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags if not t.deleted_at],
         })
     db.session.commit()
     return updated
@@ -199,7 +201,7 @@ def bulk_remove_tag(user_id, guest_ids, tag_name):
             log_action(user_id, "untagged_guest", "guest", guest.id, f"You removed tag {tag_name} from {guest.full_name}")
         updated.append({
             "id": guest.id,
-            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
+            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags if not t.deleted_at],
         })
     db.session.commit()
     return updated

@@ -70,4 +70,4 @@ def delete_tag(tag_id):
     user = get_api_user()
     tag = tag_service.get_owned_tag_or_404(tag_id, user.id)
     tag_service.delete_tag(tag, user.id)
-    return api_success(), 204
+    return '', 204

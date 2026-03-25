@@ -30,7 +30,7 @@
 <span id="last-edited-value" style="display:none">{{ event.date_edited.strftime('%d %B %Y at %H:%M') if event.date_edited else '—' }}</span>
 
 <!-- Attendance Summary -->
-{% set all_inv = event.invitations %}
+{% set all_inv = event.invitations|rejectattr('guest.deleted_at')|list %}
 {% set male_inv = all_inv|selectattr('guest.gender', 'equalto', 'Male')|list %}
 {% set female_inv = all_inv|selectattr('guest.gender', 'equalto', 'Female')|list %}
 <div class="collapsible section">
@@ -99,7 +99,7 @@
 <div class="collapsible section">
     <div class="collapsible-header">
         <span class="collapse-icon">▼</span>
-        <h2 id="guest-list-heading">Guest List ({{ event.invitations|length }})</h2>
+        <h2 id="guest-list-heading">Guest List ({{ event.invitations|rejectattr('guest.deleted_at')|list|length }})</h2>
     </div>
     <div class="collapsible-body">
         <div class="sticky-controls">
@@ -189,7 +189,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% if not event.invitations %}
+                {% if not event.invitations|rejectattr('guest.deleted_at')|list %}
                 <tr id="guest-empty-row">
                     <td colspan="8">
                         <div class="empty-state empty-state-inline">
@@ -200,10 +200,10 @@
                     </td>
                 </tr>
                 {% endif %}
-                {% for inv in event.invitations %}
+                {% for inv in event.invitations if not inv.guest.deleted_at %}
                 <tr data-inv-id="{{ inv.id }}" data-guest-id="{{ inv.guest.id }}"
                     data-gender="{{ inv.guest.gender }}"
-                    data-tags="{{ inv.guest.tags|map(attribute='id')|join(',') }}"
+                    data-tags="{{ inv.guest.tags|rejectattr('deleted_at')|map(attribute='id')|join(',') }}"
                     data-sent="{{ 'true' if inv.status != 'Not Sent' else 'false' }}"
                     data-date-invited="{{ inv.date_invited.strftime('%d %b %Y') if inv.date_invited else '' }}"
                     data-date-invited-iso="{{ inv.date_invited.isoformat() if inv.date_invited else '' }}"
@@ -232,7 +232,7 @@
                                value="{{ inv.notes or '' }}" placeholder="Invite note..." autocomplete="off">
                     </td>
                     <td class="col-expand">{{ inv.guest.notes or '' }}</td>
-                    <td class="col-expand">{% for tag in inv.guest.tags %}<span class="tag-badge" style="background:{{ tag.color }}">{{ tag.name }}</span> {% endfor %}</td>
+                    <td class="col-expand">{% for tag in inv.guest.tags if not tag.deleted_at %}<span class="tag-badge" style="background:{{ tag.color }}">{{ tag.name }}</span> {% endfor %}</td>
                     <td>
                         <div class="kebab-wrapper">
                             <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>

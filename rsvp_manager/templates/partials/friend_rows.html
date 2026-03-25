@@ -6,7 +6,7 @@
     data-created="{{ guest.date_created.isoformat() if guest.date_created else '' }}"
     data-is-me="{{ 'true' if guest.is_me else 'false' }}"
     data-is-archived="{{ 'true' if guest.is_archived else 'false' }}"
-    data-tags="{{ guest.tags|map(attribute='id')|join(',') }}"
+    data-tags="{{ guest.tags|rejectattr('deleted_at')|map(attribute='id')|join(',') }}"
     class="{{ 'archived-row' if guest.is_archived else '' }}">
     <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
     <td><textarea class="inline-edit ge-first" rows="1" data-guest-id="{{ guest.id }}">{{ guest.first_name }}</textarea></td>
@@ -18,7 +18,7 @@
         </select>
     </td>
     <td class="col-expand-mobile"><input type="text" class="inline-edit ge-notes" autocomplete="off" value="{{ guest.notes or '' }}" placeholder="Add notes" data-guest-id="{{ guest.id }}"></td>
-    <td class="col-expand ge-tags-cell">{% for tag in guest.tags %}<span class="tag-badge" style="background:{{ tag.color }}">{{ tag.name }}</span> {% endfor %}</td>
+    <td class="col-expand ge-tags-cell">{% for tag in guest.tags if not tag.deleted_at %}<span class="tag-badge" style="background:{{ tag.color }}">{{ tag.name }}</span> {% endfor %}</td>
     <td>
         <div class="kebab-wrapper">
             <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>

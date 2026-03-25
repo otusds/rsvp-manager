@@ -72,7 +72,7 @@ def update_field(invitation, field, value):
 
 def get_available_guests(event, user_id):
     invited_ids = {inv.guest_id for inv in event.invitations}
-    all_guests = Guest.query.filter_by(user_id=user_id).order_by(
+    all_guests = Guest.query.filter_by(user_id=user_id).filter(Guest.deleted_at.is_(None)).order_by(
         Guest.first_name, Guest.last_name
     ).all()
     result = []
@@ -81,7 +81,7 @@ def get_available_guests(event, user_id):
             "id": g.id, "first_name": g.first_name, "last_name": g.last_name or "",
             "gender": g.gender, "already_invited": g.id in invited_ids,
             "is_archived": g.is_archived,
-            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in g.tags],
+            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in g.tags if not t.deleted_at],
         })
     return result
 
@@ -93,7 +93,8 @@ def bulk_add_guests(event, guest_ids, user_id):
         return []
     guests_by_id = {
         g.id: g for g in Guest.query.filter(
-            Guest.id.in_(new_ids), Guest.user_id == user_id
+            Guest.id.in_(new_ids), Guest.user_id == user_id,
+            Guest.deleted_at.is_(None)
         ).all()
     }
     added = []
@@ -111,7 +112,7 @@ def bulk_add_guests(event, guest_ids, user_id):
             "first_name": guest.first_name, "last_name": guest.last_name or "",
             "gender": guest.gender, "status": "Not Sent",
             "notes": "", "guest_notes": guest.notes or "",
-            "guest_tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
+            "guest_tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags if not t.deleted_at],
             "date_invited": "", "date_invited_iso": "",
             "date_responded": "", "date_responded_iso": ""
         })
@@ -134,7 +135,7 @@ def get_event_guests_with_status(source_event, current_event, user_id):
             "status": inv.status,
             "already_invited": guest.id in current_invited_ids,
             "is_archived": guest.is_archived,
-            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
+            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags if not t.deleted_at],
         })
     return result
 

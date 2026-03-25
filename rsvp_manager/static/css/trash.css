@@ -1,0 +1,79 @@
+/* ── Trash / Recently Deleted ─────────────────────────────────────────────── */
+.trash-hint {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1.25rem;
+}
+
+.trash-section {
+    margin-bottom: 1.5rem;
+}
+
+.trash-section h2 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.trash-list {
+    background: var(--color-surface);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.trash-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.trash-item:last-child {
+    border-bottom: none;
+}
+
+.trash-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.trash-item-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.trash-item-meta {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+}
+
+.trash-item-date {
+    font-size: 0.72rem;
+    color: var(--color-placeholder);
+}
+
+.trash-item-actions {
+    display: flex;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .trash-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .trash-item-actions {
+        align-self: flex-end;
+    }
+}

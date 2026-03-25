@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-row">
+    <h1>Recently Deleted</h1>
+</div>
+
+{% if total == 0 %}
+<div class="empty-state">
+    <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    <p class="empty-state-title">Trash is empty</p>
+    <p class="empty-state-sub">Deleted items will appear here for 30 days before being permanently removed.</p>
+</div>
+{% else %}
+<p class="trash-hint">Items are permanently deleted after 30 days.</p>
+
+{% if items.events %}
+<div class="trash-section">
+    <h2>Events ({{ items.events|length }})</h2>
+    <div class="trash-list">
+        {% for event in items.events %}
+        <div class="trash-item" data-type="event" data-id="{{ event.id }}">
+            <div class="trash-item-info">
+                <span class="trash-item-name">{{ event.name }}</span>
+                <span class="trash-item-meta">{{ event.event_type }} · {{ event.date.strftime('%d %b %Y') }} · {{ event.invitations|length }} guest{{ 's' if event.invitations|length != 1 }}</span>
+                <span class="trash-item-date">Deleted {{ event.deleted_at.strftime('%d %b %Y') }}</span>
+            </div>
+            <div class="trash-item-actions">
+                <button type="button" class="btn btn-small btn-secondary trash-restore-btn">Restore</button>
+                <button type="button" class="btn btn-small btn-danger trash-purge-btn">Delete Forever</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if items.guests %}
+<div class="trash-section">
+    <h2>Friends ({{ items.guests|length }})</h2>
+    <div class="trash-list">
+        {% for guest in items.guests %}
+        <div class="trash-item" data-type="guest" data-id="{{ guest.id }}">
+            <div class="trash-item-info">
+                <span class="trash-item-name">{{ guest.full_name }}</span>
+                <span class="trash-item-meta">{{ guest.gender }} · {{ guest.invitations|length }} invitation{{ 's' if guest.invitations|length != 1 }}</span>
+                <span class="trash-item-date">Deleted {{ guest.deleted_at.strftime('%d %b %Y') }}</span>
+            </div>
+            <div class="trash-item-actions">
+                <button type="button" class="btn btn-small btn-secondary trash-restore-btn">Restore</button>
+                <button type="button" class="btn btn-small btn-danger trash-purge-btn">Delete Forever</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if items.tags %}
+<div class="trash-section">
+    <h2>Tags ({{ items.tags|length }})</h2>
+    <div class="trash-list">
+        {% for tag in items.tags %}
+        <div class="trash-item" data-type="tag" data-id="{{ tag.id }}">
+            <div class="trash-item-info">
+                <span class="trash-item-name"><span class="tag-color-dot-sm" style="background:{{ tag.color }}"></span> {{ tag.name }}</span>
+                <span class="trash-item-meta">{{ tag.guests|length }} friend{{ 's' if tag.guests|length != 1 }}</span>
+                <span class="trash-item-date">Deleted {{ tag.deleted_at.strftime('%d %b %Y') }}</span>
+            </div>
+            <div class="trash-item-actions">
+                <button type="button" class="btn btn-small btn-secondary trash-restore-btn">Restore</button>
+                <button type="button" class="btn btn-small btn-danger trash-purge-btn">Delete Forever</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

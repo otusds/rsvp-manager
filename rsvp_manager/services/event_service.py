@@ -10,7 +10,7 @@ EVENTS_PER_PAGE = 20
 
 
 def get_user_events(user_id, page=1):
-    return Event.query.filter_by(user_id=user_id).options(
+    return Event.query.filter_by(user_id=user_id).filter(Event.deleted_at.is_(None)).options(
         joinedload(Event.invitations)
     ).order_by(Event.date.desc()).paginate(
         page=page, per_page=EVENTS_PER_PAGE, error_out=False
@@ -20,7 +20,7 @@ def get_user_events(user_id, page=1):
 def get_owned_event_or_404(event_id, user_id):
     event = Event.query.options(
         joinedload(Event.invitations).joinedload(Invitation.guest).joinedload(Guest.tags),
-    ).filter_by(id=event_id).first()
+    ).filter_by(id=event_id).filter(Event.deleted_at.is_(None)).first()
     if not event:
         abort(404)
     if event.user_id != user_id:
@@ -30,13 +30,14 @@ def get_owned_event_or_404(event_id, user_id):
 
 def get_user_locations(user_id):
     rows = db.session.query(Event.location).filter(
-        Event.user_id == user_id, Event.location.isnot(None), Event.location != ""
+        Event.user_id == user_id, Event.location.isnot(None), Event.location != "",
+        Event.deleted_at.is_(None)
     ).distinct().order_by(Event.location).all()
     return [r[0] for r in rows]
 
 
 def check_me_exists(user_id):
-    return Guest.query.filter_by(user_id=user_id, is_me=True).first() is not None
+    return Guest.query.filter_by(user_id=user_id, is_me=True).filter(Guest.deleted_at.is_(None)).first() is not None
 
 
 
@@ -73,7 +74,7 @@ def create_event(user_id, form_data):
     db.session.commit()
 
     if form_data.get("include_me"):
-        me = Guest.query.filter_by(user_id=user_id, is_me=True).first()
+        me = Guest.query.filter_by(user_id=user_id, is_me=True).filter(Guest.deleted_at.is_(None)).first()
         if me:
             inv = Invitation(
                 event_id=event.id, guest_id=me.id,
@@ -102,14 +103,15 @@ def update_event(event, form_data):
 
 def delete_event(event):
     log_action(event.user_id, "deleted_event", "event", event.id, f"You deleted event {event.name}")
-    db.session.delete(event)
+    event.deleted_at = datetime.now(timezone.utc)
     db.session.commit()
 
 
 def get_user_events_for_selector(user_id, exclude_event_id):
     events = Event.query.filter(
         Event.user_id == user_id,
-        Event.id != exclude_event_id
+        Event.id != exclude_event_id,
+        Event.deleted_at.is_(None)
     ).order_by(Event.date.desc()).all()
     return [{
         "id": e.id,
