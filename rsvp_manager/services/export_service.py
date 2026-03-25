@@ -87,11 +87,11 @@ def export_event_guests_text(event):
     pending.sort(key=str.lower)
 
     lines = []
-    lines.append(f"📋 {event.name}")
+    lines.append(f"🎉 {event.name}")
     lines.append(f"📅 {event.date.strftime('%d %B %Y')}")
     if event.location:
         lines.append(f"📍 {event.location}")
-    lines.append(f"✅ {len(attending)} attending · ⏳ {len(pending)} pending")
+    lines.append(f"✅ {len(attending)} attending · 🔔 {len(pending)} pending")
     lines.append("")
 
     if attending:
@@ -103,7 +103,7 @@ def export_event_guests_text(event):
     if pending:
         lines.append("— Pending —")
         for name in pending:
-            lines.append(f"• {name} (pending)")
+            lines.append(f"• {name}")
         lines.append("")
 
     text = "\n".join(lines)
