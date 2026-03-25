@@ -327,10 +327,9 @@ select.status-declined {
     background: var(--color-surface);
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    min-width: 180px;
+    min-width: 200px;
     z-index: 50;
     overflow: hidden;
-    white-space: nowrap;
 }
 
 .kebab-menu.open { display: block; }
