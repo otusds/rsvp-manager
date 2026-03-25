@@ -13,7 +13,7 @@
     background: var(--color-surface);
     border: none;
     border-radius: 16px;
-    padding: 24px;
+    padding: 12px 24px;
     text-decoration: none;
     color: var(--color-text);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
@@ -95,8 +95,8 @@
 .rsvp-bar {
     grid-column: 1 / -1;
     display: flex;
-    height: 20px;
-    border-radius: 6px;
+    height: 15px;
+    border-radius: 5px;
     overflow: hidden;
     margin-top: 0.4rem;
 }
