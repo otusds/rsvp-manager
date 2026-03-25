@@ -98,6 +98,9 @@
     padding: 0.2rem 0.5rem;
     height: auto;
 }
+.summary-table th:nth-child(2) { color: var(--color-success-dark); background: rgba(52,199,89,0.08); }
+.summary-table th:nth-child(3) { color: var(--color-warning-dark); background: rgba(255,149,0,0.08); }
+.summary-table th:nth-child(4) { color: var(--color-danger-dark); background: rgba(255,59,48,0.08); }
 
 .summary-table td {
     text-align: center;
