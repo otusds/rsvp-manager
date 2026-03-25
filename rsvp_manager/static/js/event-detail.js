@@ -88,8 +88,6 @@ document.addEventListener("DOMContentLoaded", function () {
             if (attBar) { attBar.style.width = attPct + "%"; attBar.innerHTML = "<span>" + attPct + "%</span>"; }
             if (pendBar) { pendBar.style.width = pendPct + "%"; pendBar.innerHTML = "<span>" + pendPct + "%</span>"; }
             if (declBar) { declBar.style.width = declPct + "%"; declBar.innerHTML = "<span>" + declPct + "%</span>"; }
-            var invVal = document.getElementById("invited-bar-value");
-            if (invVal) invVal.textContent = invited + " invited";
         }
 
         // Update guest list heading count
