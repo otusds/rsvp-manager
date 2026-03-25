@@ -47,7 +47,7 @@ def create_app(config_class=Config):
     login_manager.login_view = "auth.login"
     login_manager.login_message = None
 
-    from rsvp_manager.blueprints import auth, events, friends, invitations, exports, settings, history, errors
+    from rsvp_manager.blueprints import auth, events, friends, invitations, exports, settings, history, tags, errors
     app.register_blueprint(auth.bp)
     app.register_blueprint(events.bp)
     app.register_blueprint(friends.bp)
@@ -55,6 +55,7 @@ def create_app(config_class=Config):
     app.register_blueprint(exports.bp)
     app.register_blueprint(settings.bp)
     app.register_blueprint(history.bp)
+    app.register_blueprint(tags.bp)
     app.register_blueprint(errors.bp)
 
     from rsvp_manager.blueprints.api import api_bp

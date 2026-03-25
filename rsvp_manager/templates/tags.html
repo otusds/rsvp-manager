@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-row">
+    <h1>Tags <span class="tag-count-label">({{ tags|length }})</span></h1>
+    <div class="btn-group">
+        <button type="button" class="btn" id="add-tag-btn"><span class="btn-label-full">+ New Tag</span><span class="btn-label-short">+</span></button>
+    </div>
+</div>
+
+{% if tags %}
+<div class="table-scroll">
+<table id="tags-table">
+    <thead>
+        <tr>
+            <th class="col-tag-color">Color</th>
+            <th>Name</th>
+            <th class="center">Friends</th>
+            <th class="col-kebab"><span class="col-expand">Action</span></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tag in tags %}
+        <tr data-tag-id="{{ tag.id }}">
+            <td class="center col-tag-color">
+                <button type="button" class="tag-color-dot" style="background:{{ tag.color }}" data-tag-id="{{ tag.id }}" title="Change color"></button>
+            </td>
+            <td>
+                <textarea class="inline-edit tag-name-input" rows="1" data-tag-id="{{ tag.id }}">{{ tag.name }}</textarea>
+            </td>
+            <td class="center">{{ tag.guests|length }}</td>
+            <td>
+                <div class="kebab-wrapper">
+                    <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>
+                    <div class="kebab-menu">
+                        <button type="button" class="tag-delete-btn kebab-danger" data-tag-id="{{ tag.id }}" data-tag-name="{{ tag.name }}" data-guest-count="{{ tag.guests|length }}"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Delete</button>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<div class="empty-state">
+    <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    <p class="empty-state-title">No tags yet</p>
+    <p class="empty-state-sub">Create tags to organize your friends into groups.</p>
+    <button type="button" class="btn" id="add-tag-btn-empty">+ New Tag</button>
+</div>
+{% endif %}
+
+<!-- Color picker popover -->
+<div class="tag-color-picker" id="tag-color-picker" style="display:none">
+    {% for c in tag_colors %}
+    <button type="button" class="tag-color-option" data-color="{{ c }}" style="background:{{ c }}" title="{{ c }}"></button>
+    {% endfor %}
+</div>
+
+<!-- Add Tag modal -->
+<div class="detail-overlay" id="add-tag-overlay" style="display:none">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <span class="modal-title">New Tag</span>
+            <button type="button" class="detail-close" id="add-tag-close">&times;</button>
+        </div>
+        <div class="detail-card-body">
+            <form class="form modal-form" id="add-tag-form">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="new-tag-name">Tag Name</label>
+                        <input type="text" id="new-tag-name" required maxlength="50" placeholder="e.g. Family, Work, Cycling...">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Color</label>
+                        <div class="tag-color-picker-inline" id="new-tag-color-picker">
+                            {% for c in tag_colors %}
+                            <button type="button" class="tag-color-option{{ ' selected' if loop.first }}" data-color="{{ c }}" style="background:{{ c }}" title="{{ c }}"></button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Create Tag</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
