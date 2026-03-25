@@ -721,3 +721,18 @@ tr[data-is-me="true"] td {
 .guest-name-cell {
     font-weight: 500;
 }
+
+/* ── Export text modal ───────────────────────────────────────────────────── */
+.export-text-area {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 0.75rem;
+    resize: vertical;
+    color: var(--color-text);
+    background: var(--color-bg-secondary);
+    margin-bottom: 0.75rem;
+}

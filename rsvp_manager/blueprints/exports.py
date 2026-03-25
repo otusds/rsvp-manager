@@ -27,3 +27,10 @@ def export_friends():
 def export_event_guests(event_id):
     event = event_service.get_owned_event_or_404(event_id, current_user.id)
     return export_service.export_event_guests_xlsx(event)
+
+
+@bp.route("/export/event/<int:event_id>/text")
+@login_required
+def export_event_guests_text(event_id):
+    event = event_service.get_owned_event_or_404(event_id, current_user.id)
+    return export_service.export_event_guests_text(event)

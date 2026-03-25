@@ -1103,6 +1103,39 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // ── Export to Text ─────────────────────────────────────────────────
+    var exportTextBtn = document.getElementById("export-text-btn");
+    var exportTextOverlay = document.getElementById("export-text-overlay");
+    var exportTextClose = document.getElementById("export-text-close");
+    var exportTextContent = document.getElementById("export-text-content");
+    var exportTextCopy = document.getElementById("export-text-copy");
+
+    if (exportTextBtn && exportTextOverlay) {
+        exportTextBtn.addEventListener("click", function () {
+            var menu = exportTextBtn.closest(".kebab-menu");
+            if (menu) menu.classList.remove("open");
+            var eventId = document.getElementById("invitations-table").getAttribute("data-event-id");
+            fetch("/export/event/" + eventId + "/text")
+                .then(function (r) { return r.text(); })
+                .then(function (text) {
+                    exportTextContent.value = text;
+                    exportTextOverlay.style.display = "flex";
+                    exportTextContent.select();
+                });
+        });
+        exportTextClose.addEventListener("click", function () { exportTextOverlay.style.display = "none"; });
+        exportTextOverlay.addEventListener("click", function (e) {
+            if (e.target === exportTextOverlay) exportTextOverlay.style.display = "none";
+        });
+        exportTextCopy.addEventListener("click", function () {
+            exportTextContent.select();
+            navigator.clipboard.writeText(exportTextContent.value).then(function () {
+                exportTextCopy.textContent = "Copied!";
+                setTimeout(function () { exportTextCopy.textContent = "Copy to Clipboard"; }, 2000);
+            });
+        });
+    }
+
     // ── Friends Picker ────────────────────────────────────────────────
     var selectFromDbBtn = document.getElementById("select-from-db-btn");
     var friendsOverlay = document.getElementById("friends-overlay");
