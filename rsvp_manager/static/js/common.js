@@ -9,6 +9,9 @@ document.addEventListener("DOMContentLoaded", function () {
         options = options || {};
         options.headers = options.headers || {};
         options.headers["X-CSRFToken"] = csrfToken;
+        if (options.body && typeof options.body === "string" && !options.headers["Content-Type"]) {
+            options.headers["Content-Type"] = "application/json";
+        }
         return fetch(url, options);
     };
 

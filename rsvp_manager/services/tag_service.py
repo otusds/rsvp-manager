@@ -1,11 +1,75 @@
+import re
 from flask import abort
 from rsvp_manager.extensions import db
-from rsvp_manager.models import Tag
+from rsvp_manager.models import Tag, guest_tags
 from rsvp_manager.services.history_service import log_action
 
 
 def get_user_tags(user_id):
     return Tag.query.filter_by(user_id=user_id).order_by(Tag.name).all()
+
+
+def get_owned_tag_or_404(tag_id, user_id):
+    tag = db.session.get(Tag, tag_id)
+    if not tag or tag.user_id != user_id:
+        abort(404)
+    return tag
+
+
+def rename_tag(tag, user_id, new_name):
+    new_name = new_name.strip()
+    if not new_name or len(new_name) > 50:
+        abort(400, description="Tag name must be 1-50 characters")
+    existing = Tag.query.filter(
+        Tag.user_id == user_id,
+        db.func.lower(Tag.name) == new_name.lower(),
+        Tag.id != tag.id,
+    ).first()
+    if existing:
+        abort(400, description="A tag with that name already exists")
+    old_name = tag.name
+    tag.name = new_name
+    db.session.commit()
+    log_action(user_id, "renamed_tag", "tag", tag.id, f"You renamed tag '{old_name}' to '{new_name}'")
+    return tag
+
+
+def update_tag_color(tag, color):
+    if color:
+        if not re.match(r'^#[0-9A-Fa-f]{6}$', color):
+            abort(400, description="Invalid color format")
+        tag._color = color
+    else:
+        tag._color = None
+    db.session.commit()
+    return tag
+
+
+def delete_tag(tag, user_id):
+    name = tag.name
+    db.session.execute(guest_tags.delete().where(guest_tags.c.tag_id == tag.id))
+    db.session.delete(tag)
+    db.session.commit()
+    log_action(user_id, "deleted_tag", "tag", tag.id, f"You deleted tag '{name}'")
+
+
+def merge_tags(source_tag, target_tag, user_id):
+    """Merge source_tag into target_tag: move all guests, then delete source."""
+    if source_tag.id == target_tag.id:
+        abort(400, description="Cannot merge a tag into itself")
+    source_name = source_tag.name
+    target_name = target_tag.name
+    # Move guests from source to target (skip if already tagged with target)
+    for guest in list(source_tag.guests):
+        if target_tag not in guest.tags:
+            guest.tags.append(target_tag)
+        guest.tags.remove(source_tag)
+    # Delete the source tag
+    db.session.delete(source_tag)
+    db.session.commit()
+    log_action(user_id, "merged_tag", "tag", target_tag.id,
+               f"You merged tag '{source_name}' into '{target_name}'")
+    return target_tag
 
 
 def get_or_create_tag(user_id, tag_name):

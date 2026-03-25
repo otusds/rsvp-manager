@@ -77,6 +77,7 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
     name = db.Column(db.String(50), nullable=False)
+    _color = db.Column("color", db.String(7), nullable=True)
     __table_args__ = (db.UniqueConstraint('user_id', 'name', name='uq_user_tag_name'),)
 
     TAG_COLORS = [
@@ -86,7 +87,7 @@ class Tag(db.Model):
 
     @property
     def color(self):
-        return self.TAG_COLORS[self.id % len(self.TAG_COLORS)]
+        return self._color or self.TAG_COLORS[self.id % len(self.TAG_COLORS)]
 
     def __repr__(self):
         return f"<Tag {self.id} {self.name!r}>"
