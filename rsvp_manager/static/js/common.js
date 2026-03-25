@@ -53,9 +53,20 @@ document.addEventListener("DOMContentLoaded", function () {
             if (isInTable && !menu.classList.contains("open")) {
                 var rect = btn.getBoundingClientRect();
                 menu.style.position = "fixed";
-                menu.style.top = rect.bottom + 4 + "px";
                 menu.style.right = (window.innerWidth - rect.right) + "px";
                 menu.style.left = "auto";
+                // Show briefly offscreen to measure height
+                menu.style.visibility = "hidden";
+                menu.classList.add("open");
+                var menuH = menu.offsetHeight;
+                menu.classList.remove("open");
+                menu.style.visibility = "";
+                // Open upward if it would overflow the viewport bottom
+                if (rect.bottom + 4 + menuH > window.innerHeight) {
+                    menu.style.top = (rect.top - menuH - 4) + "px";
+                } else {
+                    menu.style.top = rect.bottom + 4 + "px";
+                }
             } else if (menu.classList.contains("open")) {
                 menu.style.position = "";
                 menu.style.top = "";
