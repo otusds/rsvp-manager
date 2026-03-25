@@ -34,4 +34,4 @@ def permanently_delete_item(entity_type, entity_id):
     result = delete_fn(entity_id, user.id)
     if not result:
         return api_error("Item not found in trash", status_code=404)
-    return api_success(), 204
+    return '', 204

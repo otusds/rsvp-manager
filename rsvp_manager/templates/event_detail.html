@@ -30,7 +30,7 @@
 <span id="last-edited-value" style="display:none">{{ event.date_edited.strftime('%d %B %Y at %H:%M') if event.date_edited else '—' }}</span>
 
 <!-- Attendance Summary -->
-{% set all_inv = event.invitations %}
+{% set all_inv = event.invitations|rejectattr('guest.deleted_at')|list %}
 {% set male_inv = all_inv|selectattr('guest.gender', 'equalto', 'Male')|list %}
 {% set female_inv = all_inv|selectattr('guest.gender', 'equalto', 'Female')|list %}
 <div class="collapsible section">
@@ -99,7 +99,7 @@
 <div class="collapsible section">
     <div class="collapsible-header">
         <span class="collapse-icon">▼</span>
-        <h2 id="guest-list-heading">Guest List ({{ event.invitations|length }})</h2>
+        <h2 id="guest-list-heading">Guest List ({{ event.invitations|rejectattr('guest.deleted_at')|list|length }})</h2>
     </div>
     <div class="collapsible-body">
         <div class="sticky-controls">
@@ -189,7 +189,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% if not event.invitations %}
+                {% if not event.invitations|rejectattr('guest.deleted_at')|list %}
                 <tr id="guest-empty-row">
                     <td colspan="8">
                         <div class="empty-state empty-state-inline">
@@ -200,7 +200,7 @@
                     </td>
                 </tr>
                 {% endif %}
-                {% for inv in event.invitations %}
+                {% for inv in event.invitations if not inv.guest.deleted_at %}
                 <tr data-inv-id="{{ inv.id }}" data-guest-id="{{ inv.guest.id }}"
                     data-gender="{{ inv.guest.gender }}"
                     data-tags="{{ inv.guest.tags|map(attribute='id')|join(',') }}"

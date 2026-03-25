@@ -1,7 +1,8 @@
 {% for event in events %}
-{% set attending = event.invitations|selectattr('status', 'equalto', 'Attending')|list|length %}
-{% set pending = event.invitations|selectattr('status', 'equalto', 'Pending')|list|length %}
-{% set declined = event.invitations|selectattr('status', 'equalto', 'Declined')|list|length %}
+{% set active_inv = event.invitations|rejectattr('guest.deleted_at')|list %}
+{% set attending = active_inv|selectattr('status', 'equalto', 'Attending')|list|length %}
+{% set pending = active_inv|selectattr('status', 'equalto', 'Pending')|list|length %}
+{% set declined = active_inv|selectattr('status', 'equalto', 'Declined')|list|length %}
 {% set total = attending + pending + declined %}
 <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="event-row-card"
    data-name="{{ event.name|lower }}"

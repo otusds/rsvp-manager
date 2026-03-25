@@ -195,13 +195,6 @@ document.addEventListener("DOMContentLoaded", function () {
         var kebabBtn = row.querySelector(".kebab-btn");
         if (kebabBtn) window.attachKebabListener(kebabBtn);
 
-        // Confirm dialogs
-        row.querySelectorAll("form[data-confirm]").forEach(function (form) {
-            form.addEventListener("submit", function (e) {
-                if (!confirm(form.getAttribute("data-confirm"))) e.preventDefault();
-            });
-        });
-
         // Name editing
         row.querySelectorAll(".ge-first, .ge-last").forEach(function (input) {
             input.addEventListener("blur", function () {
