@@ -73,6 +73,11 @@ def create_app(config_class=Config):
     def health():
         return jsonify({"status": "ok"})
 
+    @app.route("/offline")
+    def offline():
+        from flask import render_template
+        return render_template("offline.html")
+
     @app.after_request
     def set_security_headers(response):
         response.headers["X-Content-Type-Options"] = "nosniff"

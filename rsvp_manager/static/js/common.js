@@ -1,3 +1,8 @@
+// ── Service Worker registration ───────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/static/sw.js');
+}
+
 document.addEventListener("DOMContentLoaded", function () {
 
     // ── CSRF helper ─────────────────────────────────────────────────────────
