@@ -81,7 +81,7 @@ def get_available_guests(event, user_id):
             "id": g.id, "first_name": g.first_name, "last_name": g.last_name or "",
             "gender": g.gender, "already_invited": g.id in invited_ids,
             "is_archived": g.is_archived,
-            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in g.tags],
+            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in g.tags if not t.deleted_at],
         })
     return result
 
@@ -112,7 +112,7 @@ def bulk_add_guests(event, guest_ids, user_id):
             "first_name": guest.first_name, "last_name": guest.last_name or "",
             "gender": guest.gender, "status": "Not Sent",
             "notes": "", "guest_notes": guest.notes or "",
-            "guest_tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
+            "guest_tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags if not t.deleted_at],
             "date_invited": "", "date_invited_iso": "",
             "date_responded": "", "date_responded_iso": ""
         })
@@ -135,7 +135,7 @@ def get_event_guests_with_status(source_event, current_event, user_id):
             "status": inv.status,
             "already_invited": guest.id in current_invited_ids,
             "is_archived": guest.is_archived,
-            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
+            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags if not t.deleted_at],
         })
     return result
 

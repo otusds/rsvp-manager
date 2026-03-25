@@ -178,7 +178,7 @@ def bulk_add_tag(user_id, guest_ids, tag_name):
             log_action(user_id, "tagged_guest", "guest", guest.id, f"You tagged {guest.full_name} as {tag_name}")
         updated.append({
             "id": guest.id,
-            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
+            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags if not t.deleted_at],
         })
     db.session.commit()
     return updated
@@ -201,7 +201,7 @@ def bulk_remove_tag(user_id, guest_ids, tag_name):
             log_action(user_id, "untagged_guest", "guest", guest.id, f"You removed tag {tag_name} from {guest.full_name}")
         updated.append({
             "id": guest.id,
-            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
+            "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags if not t.deleted_at],
         })
     db.session.commit()
     return updated

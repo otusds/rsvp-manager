@@ -87,7 +87,7 @@ def serialize_friend(guest):
         "full_name": guest.full_name,
         "date_created": guest.date_created.isoformat() if guest.date_created else None,
         "date_edited": guest.date_edited.isoformat() if guest.date_edited else None,
-        "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags],
+        "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags if not t.deleted_at],
         "invitation_summary": {
             "invited": invited,
             "attending": attending,
@@ -130,7 +130,7 @@ def serialize_invitation_brief(inv):
         "status": inv.status,
         "notes": inv.notes or "",
         "guest_notes": inv.guest.notes or "",
-        "guest_tags": [{"id": t.id, "name": t.name, "color": t.color} for t in inv.guest.tags],
+        "guest_tags": [{"id": t.id, "name": t.name, "color": t.color} for t in inv.guest.tags if not t.deleted_at],
         "date_invited": inv.date_invited.strftime("%d %b %Y") if inv.date_invited else "",
         "date_invited_iso": inv.date_invited.isoformat() if inv.date_invited else "",
         "date_responded": inv.date_responded.strftime("%d %b %Y") if inv.date_responded else "",
