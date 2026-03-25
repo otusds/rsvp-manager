@@ -184,12 +184,12 @@
         font-size: 0.82rem !important;
     }
     .status-select {
-        padding-left: 0.1rem;
-        padding-right: 0.7rem;
+        padding-left: 0.15rem;
+        padding-right: 0.15rem;
         text-align: center;
         text-align-last: center;
         font-size: 0.75rem !important;
-        background-position: right 0.2rem center;
+        background-image: none;
     }
     .filter-select,
     .sort-select {
