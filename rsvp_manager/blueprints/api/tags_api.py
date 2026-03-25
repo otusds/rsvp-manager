@@ -49,6 +49,21 @@ def update_tag(tag_id):
     return api_success(serialize_tag(tag))
 
 
+@api_bp.route("/tags/<int:tag_id>/merge", methods=["POST"])
+@api_auth_required
+def merge_tag(tag_id):
+    user = get_api_user()
+    source = tag_service.get_owned_tag_or_404(tag_id, user.id)
+    data = request.get_json() or {}
+    target_id = data.get("target_id")
+    if not target_id:
+        from rsvp_manager.blueprints.api import api_error
+        return api_error("target_id is required")
+    target = tag_service.get_owned_tag_or_404(target_id, user.id)
+    result = tag_service.merge_tags(source, target, user.id)
+    return api_success(serialize_tag(result))
+
+
 @api_bp.route("/tags/<int:tag_id>", methods=["DELETE"])
 @api_auth_required
 def delete_tag(tag_id):

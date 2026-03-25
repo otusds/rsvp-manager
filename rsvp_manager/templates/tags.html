@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="header-row">
-    <h1>Tags <span class="tag-count-label">({{ tags|length }})</span></h1>
+    <h1>Tag Manager <span class="tag-count-label">({{ tags|length }})</span></h1>
     <div class="btn-group">
         <button type="button" class="btn" id="add-tag-btn"><span class="btn-label-full">+ New Tag</span><span class="btn-label-short">+</span></button>
     </div>
@@ -33,6 +33,7 @@
                 <div class="kebab-wrapper">
                     <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>
                     <div class="kebab-menu">
+                        <button type="button" class="tag-merge-btn" data-tag-id="{{ tag.id }}" data-tag-name="{{ tag.name }}"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 4 20 4 20 9"/><path d="M20 4L13 11"/><polyline points="9 20 4 20 4 15"/><path d="M4 20l7-7"/></svg>Merge into...</button>
                         <button type="button" class="tag-delete-btn kebab-danger" data-tag-id="{{ tag.id }}" data-tag-name="{{ tag.name }}" data-guest-count="{{ tag.guests|length }}"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Delete</button>
                     </div>
                 </div>
@@ -87,6 +88,20 @@
                     <button type="submit" class="btn">Create Tag</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Merge Tag modal -->
+<div class="detail-overlay" id="merge-tag-overlay" style="display:none">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <span class="modal-title">Merge Tag</span>
+            <button type="button" class="detail-close" id="merge-tag-close">&times;</button>
+        </div>
+        <div class="detail-card-body">
+            <p class="merge-tag-hint" id="merge-tag-hint">Select the tag to merge into:</p>
+            <div class="merge-tag-list" id="merge-tag-list"></div>
         </div>
     </div>
 </div>

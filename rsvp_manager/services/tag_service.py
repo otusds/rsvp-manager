@@ -53,6 +53,25 @@ def delete_tag(tag, user_id):
     log_action(user_id, "deleted_tag", "tag", tag.id, f"You deleted tag '{name}'")
 
 
+def merge_tags(source_tag, target_tag, user_id):
+    """Merge source_tag into target_tag: move all guests, then delete source."""
+    if source_tag.id == target_tag.id:
+        abort(400, description="Cannot merge a tag into itself")
+    source_name = source_tag.name
+    target_name = target_tag.name
+    # Move guests from source to target (skip if already tagged with target)
+    for guest in list(source_tag.guests):
+        if target_tag not in guest.tags:
+            guest.tags.append(target_tag)
+        guest.tags.remove(source_tag)
+    # Delete the source tag
+    db.session.delete(source_tag)
+    db.session.commit()
+    log_action(user_id, "merged_tag", "tag", target_tag.id,
+               f"You merged tag '{source_name}' into '{target_name}'")
+    return target_tag
+
+
 def get_or_create_tag(user_id, tag_name):
     tag_name = tag_name.strip()
     if not tag_name or len(tag_name) > 50:
