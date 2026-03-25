@@ -102,8 +102,9 @@ class TestEdgeCases:
         r = logged_in_client.post(f"/event/{eid}/delete")
         assert r.status_code == 302
         with test_app.app_context():
-            assert db.session.get(Event,eid) is None
-            assert Invitation.query.filter_by(event_id=eid).count() == 0
+            event = db.session.get(Event, eid)
+            assert event is not None
+            assert event.deleted_at is not None
 
     def test_rapid_send_toggle(self, logged_in_client, sample_invitation):
         """Rapidly toggling send should not crash."""

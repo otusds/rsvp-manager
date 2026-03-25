@@ -154,7 +154,9 @@ class TestDeleteEvent:
         r = logged_in_client.post(f"/event/{sample_event}/delete")
         assert r.status_code == 302
         with test_app.app_context():
-            assert db.session.get(Event,sample_event) is None
+            event = db.session.get(Event, sample_event)
+            assert event is not None
+            assert event.deleted_at is not None
 
     def test_delete_event_other_user(self, logged_in_client, test_app, user2):
         with test_app.app_context():
@@ -174,7 +176,10 @@ class TestDeleteEvent:
         r = logged_in_client.post(f"/event/{sample_event}/delete")
         assert r.status_code == 302
         with test_app.app_context():
-            assert db.session.get(Invitation, sample_invitation) is None
+            event = db.session.get(Event, sample_event)
+            assert event.deleted_at is not None
+            # Invitations are preserved (soft-delete keeps related records)
+            assert db.session.get(Invitation, sample_invitation) is not None
 
     def test_delete_nonexistent(self, logged_in_client):
         r = logged_in_client.post("/event/99999/delete")

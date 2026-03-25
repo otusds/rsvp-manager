@@ -64,8 +64,8 @@
 
     /* Event guest list collapsed: precise column widths */
     #invitations-table.table-collapsed .col-kebab { width: 36px; }
-    #invitations-table.table-collapsed .col-status { width: 95px; }
-    #invitations-table.table-collapsed .col-sent { width: 72px; }
+    #invitations-table.table-collapsed .col-status { width: 90px; }
+    #invitations-table.table-collapsed .col-sent { width: 38px; padding: 0; }
     /* col-guest gets the remainder automatically via table-layout: fixed */
 
     /* Guest database collapsed: gender column with symbol */
@@ -177,6 +177,10 @@
     .status-select,
     .inline-select {
         font-size: 0.82rem !important;
+    }
+    .status-select {
+        padding-left: 0.25rem;
+        padding-right: 1rem;
     }
     .filter-select,
     .sort-select {
