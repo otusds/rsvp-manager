@@ -37,7 +37,9 @@ class TestDeleteGuest:
         r = logged_in_client.post(f"/friend/{sample_guest}/delete")
         assert r.status_code == 302
         with test_app.app_context():
-            assert db.session.get(Guest,sample_guest) is None
+            guest = db.session.get(Guest, sample_guest)
+            assert guest is not None
+            assert guest.deleted_at is not None
 
     def test_delete_guest_other_user(self, logged_in_client, test_app, user2):
         with test_app.app_context():
@@ -56,7 +58,10 @@ class TestDeleteGuest:
         r = logged_in_client.post(f"/friend/{sample_guest}/delete")
         assert r.status_code == 302
         with test_app.app_context():
-            assert db.session.get(Invitation, sample_invitation) is None
+            guest = db.session.get(Guest, sample_guest)
+            assert guest.deleted_at is not None
+            # Invitations are preserved (soft-delete keeps related records)
+            assert db.session.get(Invitation, sample_invitation) is not None
 
     def test_delete_nonexistent(self, logged_in_client):
         r = logged_in_client.post("/friend/99999/delete")
