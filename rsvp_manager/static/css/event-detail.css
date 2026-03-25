@@ -163,12 +163,14 @@
 .summary-bar-segment span {
     font-size: 0.65rem;
     font-weight: 600;
-    color: var(--color-surface);
     padding: 0 3px;
 }
-.bar-attending { background: var(--color-success-dark); }
-.bar-pending { background: var(--color-warning-dark); }
-.bar-declined { background: var(--color-danger-dark); }
+.bar-attending { background: rgba(52,199,89,0.15); }
+.bar-attending span { color: var(--color-success-dark); }
+.bar-pending { background: rgba(255,149,0,0.15); }
+.bar-pending span { color: var(--color-warning-dark); }
+.bar-declined { background: rgba(255,59,48,0.15); }
+.bar-declined span { color: var(--color-danger-dark); }
 
 .summary-bar-value {
     font-size: 0.75rem;
