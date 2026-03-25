@@ -22,8 +22,8 @@
         <span class="event-row-date">{{ event.date.strftime('%d %b %Y') }}</span>
     </div>
     <div class="event-row-stats">
-        <span class="stat">{{ total }} invited</span>
-        <span class="stat stat-attending">{{ attending }} attending</span>
+        <span class="stat"><span class="stat-number">{{ total }}</span> invited</span>
+        <span class="stat stat-attending"><span class="stat-number">{{ attending }}</span> attending</span>
     </div>
     {% if total > 0 %}
     {% set pct_attending = (attending * 100 / total)|round|int %}

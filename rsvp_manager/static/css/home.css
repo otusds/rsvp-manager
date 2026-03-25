@@ -83,6 +83,11 @@
     font-size: 0.78rem;
     color: var(--color-text-muted);
 }
+.stat-number {
+    font-size: 1.56rem;
+    font-weight: 700;
+    vertical-align: baseline;
+}
 
 .stat-attending { color: var(--color-success); font-weight: 600; }
 
