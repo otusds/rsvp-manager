@@ -20,7 +20,7 @@ th, td {
     border: none;
     border-bottom: 1px solid var(--color-border);
     padding: 0 16px;
-    height: 56px;
+    height: 34px;
     vertical-align: middle;
     text-align: left;
 }
@@ -34,7 +34,7 @@ th {
     letter-spacing: 0.06em;
     position: sticky;
     top: 0;
-    height: 44px;
+    height: 28px;
 }
 
 th:first-child { border-radius: 16px 0 0 0; }
