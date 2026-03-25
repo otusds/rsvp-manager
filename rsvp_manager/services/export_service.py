@@ -88,8 +88,6 @@ def export_event_guests_text(event):
 
     lines = []
     lines.append(f"{event.name} ({event.date.strftime('%d %B %Y')})")
-    if event.location:
-        lines.append(f"📍 {event.location}")
     lines.append(f"✅ {len(attending)} attending · 🔔 {len(pending)} pending")
     lines.append("")
 
