@@ -64,7 +64,7 @@
 
     /* Event guest list collapsed: precise column widths */
     #invitations-table.table-collapsed .col-kebab { width: 36px; }
-    #invitations-table.table-collapsed .col-status { width: 81px; }
+    #invitations-table.table-collapsed .col-status { width: 89px; }
     #invitations-table.table-collapsed .col-sent { width: 46px; padding: 0; }
     /* col-guest gets the remainder automatically via table-layout: fixed */
 
