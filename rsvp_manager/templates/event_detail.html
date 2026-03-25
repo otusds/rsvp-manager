@@ -48,7 +48,6 @@
             {% set pend_pct = ((pend_count / invited_count) * 100)|round|int if invited_count else 0 %}
             {% set decl_pct = ((decl_count / invited_count) * 100)|round|int if invited_count else 0 %}
             <div class="summary-bar-row" id="invited-bar-row">
-                <span class="summary-bar-label">RSVP Status</span>
                 <div class="summary-bar">
                     <div class="summary-bar-segment bar-attending" id="invited-bar-attending"
                          style="width: {{ att_pct }}%"><span>{{ att_pct }}%</span></div>
@@ -57,7 +56,6 @@
                     <div class="summary-bar-segment bar-declined" id="invited-bar-declined"
                          style="width: {{ decl_pct }}%"><span>{{ decl_pct }}%</span></div>
                 </div>
-                <span class="summary-bar-value" id="invited-bar-value">{{ invited_count }} invited</span>
             </div>
         </div>
         <table class="summary-table" id="summary-table">
@@ -404,10 +402,10 @@
             <span class="modal-hint">Press Enter to add another guest</span>
             <button type="button" class="btn" id="add-guest-save-btn">Save</button>
         </div>
-        <div class="add-guest-divider"><span>OR multi-select from</span></div>
+        <div class="add-guest-divider"><span>OR multi-select</span></div>
         <div class="add-guest-alt-actions">
-            <button type="button" class="btn" id="select-from-db-btn">Friends</button>
-            <button type="button" class="btn" id="add-from-events-btn">Past Events</button>
+            <button type="button" class="btn" id="select-from-db-btn">from Friends</button>
+            <button type="button" class="btn" id="add-from-events-btn">from Past Events</button>
         </div>
     </div>
 </div>

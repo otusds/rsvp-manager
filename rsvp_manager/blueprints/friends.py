@@ -13,7 +13,8 @@ def friends():
     pagination = friend_service.get_user_guests(current_user.id, page=page, show_archived=show_archived)
     if request.args.get("partial"):
         return render_template("partials/friend_rows.html", guests=pagination.items)
-    return render_template("friends.html", guests=pagination.items, pagination=pagination, show_archived=show_archived)
+    has_any_friends = friend_service.get_user_guests(current_user.id, page=1, show_archived="1").total > 0 if not pagination.items else True
+    return render_template("friends.html", guests=pagination.items, pagination=pagination, show_archived=show_archived, has_any_friends=has_any_friends)
 
 
 @bp.route("/friend/add", methods=["POST"])

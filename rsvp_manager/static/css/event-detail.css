@@ -35,7 +35,8 @@
     resize: none;
     overflow: hidden;
     line-height: 1.4;
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     min-height: 1.8em;
 }
 
@@ -98,6 +99,9 @@
     padding: 0.2rem 0.5rem;
     height: auto;
 }
+.summary-table th:nth-child(2) { color: var(--color-success-dark); background: rgba(52,199,89,0.08); }
+.summary-table th:nth-child(3) { color: var(--color-warning-dark); background: rgba(255,149,0,0.08); }
+.summary-table th:nth-child(4) { color: var(--color-danger-dark); background: rgba(255,59,48,0.08); }
 
 .summary-table td {
     text-align: center;
@@ -550,18 +554,18 @@
 }
 
 .event-guest-status.status-attending {
-    background: #DCFCE7;
-    color: #15803D;
+    background: rgba(52,199,89,0.12);
+    color: var(--color-success-dark);
 }
 
 .event-guest-status.status-pending {
-    background: #FEF9C3;
-    color: #A16207;
+    background: rgba(255,149,0,0.12);
+    color: var(--color-warning-dark);
 }
 
 .event-guest-status.status-declined {
-    background: #FFE4E6;
-    color: #BE123C;
+    background: rgba(255,59,48,0.12);
+    color: var(--color-danger-dark);
 }
 
 .event-guest-status.status-not-sent {

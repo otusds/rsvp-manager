@@ -95,10 +95,22 @@
 </table>
 </div>
 
-<p class="empty" id="no-results" style="display:none;">No friends match your filters.</p>
+<div class="empty-state" id="no-results" style="display:none;">
+    <svg class="empty-state-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+    <p class="empty-state-title">No friends match your filters</p>
+    <p class="empty-state-sub">Try adjusting your search or filters to see results.</p>
+</div>
 
 <div class="scroll-loader" id="scroll-loader" style="display:none">
     <div class="scroll-spinner"></div>
+</div>
+{% else %}
+{% if has_any_friends %}
+<div class="empty-state">
+    <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+    <p class="empty-state-title">No friends match your filters</p>
+    <p class="empty-state-sub">Try adjusting your filters to see results.</p>
+    <a href="{{ url_for('friends.friends') }}" class="btn">Clear Filters</a>
 </div>
 {% else %}
 <div class="empty-state">
@@ -107,6 +119,7 @@
     <p class="empty-state-sub">Start building your list — add your first friend!</p>
     <button type="button" class="btn" onclick="document.getElementById('open-add-guest-btn').click()">+ Add Friend</button>
 </div>
+{% endif %}
 {% endif %}
 
 <!-- Add New Friends modal -->
