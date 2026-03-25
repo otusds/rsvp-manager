@@ -47,8 +47,32 @@ document.addEventListener("DOMContentLoaded", function () {
             e.stopPropagation();
             var menu = btn.nextElementSibling;
             document.querySelectorAll(".kebab-menu.open").forEach(function (m) {
-                if (m !== menu) m.classList.remove("open");
+                if (m !== menu) { m.classList.remove("open"); m.style.position = ""; m.style.top = ""; m.style.left = ""; m.style.right = ""; }
             });
+            var isInTable = btn.closest(".table-scroll");
+            if (isInTable && !menu.classList.contains("open")) {
+                var rect = btn.getBoundingClientRect();
+                menu.style.position = "fixed";
+                menu.style.right = (window.innerWidth - rect.right) + "px";
+                menu.style.left = "auto";
+                // Show briefly offscreen to measure height
+                menu.style.visibility = "hidden";
+                menu.classList.add("open");
+                var menuH = menu.offsetHeight;
+                menu.classList.remove("open");
+                menu.style.visibility = "";
+                // Open upward if it would overflow the viewport bottom
+                if (rect.bottom + 4 + menuH > window.innerHeight) {
+                    menu.style.top = (rect.top - menuH - 4) + "px";
+                } else {
+                    menu.style.top = rect.bottom + 4 + "px";
+                }
+            } else if (menu.classList.contains("open")) {
+                menu.style.position = "";
+                menu.style.top = "";
+                menu.style.left = "";
+                menu.style.right = "";
+            }
             menu.classList.toggle("open");
         });
     };
@@ -59,6 +83,10 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("click", function () {
         document.querySelectorAll(".kebab-menu.open").forEach(function (m) {
             m.classList.remove("open");
+            m.style.position = "";
+            m.style.top = "";
+            m.style.left = "";
+            m.style.right = "";
         });
     });
 
