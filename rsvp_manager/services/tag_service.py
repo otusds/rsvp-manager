@@ -6,12 +6,12 @@ from rsvp_manager.services.history_service import log_action
 
 
 def get_user_tags(user_id):
-    return Tag.query.filter_by(user_id=user_id).order_by(Tag.name).all()
+    return Tag.query.filter_by(user_id=user_id).filter(Tag.deleted_at.is_(None)).order_by(Tag.name).all()
 
 
 def get_owned_tag_or_404(tag_id, user_id):
     tag = db.session.get(Tag, tag_id)
-    if not tag or tag.user_id != user_id:
+    if not tag or tag.user_id != user_id or tag.deleted_at is not None:
         abort(404)
     return tag
 
@@ -24,6 +24,7 @@ def rename_tag(tag, user_id, new_name):
         Tag.user_id == user_id,
         db.func.lower(Tag.name) == new_name.lower(),
         Tag.id != tag.id,
+        Tag.deleted_at.is_(None),
     ).first()
     if existing:
         abort(400, description="A tag with that name already exists")
@@ -46,9 +47,9 @@ def update_tag_color(tag, color):
 
 
 def delete_tag(tag, user_id):
+    from datetime import datetime, timezone
     name = tag.name
-    db.session.execute(guest_tags.delete().where(guest_tags.c.tag_id == tag.id))
-    db.session.delete(tag)
+    tag.deleted_at = datetime.now(timezone.utc)
     db.session.commit()
     log_action(user_id, "deleted_tag", "tag", tag.id, f"You deleted tag '{name}'")
 
@@ -79,7 +80,8 @@ def get_or_create_tag(user_id, tag_name):
 
     tag = Tag.query.filter(
         Tag.user_id == user_id,
-        db.func.lower(Tag.name) == tag_name.lower()
+        db.func.lower(Tag.name) == tag_name.lower(),
+        Tag.deleted_at.is_(None)
     ).first()
 
     if tag:

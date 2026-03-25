@@ -72,7 +72,7 @@ def update_field(invitation, field, value):
 
 def get_available_guests(event, user_id):
     invited_ids = {inv.guest_id for inv in event.invitations}
-    all_guests = Guest.query.filter_by(user_id=user_id).order_by(
+    all_guests = Guest.query.filter_by(user_id=user_id).filter(Guest.deleted_at.is_(None)).order_by(
         Guest.first_name, Guest.last_name
     ).all()
     result = []
@@ -93,7 +93,8 @@ def bulk_add_guests(event, guest_ids, user_id):
         return []
     guests_by_id = {
         g.id: g for g in Guest.query.filter(
-            Guest.id.in_(new_ids), Guest.user_id == user_id
+            Guest.id.in_(new_ids), Guest.user_id == user_id,
+            Guest.deleted_at.is_(None)
         ).all()
     }
     added = []

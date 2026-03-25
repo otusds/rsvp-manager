@@ -36,6 +36,7 @@ class Event(db.Model):
     date = db.Column(db.Date, nullable=False)
     date_created = db.Column(db.Date, nullable=True)
     date_edited = db.Column(db.DateTime, nullable=True)
+    deleted_at = db.Column(db.DateTime, nullable=True, index=True)
     notes = db.Column(db.Text, default="")
     invitations = db.relationship("Invitation", backref="event", cascade="all, delete-orphan")
 
@@ -60,6 +61,7 @@ class Guest(db.Model):
     notes = db.Column(db.Text, default="")
     date_created = db.Column(db.DateTime, nullable=True)
     date_edited = db.Column(db.DateTime, nullable=True)
+    deleted_at = db.Column(db.DateTime, nullable=True, index=True)
     invitations = db.relationship("Invitation", backref="guest", cascade="all, delete-orphan")
     tags = db.relationship("Tag", secondary=guest_tags, backref="guests")
 
@@ -78,6 +80,7 @@ class Tag(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
     name = db.Column(db.String(50), nullable=False)
     _color = db.Column("color", db.String(7), nullable=True)
+    deleted_at = db.Column(db.DateTime, nullable=True, index=True)
     __table_args__ = (db.UniqueConstraint('user_id', 'name', name='uq_user_tag_name'),)
 
     TAG_COLORS = [
