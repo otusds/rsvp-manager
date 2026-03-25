@@ -80,7 +80,8 @@ def create_app(config_class=Config):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; script-src 'self'; "
-            "style-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
         )
         if response.content_type and ("css" in response.content_type or "javascript" in response.content_type):
