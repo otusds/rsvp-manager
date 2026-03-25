@@ -94,6 +94,11 @@
     .guest-name-cell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .kebab-wrapper .kebab-btn { padding: 0.2rem 0.2rem; font-size: 1.15rem; }
 
+    /* RSVP Status header: short on mobile */
+    .col-status-full { display: none; }
+    .col-status-short { display: inline; }
+    .col-status { text-align: center; }
+
     /* Gender header: collapsed = symbol only, expanded = symbol + text */
     .col-gender-symbol { display: inline; }
     .table-collapsed .col-gender-text { display: none; }
