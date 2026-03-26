@@ -571,10 +571,32 @@ document.addEventListener("DOMContentLoaded", function () {
                 var gdAddToFriendsBtn = document.getElementById("gd-add-to-friends");
                 if (gdSaveBtn) gdSaveBtn.style.display = isViewer ? "none" : "";
                 if (gdAddToFriendsBtn) {
-                    gdAddToFriendsBtn.style.display = isOtherUsersGuest ? "" : "none";
                     gdAddToFriendsBtn.dataset.firstName = g.first_name;
                     gdAddToFriendsBtn.dataset.lastName = g.last_name || "";
                     gdAddToFriendsBtn.dataset.gender = g.gender;
+                    if (isOtherUsersGuest) {
+                        // Check if a friend with this name already exists in my list
+                        var searchName = (g.first_name + " " + (g.last_name || "")).trim().toLowerCase();
+                        window.fetchWithCsrf("/api/v1/friends?page=1")
+                            .then(function (r) { return r.json(); })
+                            .then(function (resp) {
+                                var exists = (resp.data.items || []).some(function (f) {
+                                    return (f.first_name + " " + (f.last_name || "")).trim().toLowerCase() === searchName;
+                                });
+                                gdAddToFriendsBtn.style.display = exists ? "none" : "";
+                                if (exists) {
+                                    // Show "Already in your friends" text instead
+                                    gdAddToFriendsBtn.style.display = "";
+                                    gdAddToFriendsBtn.textContent = "Already in your friends";
+                                    gdAddToFriendsBtn.disabled = true;
+                                } else {
+                                    gdAddToFriendsBtn.textContent = "+ Add to My Friends";
+                                    gdAddToFriendsBtn.disabled = false;
+                                }
+                            });
+                    } else {
+                        gdAddToFriendsBtn.style.display = "none";
+                    }
                 }
 
                 // Tags
@@ -747,17 +769,55 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
             }
 
-            // Save invitation fields (always, if invId exists)
+            // Save invitation fields (always, if invId exists and user is not viewer)
             if (invId) {
                 var invNotes = document.getElementById("gd-inv-notes").value.trim();
+                var sentToggle = document.getElementById("gd-sent-toggle");
+                var statusSelect = document.getElementById("gd-status");
+                var sentCheckbox = gdActiveRow ? gdActiveRow.querySelector(".sent-checkbox") : null;
+                var wasSent = sentCheckbox ? sentCheckbox.checked : false;
+                var nowSent = sentToggle ? sentToggle.checked : wasSent;
+
+                var invPayload = { notes: invNotes };
+
+                // Handle sent toggle change
+                if (nowSent !== wasSent) {
+                    invPayload.toggle_send = true;
+                }
+
+                // Handle status change (only if sent)
+                if (nowSent && statusSelect && !statusSelect.disabled) {
+                    invPayload.status = statusSelect.value;
+                }
+
                 promises.push(
                     window.fetchWithCsrf("/api/v1/invitations/" + invId, {
                         method: "PUT",
-                        body: JSON.stringify({ notes: invNotes })
-                    }).then(function () {
-                        if (gdActiveRow) {
+                        body: JSON.stringify(invPayload)
+                    }).then(function (res) { return res.json(); }).then(function (resp) {
+                        if (gdActiveRow && resp.data) {
+                            var d = resp.data;
+                            // Update sent checkbox
+                            if (sentCheckbox) sentCheckbox.checked = (d.status !== "Not Sent");
+                            // Update status select
+                            var tableStatus = gdActiveRow.querySelector(".status-select");
+                            if (d.status === "Not Sent") {
+                                if (tableStatus) tableStatus.closest("td").innerHTML = '<span class="status-not-sent">Not Sent</span>';
+                            } else if (tableStatus) {
+                                tableStatus.value = d.status;
+                                window.colorStatusSelect(tableStatus);
+                            }
+                            // Update data attributes
+                            gdActiveRow.setAttribute("data-sent", d.status !== "Not Sent" ? "true" : "false");
+                            gdActiveRow.setAttribute("data-date-invited", d.date_invited || "");
+                            gdActiveRow.setAttribute("data-date-invited-iso", d.date_invited_iso || "");
+                            gdActiveRow.setAttribute("data-sent-by", d.sent_by_name || "");
+                            gdActiveRow.setAttribute("data-date-responded", d.date_responded || "");
+                            gdActiveRow.setAttribute("data-date-responded-iso", d.date_responded_iso || "");
+                            gdActiveRow.setAttribute("data-status-changed-by", d.status_changed_by_name || "");
+                            // Update notes
                             var tableInput = gdActiveRow.querySelector(".inv-notes-input");
-                            if (tableInput) tableInput.value = invNotes;
+                            if (tableInput) tableInput.value = d.notes || "";
                         }
                     })
                 );

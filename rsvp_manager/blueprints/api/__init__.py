@@ -82,6 +82,15 @@ def serialize_friend(guest, viewer_user_id=None):
         from rsvp_manager.services.friend_service import get_shared_invitations
         shared = get_shared_invitations(guest, viewer_user_id)
         invitations.extend(shared)
+        # Include shared invitations in summary counts
+        for s in shared:
+            if s["status"] == "Attending":
+                attending += 1
+            elif s["status"] == "Pending":
+                pending += 1
+            elif s["status"] == "Declined":
+                declined += 1
+        invited = attending + pending + declined
     owner_name = guest.user.full_name if guest.user else ""
     return {
         "id": guest.id,
