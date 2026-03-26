@@ -42,6 +42,18 @@
     margin-bottom: 0.5rem;
 }
 
+/* ── is_me row: make fields look like plain text ─────────────────────────── */
+tr[data-is-me="true"] .inline-edit[readonly] {
+    pointer-events: none;
+    border-color: transparent;
+    background: transparent;
+    color: var(--color-text);
+}
+tr[data-is-me="true"] .inline-edit[readonly]:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
 .archived-row td { opacity: 0.5; }
 .archived-row td:last-child { opacity: 1; }
 .archived-row input, .archived-row select { color: var(--color-text-muted); }
