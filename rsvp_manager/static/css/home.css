@@ -53,21 +53,13 @@
     display: inline-block;
     font-size: 0.6rem;
     font-weight: 500;
-    color: var(--color-primary);
-    background: var(--color-primary-pale);
+    color: var(--color-text-muted);
+    background: rgba(118,118,128,0.1);
     padding: 0.05rem 0.4rem;
     border-radius: 4px;
     vertical-align: middle;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-}
-.shared-event-badge.badge-viewer {
-    color: var(--color-text-muted);
-    background: rgba(118,118,128,0.1);
-}
-.shared-event-badge.badge-shared {
-    color: var(--color-primary-dark);
-    background: rgba(16,185,129,0.1);
 }
 
 .event-row-location {

@@ -1199,7 +1199,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             return '<div class="share-member">' +
                                 '<span class="share-member-name">' + window.escapeHtml(c.name) +
                                 ' <span class="share-member-email">(' + window.escapeHtml(c.email) + ')</span></span>' +
-                                '<span class="share-member-role">' + c.role.replace('cohost', 'co-host') + '</span>' +
+                                '<span class="share-member-role">' + c.role.replace('cohost', 'Co-Host').replace('viewer', 'Viewer') + '</span>' +
                                 '<button type="button" class="share-remove-btn" data-user-id="' + c.user_id + '">&times;</button>' +
                                 '</div>';
                         }).join("");
@@ -1216,7 +1216,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         }
 
-        shareBtn.addEventListener("click", function () {
+        shareBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
             var menu = shareBtn.closest(".kebab-menu");
             if (menu) menu.classList.remove("open");
             loadShareData();
