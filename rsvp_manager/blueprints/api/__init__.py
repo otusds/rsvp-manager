@@ -82,9 +82,20 @@ def serialize_friend(guest, viewer_user_id=None):
         from rsvp_manager.services.friend_service import get_shared_invitations
         shared = get_shared_invitations(guest, viewer_user_id)
         invitations.extend(shared)
+        # Include shared invitations in summary counts
+        for s in shared:
+            if s["status"] == "Attending":
+                attending += 1
+            elif s["status"] == "Pending":
+                pending += 1
+            elif s["status"] == "Declined":
+                declined += 1
+        invited = attending + pending + declined
+    owner_name = guest.user.full_name if guest.user else ""
     return {
         "id": guest.id,
         "user_id": guest.user_id,
+        "owner_name": owner_name,
         "first_name": guest.first_name,
         "last_name": guest.last_name or "",
         "gender": guest.gender,
@@ -106,6 +117,7 @@ def serialize_friend(guest, viewer_user_id=None):
 
 
 def serialize_invitation(inv):
+    from rsvp_manager.models import User
     return {
         "id": inv.id,
         "event_id": inv.event_id,
@@ -114,8 +126,10 @@ def serialize_invitation(inv):
         "notes": inv.notes or "",
         "date_invited": inv.date_invited.strftime("%d %b %Y") if inv.date_invited else "",
         "date_invited_iso": inv.date_invited.isoformat() if inv.date_invited else "",
+        "sent_by_name": db.session.get(User, inv.sent_by).full_name if inv.sent_by else "",
         "date_responded": inv.date_responded.strftime("%d %b %Y") if inv.date_responded else "",
         "date_responded_iso": inv.date_responded.isoformat() if inv.date_responded else "",
+        "status_changed_by_name": db.session.get(User, inv.status_changed_by).full_name if inv.status_changed_by else "",
         "guest": {
             "id": inv.guest.id,
             "first_name": inv.guest.first_name,
@@ -145,8 +159,10 @@ def serialize_invitation_brief(inv):
         "guest_tags": [{"id": t.id, "name": t.name, "color": t.color} for t in inv.guest.tags if not t.deleted_at],
         "date_invited": inv.date_invited.strftime("%d %b %Y") if inv.date_invited else "",
         "date_invited_iso": inv.date_invited.isoformat() if inv.date_invited else "",
+        "sent_by_name": db.session.get(User, inv.sent_by).full_name if inv.sent_by else "",
         "date_responded": inv.date_responded.strftime("%d %b %Y") if inv.date_responded else "",
         "date_responded_iso": inv.date_responded.isoformat() if inv.date_responded else "",
+        "status_changed_by_name": db.session.get(User, inv.status_changed_by).full_name if inv.status_changed_by else "",
     }
 
 

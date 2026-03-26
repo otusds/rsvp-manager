@@ -69,14 +69,14 @@
 
 .modal-form { padding: 0; background: transparent; box-shadow: none; }
 .detail-card-body:has(.modal-form) { background: var(--color-surface); border-radius: 0 0 14px 14px; }
-.modal-form label { font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 0.25rem; }
+.modal-form label { font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 0.15rem; margin-top: 0.4rem; }
 .modal-form .form-field > .ios-toggle { margin-top: 0.25rem; margin-bottom: 0; }
-.modal-form .form-actions { margin-top: 1rem; }
+.modal-form .form-actions { margin-top: 0.75rem; }
 
 .form-row {
     display: flex;
     gap: 0.75rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.4rem;
 }
 
 .form-field {
@@ -114,6 +114,20 @@
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+}
+.form-field input[readonly],
+.form-field textarea[readonly],
+.form-field select:disabled {
+    border-color: transparent;
+    background: var(--color-bg-secondary);
+    color: var(--color-text);
+    pointer-events: none;
+}
+.form-field input[readonly]:focus,
+.form-field textarea[readonly]:focus,
+.form-field select:disabled:focus {
+    box-shadow: none;
+    border-color: transparent;
 }
 
 .form-hint {

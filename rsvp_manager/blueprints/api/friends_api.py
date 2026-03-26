@@ -24,20 +24,25 @@ def list_friends():
 @api_auth_required
 def get_friend(guest_id):
     from rsvp_manager.extensions import db as _db
-    from rsvp_manager.models import Guest, Invitation, EventCohost
+    from rsvp_manager.models import Guest, Invitation, EventCohost, Event
     user_id = get_api_user().id
     guest = _db.session.get(Guest, guest_id)
     if not guest or guest.deleted_at is not None:
         return api_error("Guest not found", "NOT_FOUND", 404)
     if guest.user_id == user_id:
         return api_success(serialize_friend(guest, viewer_user_id=user_id))
-    # Allow read-only access if user co-hosts an event with this guest
-    shared = _db.session.query(Invitation).filter(
+    # Allow read-only access if user owns or co-hosts an event with this guest
+    shared_as_cohost = _db.session.query(Invitation).filter(
         Invitation.guest_id == guest_id
     ).join(EventCohost, EventCohost.event_id == Invitation.event_id).filter(
         EventCohost.user_id == user_id
     ).first()
-    if shared:
+    shared_as_owner = _db.session.query(Invitation).filter(
+        Invitation.guest_id == guest_id
+    ).join(Event, Event.id == Invitation.event_id).filter(
+        Event.user_id == user_id
+    ).first()
+    if shared_as_cohost or shared_as_owner:
         return api_success(serialize_friend(guest))
     return api_error("Access denied", "FORBIDDEN", 403)
 
