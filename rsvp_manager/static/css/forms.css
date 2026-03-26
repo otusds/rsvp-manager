@@ -69,14 +69,14 @@
 
 .modal-form { padding: 0; background: transparent; box-shadow: none; }
 .detail-card-body:has(.modal-form) { background: var(--color-surface); border-radius: 0 0 14px 14px; }
-.modal-form label { font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 0.25rem; }
+.modal-form label { font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 0.15rem; margin-top: 0.4rem; }
 .modal-form .form-field > .ios-toggle { margin-top: 0.25rem; margin-bottom: 0; }
-.modal-form .form-actions { margin-top: 1rem; }
+.modal-form .form-actions { margin-top: 0.75rem; }
 
 .form-row {
     display: flex;
     gap: 0.75rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.4rem;
 }
 
 .form-field {
