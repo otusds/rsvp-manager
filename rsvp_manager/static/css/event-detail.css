@@ -784,6 +784,7 @@ tr[data-is-me="true"] td {
 }
 .share-member:last-child { border-bottom: none; }
 .share-member-name { flex: 1; font-size: 0.9rem; font-weight: 500; }
+.share-member-email { font-weight: 400; font-size: 0.78rem; color: var(--color-text-muted); }
 .share-member-role {
     font-size: 0.72rem;
     text-transform: uppercase;

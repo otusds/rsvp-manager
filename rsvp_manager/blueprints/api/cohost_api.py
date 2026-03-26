@@ -49,14 +49,23 @@ def regenerate_share_link(event_id):
 def list_cohosts(event_id):
     event, role = cohost_service.require_event_access(event_id, get_api_user().id, "viewer")
     cohosts = cohost_service.get_event_cohosts(event_id)
-    return api_success([{
-        "id": c.id,
-        "user_id": c.user_id,
-        "name": c.user.full_name,
-        "email": c.user.email,
-        "role": c.role,
-        "joined_at": c.joined_at.isoformat(),
-    } for c in cohosts])
+    owner = event.user
+    result = {
+        "owner": {
+            "user_id": owner.id,
+            "name": owner.full_name,
+            "email": owner.email,
+        },
+        "data": [{
+            "id": c.id,
+            "user_id": c.user_id,
+            "name": c.user.full_name,
+            "email": c.user.email,
+            "role": c.role,
+            "joined_at": c.joined_at.isoformat(),
+        } for c in cohosts],
+    }
+    return api_success(result)
 
 
 @api_bp.route("/events/<int:event_id>/cohosts/<int:cohost_user_id>", methods=["DELETE"])

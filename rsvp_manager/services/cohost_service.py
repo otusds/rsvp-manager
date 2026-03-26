@@ -32,6 +32,24 @@ def require_event_access(event_id, user_id, min_role="viewer"):
     return event, role
 
 
+def get_event_roles_for_user(user_id, event_ids):
+    """Return dict of {event_id: role} for a user across multiple events."""
+    if not event_ids:
+        return {}
+    roles = {}
+    cohosts = EventCohost.query.filter(
+        EventCohost.user_id == user_id,
+        EventCohost.event_id.in_(event_ids)
+    ).all()
+    for c in cohosts:
+        roles[c.event_id] = c.role
+    # Events not in cohosts are owned by the user
+    for eid in event_ids:
+        if eid not in roles:
+            roles[eid] = "owner"
+    return roles
+
+
 def get_event_cohosts(event_id):
     """Get all cohosts/viewers for an event."""
     return EventCohost.query.filter_by(event_id=event_id).all()

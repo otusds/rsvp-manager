@@ -61,6 +61,10 @@
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
+.shared-event-badge.badge-viewer {
+    color: var(--color-text-muted);
+    background: rgba(118,118,128,0.1);
+}
 
 .event-row-location {
     font-size: 0.8rem;

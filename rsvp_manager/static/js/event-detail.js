@@ -1165,63 +1165,54 @@ document.addEventListener("DOMContentLoaded", function () {
         var eventId = invTable ? invTable.getAttribute("data-event-id") : null;
 
         function loadShareData() {
-            // Load cohosts
+            var base = window.location.origin + "/join/";
+            // Ensure both links exist, then load everything
+            Promise.all([
+                window.fetchWithCsrf("/api/v1/events/" + eventId + "/share-links", {
+                    method: "POST", body: JSON.stringify({ role: "cohost" }),
+                }).then(function (r) { return r.json(); }),
+                window.fetchWithCsrf("/api/v1/events/" + eventId + "/share-links", {
+                    method: "POST", body: JSON.stringify({ role: "viewer" }),
+                }).then(function (r) { return r.json(); }),
+            ]).then(function (results) {
+                document.getElementById("share-cohost-link").value = base + results[0].data.token;
+                document.getElementById("share-viewer-link").value = base + results[1].data.token;
+            });
+
+            // Load co-hosts + owner
             window.fetchWithCsrf("/api/v1/events/" + eventId + "/cohosts")
                 .then(function (r) { return r.json(); })
                 .then(function (resp) {
                     var list = document.getElementById("share-cohosts-list");
-                    if (!resp.data || resp.data.length === 0) {
-                        list.innerHTML = '<p class="share-empty">No co-hosts yet. Share a link to invite someone.</p>';
-                    } else {
-                        list.innerHTML = resp.data.map(function (c) {
+                    var d = resp.data;
+                    var members = d.data || [];
+                    var html = "";
+                    // Show owner first
+                    if (d.owner) {
+                        html += '<div class="share-member">' +
+                            '<span class="share-member-name">' + window.escapeHtml(d.owner.name) +
+                            ' <span class="share-member-email">(' + window.escapeHtml(d.owner.email) + ')</span></span>' +
+                            '<span class="share-member-role">owner</span>' +
+                            '</div>';
+                    }
+                    html += members.map(function (c) {
                             return '<div class="share-member">' +
-                                '<span class="share-member-name">' + window.escapeHtml(c.name) + '</span>' +
-                                '<span class="share-member-role">' + c.role + '</span>' +
+                                '<span class="share-member-name">' + window.escapeHtml(c.name) +
+                                ' <span class="share-member-email">(' + window.escapeHtml(c.email) + ')</span></span>' +
+                                '<span class="share-member-role">' + c.role.replace('cohost', 'co-host') + '</span>' +
                                 '<button type="button" class="share-remove-btn" data-user-id="' + c.user_id + '">&times;</button>' +
                                 '</div>';
                         }).join("");
-                        list.querySelectorAll(".share-remove-btn").forEach(function (btn) {
-                            btn.addEventListener("click", function () {
-                                if (!confirm("Remove this member?")) return;
-                                window.fetchWithCsrf("/api/v1/events/" + eventId + "/cohosts/" + btn.dataset.userId, {
-                                    method: "DELETE"
-                                }).then(function () { loadShareData(); });
-                            });
-                        });
                     }
-                });
-            // Load/create share links
-            window.fetchWithCsrf("/api/v1/events/" + eventId + "/share-links")
-                .then(function (r) { return r.json(); })
-                .then(function (resp) {
-                    var cohostLink = null, viewerLink = null;
-                    (resp.data || []).forEach(function (l) {
-                        if (l.role === "cohost") cohostLink = l;
-                        if (l.role === "viewer") viewerLink = l;
+                    list.innerHTML = html;
+                    list.querySelectorAll(".share-remove-btn").forEach(function (btn) {
+                        btn.addEventListener("click", function () {
+                            if (!confirm("Remove this member?")) return;
+                            window.fetchWithCsrf("/api/v1/events/" + eventId + "/cohosts/" + btn.dataset.userId, {
+                                method: "DELETE"
+                            }).then(function () { loadShareData(); });
+                        });
                     });
-                    var base = window.location.origin + "/join/";
-                    if (cohostLink) {
-                        document.getElementById("share-cohost-link").value = base + cohostLink.token;
-                    } else {
-                        window.fetchWithCsrf("/api/v1/events/" + eventId + "/share-links", {
-                            method: "POST",
-                            body: JSON.stringify({ role: "cohost" }),
-                        }).then(function (r) { return r.json(); })
-                        .then(function (r) {
-                            document.getElementById("share-cohost-link").value = base + r.data.token;
-                        });
-                    }
-                    if (viewerLink) {
-                        document.getElementById("share-viewer-link").value = base + viewerLink.token;
-                    } else {
-                        window.fetchWithCsrf("/api/v1/events/" + eventId + "/share-links", {
-                            method: "POST",
-                            body: JSON.stringify({ role: "viewer" }),
-                        }).then(function (r) { return r.json(); })
-                        .then(function (r) {
-                            document.getElementById("share-viewer-link").value = base + r.data.token;
-                        });
-                    }
                 });
         }
 
