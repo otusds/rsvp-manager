@@ -11,6 +11,14 @@ bp = Blueprint("settings", __name__)
 @bp.route("/settings")
 @login_required
 def settings():
+    # Backfill profile from is_me guest for existing users
+    if not current_user.first_name:
+        me_guest = Guest.query.filter_by(user_id=current_user.id, is_me=True).filter(Guest.deleted_at.is_(None)).first()
+        if me_guest:
+            current_user.first_name = me_guest.first_name
+            current_user.last_name = me_guest.last_name or ""
+            current_user.gender = me_guest.gender or ""
+            db.session.commit()
     return render_template("settings.html")
 
 
