@@ -1155,16 +1155,13 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ── Share Event ─────────────────────────────────────────────────────
+    // ── Share Event (data loading + copy buttons) ──────────────────────
     var shareOverlay = document.getElementById("share-event-overlay");
-    var shareBtn = document.getElementById("open-share-event-btn");
-    var shareClose = document.getElementById("share-event-close");
-
-    if (shareBtn && shareOverlay) {
+    if (shareOverlay) {
         var invTable = document.getElementById("invitations-table");
         var eventId = invTable ? invTable.getAttribute("data-event-id") : null;
 
-        function loadShareData() {
+        window._loadShareData = function () {
             var base = window.location.origin + "/join/";
             // Ensure both links exist, then load everything
             Promise.all([
@@ -1215,17 +1212,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                 });
         }
-
-        shareBtn.addEventListener("click", function () {
-            var pageMenu = document.getElementById("page-menu");
-            if (pageMenu) pageMenu.classList.remove("open");
-            loadShareData();
-            setTimeout(function () {
-                shareOverlay.style.display = "flex";
-            }, 50);
-        });
-        shareClose.addEventListener("click", function () { shareOverlay.style.display = "none"; });
-        shareOverlay.addEventListener("click", function (e) { if (e.target === shareOverlay) shareOverlay.style.display = "none"; });
 
         document.getElementById("copy-cohost-link").addEventListener("click", function () {
             var input = document.getElementById("share-cohost-link");

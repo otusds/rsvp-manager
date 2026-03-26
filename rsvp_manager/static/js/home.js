@@ -36,6 +36,23 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // ── Share Event modal (from page kebab menu) ─────────────────────────
+    var shareBtn = document.getElementById("open-share-event-btn");
+    var shareOverlay = document.getElementById("share-event-overlay");
+    var shareClose = document.getElementById("share-event-close");
+    if (shareBtn && shareOverlay) {
+        shareBtn.addEventListener("click", function () {
+            var menu = shareBtn.closest(".kebab-menu");
+            if (menu) menu.classList.remove("open");
+            if (window._loadShareData) window._loadShareData();
+            shareOverlay.style.display = "flex";
+        });
+        shareClose.addEventListener("click", function () { shareOverlay.style.display = "none"; });
+        shareOverlay.addEventListener("click", function (e) {
+            if (e.target === shareOverlay) shareOverlay.style.display = "none";
+        });
+    }
+
     // ── Event card search, filter & sort ─────────────────────────────────────
     var grid = document.getElementById("event-grid");
     if (!grid) return;
