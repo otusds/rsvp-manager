@@ -211,6 +211,7 @@
                 {% endif %}
                 {% for inv in event.invitations if not inv.guest.deleted_at %}
                 <tr data-inv-id="{{ inv.id }}" data-guest-id="{{ inv.guest.id }}"
+                    data-guest-owner-id="{{ inv.guest.user_id }}"
                     data-gender="{{ inv.guest.gender }}"
                     data-tags="{{ inv.guest.tags|rejectattr('deleted_at')|map(attribute='id')|join(',') }}"
                     data-sent="{{ 'true' if inv.status != 'Not Sent' else 'false' }}"
@@ -219,7 +220,7 @@
                     data-date-responded="{{ inv.date_responded.strftime('%d %b %Y') if inv.date_responded else '' }}"
                     data-date-responded-iso="{{ inv.date_responded.isoformat() if inv.date_responded else '' }}">
                     <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
-                    <td class="guest-name-cell">{{ inv.guest.full_name }}{% if inv.guest.gender == 'Male' %} <span class="gender-tag gender-m">M</span>{% elif inv.guest.gender == 'Female' %} <span class="gender-tag gender-f">F</span>{% endif %}</td>
+                    <td class="guest-name-cell">{{ inv.guest.full_name }}{% if inv.guest.gender == 'Male' %} <span class="gender-tag gender-m">M</span>{% elif inv.guest.gender == 'Female' %} <span class="gender-tag gender-f">F</span>{% endif %}{% if inv.guest.user_id != current_user.id %}<span class="added-by-badge" title="Added by {{ inv.added_by and inv.guest.user.full_name or 'co-host' }}">shared</span>{% endif %}</td>
                     <td class="center">
                         <input type="checkbox" class="sent-checkbox"
                                data-inv-id="{{ inv.id }}"
@@ -553,6 +554,7 @@
             <form class="form modal-form" id="guest-detail-form">
                 <input type="hidden" id="gd-guest-id">
                 <span class="gd-is-me-label" id="gd-is-me-label" style="display:none">This is me — edit via Settings &gt; My Profile</span>
+                <span class="gd-other-user-label" id="gd-other-user-label" style="display:none">Guest added by co-host — view only</span>
                 <div class="form-row">
                     <div class="form-field">
                         <label for="gd-first">First Name</label>
@@ -598,6 +600,7 @@
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn">Save</button>
+                    <button type="button" class="btn btn-secondary" id="gd-add-to-friends" style="display:none">+ Add to My Friends</button>
                 </div>
             </form>
             <div class="guest-detail-meta" id="gd-meta"></div>

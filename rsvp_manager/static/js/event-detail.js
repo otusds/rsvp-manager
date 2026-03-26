@@ -743,17 +743,31 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById("gd-last").value = g.last_name;
                 document.getElementById("gd-gender").value = g.gender;
                 document.getElementById("gd-notes").value = g.notes;
-                // Handle is_me: make name fields read-only, show label
+                // Handle read-only: is_me guest OR guest owned by another user
                 var gdFirst = document.getElementById("gd-first");
                 var gdLast = document.getElementById("gd-last");
                 var gdGender = document.getElementById("gd-gender");
                 var gdIsMeRow = document.getElementById("gd-is-me-row");
                 var gdIsMeLabel = document.getElementById("gd-is-me-label");
-                gdFirst.readOnly = g.is_me;
-                gdLast.readOnly = g.is_me;
-                gdGender.disabled = g.is_me;
+                var gdOtherUserLabel = document.getElementById("gd-other-user-label");
+                var gdSaveBtn = document.querySelector("#guest-detail-form .btn");
+                var gdAddToFriendsBtn = document.getElementById("gd-add-to-friends");
+                var currentUserId = parseInt(document.body.dataset.userId || "0");
+                var isOtherUsersGuest = g.id && currentUserId && (g.user_id || 0) !== currentUserId;
+                var isReadOnly = g.is_me || isOtherUsersGuest;
+                gdFirst.readOnly = isReadOnly;
+                gdLast.readOnly = isReadOnly;
+                gdGender.disabled = isReadOnly;
                 if (gdIsMeRow) gdIsMeRow.style.display = "none";
                 if (gdIsMeLabel) gdIsMeLabel.style.display = g.is_me ? "" : "none";
+                if (gdOtherUserLabel) gdOtherUserLabel.style.display = isOtherUsersGuest ? "" : "none";
+                if (gdSaveBtn) gdSaveBtn.style.display = isOtherUsersGuest ? "none" : "";
+                if (gdAddToFriendsBtn) {
+                    gdAddToFriendsBtn.style.display = isOtherUsersGuest ? "" : "none";
+                    gdAddToFriendsBtn.dataset.firstName = g.first_name;
+                    gdAddToFriendsBtn.dataset.lastName = g.last_name || "";
+                    gdAddToFriendsBtn.dataset.gender = g.gender;
+                }
 
                 // Populate tags
                 currentGuestTags = (g.tags || []).slice();
@@ -812,6 +826,34 @@ document.addEventListener("DOMContentLoaded", function () {
         gdOverlay.addEventListener("click", function (e) {
             if (e.target === gdOverlay) gdOverlay.style.display = "none";
         });
+
+        // Add co-host's guest to my friends
+        var addToFriendsBtn = document.getElementById("gd-add-to-friends");
+        if (addToFriendsBtn) {
+            addToFriendsBtn.addEventListener("click", function () {
+                var data = {
+                    guests: [{
+                        first_name: addToFriendsBtn.dataset.firstName,
+                        last_name: addToFriendsBtn.dataset.lastName,
+                        gender: addToFriendsBtn.dataset.gender,
+                    }]
+                };
+                window.fetchWithCsrf("/api/v1/friends/bulk", {
+                    method: "POST",
+                    body: JSON.stringify(data),
+                }).then(function (r) { return r.json(); })
+                .then(function (resp) {
+                    if (resp.data && resp.data.length > 0) {
+                        addToFriendsBtn.textContent = "Added!";
+                        addToFriendsBtn.disabled = true;
+                        setTimeout(function () {
+                            addToFriendsBtn.textContent = "+ Add to My Friends";
+                            addToFriendsBtn.disabled = false;
+                        }, 2000);
+                    }
+                });
+            });
+        }
 
         gdForm.addEventListener("submit", function (e) {
             e.preventDefault();

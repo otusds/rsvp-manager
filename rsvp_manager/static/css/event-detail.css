@@ -737,6 +737,32 @@ tr[data-is-me="true"] td {
     margin-bottom: 0.75rem;
 }
 
+/* ── Shared guest badge ──────────────────────────────────────────────────── */
+.added-by-badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    background: rgba(118,118,128,0.1);
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+    margin-left: 0.35rem;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.gd-other-user-label {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    background: rgba(118,118,128,0.08);
+    padding: 0.25rem 0.65rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
 /* ── Share Event modal ───────────────────────────────────────────────────── */
 .share-section-title {
     font-size: 0.82rem;

@@ -2,6 +2,7 @@ from functools import wraps
 from flask import Blueprint, jsonify, request, g, current_app
 from flask_login import current_user
 from flask_wtf.csrf import validate_csrf
+from rsvp_manager.extensions import db
 
 api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
@@ -63,7 +64,7 @@ def serialize_event(event):
     }
 
 
-def serialize_friend(guest):
+def serialize_friend(guest, viewer_user_id=None):
     attending = sum(1 for inv in guest.invitations if inv.status == "Attending")
     pending = sum(1 for inv in guest.invitations if inv.status == "Pending")
     declined = sum(1 for inv in guest.invitations if inv.status == "Declined")
@@ -76,8 +77,14 @@ def serialize_friend(guest):
                 "event_date": inv.event.date.strftime("%d/%m/%Y") if inv.event.date else "",
                 "status": inv.status,
             })
+    # Add shared invitations (co-host's guest with same name in shared events)
+    if viewer_user_id and viewer_user_id == guest.user_id:
+        from rsvp_manager.services.friend_service import get_shared_invitations
+        shared = get_shared_invitations(guest, viewer_user_id)
+        invitations.extend(shared)
     return {
         "id": guest.id,
+        "user_id": guest.user_id,
         "first_name": guest.first_name,
         "last_name": guest.last_name or "",
         "gender": guest.gender,
@@ -121,9 +128,14 @@ def serialize_invitation(inv):
 
 def serialize_invitation_brief(inv):
     """Invitation with inline guest info, for bulk/list responses."""
+    from rsvp_manager.models import User
+    added_by_user = db.session.get(User, inv.added_by) if inv.added_by else None
     return {
         "invitation_id": inv.id,
         "guest_id": inv.guest_id,
+        "guest_owner_id": inv.guest.user_id,
+        "added_by": inv.added_by,
+        "added_by_name": added_by_user.full_name if added_by_user else "",
         "first_name": inv.guest.first_name,
         "last_name": inv.guest.last_name or "",
         "gender": inv.guest.gender,

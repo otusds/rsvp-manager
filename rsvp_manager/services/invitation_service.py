@@ -110,6 +110,7 @@ def bulk_add_guests(event, guest_ids, user_id):
                    f"You added {guest.full_name} to {event.name}")
         added.append({
             "invitation_id": inv.id, "guest_id": guest.id,
+            "guest_owner_id": guest.user_id, "added_by": user_id,
             "first_name": guest.first_name, "last_name": guest.last_name or "",
             "gender": guest.gender, "status": "Not Sent",
             "notes": "", "guest_notes": guest.notes or "",
@@ -164,6 +165,7 @@ def bulk_create_and_invite(event, guests_data, user_id):
         log_action(user_id, "added_to_event", "invitation", inv.id, f"You added {guest.full_name} to {event.name}")
         added.append({
             "invitation_id": inv.id, "guest_id": guest.id,
+            "guest_owner_id": guest.user_id, "added_by": user_id,
             "first_name": guest.first_name, "last_name": guest.last_name or "",
             "gender": guest.gender, "status": "Not Sent",
             "notes": "",
