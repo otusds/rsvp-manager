@@ -139,6 +139,9 @@
 .settings-profile-form label {
     margin-top: 0.75rem;
 }
+.settings-profile-form .settings-actions {
+    margin-top: 1.25rem;
+}
 
 /* ── Inline forms ──────────────────────────────────────────────────────────── */
 .inline { display: inline; }
