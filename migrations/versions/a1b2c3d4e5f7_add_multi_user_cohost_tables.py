@@ -37,7 +37,7 @@ def upgrade():
         sa.Column('role', sa.String(length=10), nullable=False, server_default='cohost'),
         sa.Column('created_by', sa.Integer(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('true')),
         sa.ForeignKeyConstraint(['event_id'], ['event.id']),
         sa.ForeignKeyConstraint(['created_by'], ['user.id']),
         sa.PrimaryKeyConstraint('id'),
