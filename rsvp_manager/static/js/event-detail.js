@@ -562,7 +562,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (gdOtherUserLabel) {
                     gdOtherUserLabel.style.display = isOtherUsersGuest ? "" : "none";
                     if (isOtherUsersGuest && g.owner_name) {
-                        gdOtherUserLabel.textContent = "Guest added by " + g.owner_name + " (Co-Host) — view only";
+                        var shareIconSvg = '<svg class="share-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+                        gdOtherUserLabel.innerHTML = shareIconSvg + "Guest added by " + window.escapeHtml(g.owner_name) + " (Co-Host) — view only";
                     }
                 }
 
@@ -579,25 +580,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     gdAddToFriendsBtn.dataset.lastName = g.last_name || "";
                     gdAddToFriendsBtn.dataset.gender = g.gender;
                     if (isOtherUsersGuest) {
-                        // Check if a friend with this name already exists in my list
-                        var searchName = (g.first_name + " " + (g.last_name || "")).trim().toLowerCase();
-                        window.fetchWithCsrf("/api/v1/friends?page=1")
-                            .then(function (r) { return r.json(); })
-                            .then(function (resp) {
-                                var exists = (resp.data.items || []).some(function (f) {
-                                    return (f.first_name + " " + (f.last_name || "")).trim().toLowerCase() === searchName;
-                                });
-                                gdAddToFriendsBtn.style.display = exists ? "none" : "";
-                                if (exists) {
-                                    // Show "Already in your friends" text instead
-                                    gdAddToFriendsBtn.style.display = "";
-                                    gdAddToFriendsBtn.textContent = "Already in your friends";
-                                    gdAddToFriendsBtn.disabled = true;
-                                } else {
-                                    gdAddToFriendsBtn.textContent = "+ Add to My Friends";
-                                    gdAddToFriendsBtn.disabled = false;
-                                }
-                            });
+                        if (g.name_match_in_my_friends) {
+                            gdAddToFriendsBtn.style.display = "";
+                            gdAddToFriendsBtn.textContent = "Already in your friends";
+                            gdAddToFriendsBtn.disabled = true;
+                        } else {
+                            gdAddToFriendsBtn.style.display = "";
+                            gdAddToFriendsBtn.textContent = "+ Add to My Friends";
+                            gdAddToFriendsBtn.disabled = false;
+                        }
                     } else {
                         gdAddToFriendsBtn.style.display = "none";
                     }
@@ -618,7 +609,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     var addedByName = row.getAttribute("data-added-by-name") || "";
                     if (addedByEl) {
                         if (isOtherUsersGuest && addedByName) {
-                            addedByEl.textContent = "Added by " + addedByName;
+                            var shareIconSvg2 = '<svg class="share-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+                            addedByEl.innerHTML = shareIconSvg2 + "Guest added by " + window.escapeHtml(addedByName) + " (Co-Host) — can edit";
                             addedByEl.style.display = "";
                         } else {
                             addedByEl.style.display = "none";

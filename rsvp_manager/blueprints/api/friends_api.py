@@ -43,7 +43,17 @@ def get_friend(guest_id):
         Event.user_id == user_id
     ).first()
     if shared_as_cohost or shared_as_owner:
-        return api_success(serialize_friend(guest))
+        from rsvp_manager.services.friend_service import _normalize_name
+        data = serialize_friend(guest)
+        # Check if viewer has a friend with the same name
+        norm_first = _normalize_name(guest.first_name)
+        norm_last = _normalize_name(guest.last_name)
+        my_guests = Guest.query.filter_by(user_id=user_id).filter(Guest.deleted_at.is_(None)).all()
+        data["name_match_in_my_friends"] = any(
+            _normalize_name(g.first_name) == norm_first and _normalize_name(g.last_name) == norm_last
+            for g in my_guests
+        )
+        return api_success(data)
     return api_error("Access denied", "FORBIDDEN", 403)
 
 

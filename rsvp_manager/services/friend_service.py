@@ -236,12 +236,13 @@ def bulk_create_guests(user_id, guests_data):
 
 
 def _normalize_name(name):
-    """Normalize name for accent-insensitive, case-insensitive matching."""
+    """Normalize name: remove accents, lowercase, collapse whitespace."""
     if not name:
         return ""
-    # Remove accents
     nfkd = unicodedata.normalize('NFKD', name)
-    return "".join(c for c in nfkd if not unicodedata.combining(c)).lower().strip()
+    result = "".join(c for c in nfkd if not unicodedata.combining(c)).lower().strip()
+    # Collapse multiple spaces into one
+    return " ".join(result.split())
 
 
 def get_shared_invitations(guest, user_id):

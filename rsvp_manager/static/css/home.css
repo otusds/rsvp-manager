@@ -49,13 +49,21 @@
     text-overflow: ellipsis;
 }
 
-.shared-event-badge {
+.share-icon {
     display: inline-block;
-    font-size: 0.6rem;
+    width: 12px;
+    height: 12px;
+    vertical-align: middle;
+    margin-right: 0.2rem;
+}
+.shared-event-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.65rem;
     font-weight: 500;
     color: var(--color-text-muted);
     background: rgba(118,118,128,0.1);
-    padding: 0.05rem 0.4rem;
+    padding: 0.1rem 0.4rem;
     border-radius: 4px;
     vertical-align: middle;
     text-transform: uppercase;
