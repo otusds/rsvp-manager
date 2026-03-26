@@ -335,6 +335,22 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .catch(function () { /* ignore */ });
 
+    // ── Populate "Added by" filter dropdown ────────────────────────────────
+    var addedByFilter = document.getElementById("gl-added-by-filter");
+    if (addedByFilter) {
+        var names = new Set();
+        document.querySelectorAll("#invitations-table tbody tr").forEach(function (row) {
+            var name = row.getAttribute("data-added-by-name");
+            if (name) names.add(name);
+        });
+        names.forEach(function (name) {
+            var opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            addedByFilter.appendChild(opt);
+        });
+    }
+
     // ── Clear guest list filters ─────────────────────────────────────────
     var glClearBtn = document.getElementById("gl-clear-filters");
     if (glClearBtn) {
@@ -539,7 +555,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 var gdIsMeLabel = document.getElementById("gd-is-me-label");
                 var gdOtherUserLabel = document.getElementById("gd-other-user-label");
                 if (gdIsMeLabel) gdIsMeLabel.style.display = g.is_me ? "" : "none";
-                if (gdOtherUserLabel) gdOtherUserLabel.style.display = isOtherUsersGuest ? "" : "none";
+                if (gdOtherUserLabel) {
+                    gdOtherUserLabel.style.display = isOtherUsersGuest ? "" : "none";
+                    if (isOtherUsersGuest && g.owner_name) {
+                        gdOtherUserLabel.textContent = "Guest added by " + g.owner_name + " (Co-Host) — view only";
+                    }
+                }
 
                 // Owner-only section: notes, tags, invitation summary
                 var ownerSection = document.getElementById("gd-owner-section");
@@ -568,10 +589,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     // Added by
                     var addedByEl = document.getElementById("gd-added-by");
-                    var guestOwner = row.getAttribute("data-guest-owner-id");
+                    var addedByName = row.getAttribute("data-added-by-name") || "";
                     if (addedByEl) {
-                        if (guestOwner && parseInt(guestOwner) !== currentUserId) {
-                            addedByEl.textContent = "Guest added by " + (row.querySelector(".added-by-badge") ? "Co-Host" : "you");
+                        if (isOtherUsersGuest && addedByName) {
+                            addedByEl.textContent = "Added by " + addedByName;
                             addedByEl.style.display = "";
                         } else {
                             addedByEl.style.display = "none";
@@ -582,7 +603,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     var isSent = sentCheckbox && sentCheckbox.checked;
                     document.getElementById("gd-sent-toggle").checked = isSent;
                     document.getElementById("gd-sent-toggle").disabled = isViewer;
-                    document.getElementById("gd-date-invited").textContent = row.getAttribute("data-date-invited") || "—";
+                    var invitedDate = row.getAttribute("data-date-invited") || "";
+                    var sentByName = row.getAttribute("data-sent-by") || "";
+                    document.getElementById("gd-date-invited").textContent = invitedDate ? (invitedDate + (sentByName ? " by " + sentByName : "")) : "—";
 
                     var statusSelect = document.getElementById("gd-status");
                     var statusText = getRowStatus(row);
@@ -594,7 +617,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         statusSelect.disabled = true;
                     }
                     window.colorStatusSelect(statusSelect);
-                    document.getElementById("gd-date-responded").textContent = row.getAttribute("data-date-responded") || "—";
+                    var respondedDate = row.getAttribute("data-date-responded") || "";
+                    var statusByName = row.getAttribute("data-status-changed-by") || "";
+                    document.getElementById("gd-date-responded").textContent = respondedDate ? (respondedDate + (statusByName ? " by " + statusByName : "")) : "—";
 
                     var notesInput = row.querySelector(".inv-notes-input");
                     document.getElementById("gd-inv-notes").value = notesInput ? notesInput.value : "";

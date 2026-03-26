@@ -31,11 +31,13 @@ def update_invitation(invitation_id):
     if not data:
         return api_error("Request body must be JSON", "INVALID_FORMAT", 400)
 
+    user_id = get_api_user().id
+
     if data.get("toggle_send"):
-        invitation_service.toggle_send(invitation)
+        invitation_service.toggle_send(invitation, acting_user_id=user_id)
 
     if "status" in data:
-        invitation_service.update_status(invitation, data["status"])
+        invitation_service.update_status(invitation, data["status"], acting_user_id=user_id)
 
     if "notes" in data:
         invitation_service.update_field(invitation, "notes", data["notes"])

@@ -115,6 +115,20 @@
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
 }
+.form-field input[readonly],
+.form-field textarea[readonly],
+.form-field select:disabled {
+    border-color: transparent;
+    background: var(--color-bg-secondary);
+    color: var(--color-text);
+    pointer-events: none;
+}
+.form-field input[readonly]:focus,
+.form-field textarea[readonly]:focus,
+.form-field select:disabled:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
 
 .form-hint {
     margin: 0.3rem 0 0;

@@ -17,28 +17,34 @@ def get_owned_invitation_or_404(invitation_id, user_id):
     return invitation
 
 
-def toggle_send(invitation):
+def toggle_send(invitation, acting_user_id=None):
     if invitation.status == "Not Sent":
         invitation.status = "Pending"
         invitation.date_invited = date.today()
+        invitation.sent_by = acting_user_id
         log_action(invitation.event.user_id, "sent_invitation", "invitation", invitation.id,
-                   f"You sent an invitation to {invitation.guest.full_name} for {invitation.event.name}")
+                   f"You sent an invitation to {invitation.guest.full_name} for {invitation.event.name}",
+                   acting_user_id=acting_user_id)
     else:
         invitation.status = "Not Sent"
         invitation.date_invited = None
+        invitation.sent_by = None
         invitation.date_responded = None
+        invitation.status_changed_by = None
         log_action(invitation.event.user_id, "unsent_invitation", "invitation", invitation.id,
-                   f"You unsent the invitation to {invitation.guest.full_name} for {invitation.event.name}")
+                   f"You unsent the invitation to {invitation.guest.full_name} for {invitation.event.name}",
+                   acting_user_id=acting_user_id)
     invitation.event.date_edited = datetime.now(timezone.utc)
     db.session.commit()
     return invitation
 
 
-def update_status(invitation, new_status):
+def update_status(invitation, new_status, acting_user_id=None):
     if new_status not in VALID_STATUSES:
         abort(400, description="Invalid status")
     if new_status != invitation.status:
         invitation.status = new_status
+        invitation.status_changed_by = acting_user_id
         if new_status in ("Attending", "Declined"):
             invitation.date_responded = date.today()
         elif new_status == "Pending":
@@ -46,7 +52,8 @@ def update_status(invitation, new_status):
         status_labels = {"Attending": "attending", "Declined": "declined", "Pending": "pending"}
         label = status_labels.get(new_status, new_status.lower())
         log_action(invitation.event.user_id, "status_changed", "invitation", invitation.id,
-                   f"You marked {invitation.guest.full_name} as {label} for {invitation.event.name}")
+                   f"You marked {invitation.guest.full_name} as {label} for {invitation.event.name}",
+                   acting_user_id=acting_user_id)
     invitation.event.date_edited = datetime.now(timezone.utc)
     db.session.commit()
     return invitation

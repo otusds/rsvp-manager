@@ -154,8 +154,14 @@ class Invitation(db.Model):
     added_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     status = db.Column(db.String(20), nullable=False, default="Not Sent", index=True)
     date_invited = db.Column(db.Date, nullable=True)
+    sent_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     date_responded = db.Column(db.Date, nullable=True)
+    status_changed_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     notes = db.Column(db.Text, nullable=True, default="")
+
+    added_by_user = db.relationship("User", foreign_keys=[added_by], lazy="select")
+    sent_by_user = db.relationship("User", foreign_keys=[sent_by], lazy="select")
+    status_changed_by_user = db.relationship("User", foreign_keys=[status_changed_by], lazy="select")
 
     def __repr__(self):
         return f"<Invitation {self.id} event={self.event_id} guest={self.guest_id} {self.status}>"

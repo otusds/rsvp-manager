@@ -151,6 +151,9 @@
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                 </select>
+                <select class="filter-select" id="gl-added-by-filter" data-table="invitations-table" data-attr="data-added-by-name">
+                    <option value="">All Members</option>
+                </select>
                 <div class="tag-filter-wrapper" id="gl-tag-filter-wrapper">
                     <button type="button" class="filter-select tag-filter-toggle" id="gl-tag-filter-toggle">All Tags</button>
                     <div class="tag-filter-dropdown" id="gl-tag-filter-dropdown" style="display:none"></div>
@@ -220,8 +223,11 @@
                     data-sent="{{ 'true' if inv.status != 'Not Sent' else 'false' }}"
                     data-date-invited="{{ inv.date_invited.strftime('%d %b %Y') if inv.date_invited else '' }}"
                     data-date-invited-iso="{{ inv.date_invited.isoformat() if inv.date_invited else '' }}"
+                    data-sent-by="{{ inv.sent_by_user.full_name if inv.sent_by and inv.sent_by_user else '' }}"
                     data-date-responded="{{ inv.date_responded.strftime('%d %b %Y') if inv.date_responded else '' }}"
-                    data-date-responded-iso="{{ inv.date_responded.isoformat() if inv.date_responded else '' }}">
+                    data-date-responded-iso="{{ inv.date_responded.isoformat() if inv.date_responded else '' }}"
+                    data-status-changed-by="{{ inv.status_changed_by_user.full_name if inv.status_changed_by and inv.status_changed_by_user else '' }}"
+                    data-added-by-name="{{ inv.added_by_user.full_name if inv.added_by and inv.added_by_user else '' }}">
                     <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
                     <td class="guest-name-cell">{{ inv.guest.full_name }}{% if inv.guest.gender == 'Male' %} <span class="gender-tag gender-m">M</span>{% elif inv.guest.gender == 'Female' %} <span class="gender-tag gender-f">F</span>{% endif %}{% if inv.guest.user_id != current_user.id %}<span class="added-by-badge" title="Added by {{ inv.added_by and inv.guest.user.full_name or 'co-host' }}">shared</span>{% endif %}</td>
                     <td class="center">
