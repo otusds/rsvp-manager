@@ -562,7 +562,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (gdOtherUserLabel) {
                     gdOtherUserLabel.style.display = isOtherUsersGuest ? "" : "none";
                     if (isOtherUsersGuest && g.owner_name) {
-                        gdOtherUserLabel.textContent = "Guest added by " + g.owner_name + " (Co-Host) — view only";
+                        var shareIconSvg = '<svg class="share-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+                        gdOtherUserLabel.innerHTML = shareIconSvg + "Guest added by " + window.escapeHtml(g.owner_name) + " (Co-Host) — view only";
                     }
                 }
 
@@ -608,7 +609,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     var addedByName = row.getAttribute("data-added-by-name") || "";
                     if (addedByEl) {
                         if (isOtherUsersGuest && addedByName) {
-                            addedByEl.textContent = "Added by " + addedByName;
+                            var shareIconSvg2 = '<svg class="share-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+                            addedByEl.innerHTML = shareIconSvg2 + "Added by " + window.escapeHtml(addedByName);
                             addedByEl.style.display = "";
                         } else {
                             addedByEl.style.display = "none";
