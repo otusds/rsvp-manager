@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
     window.filterTable = function (table) {
         var tableId = table.id;
         var searchInput = document.querySelector('.search-input[data-table="' + tableId + '"]');
-        var query = searchInput ? searchInput.value.toLowerCase() : "";
+        var query = searchInput ? window.normalizeText(searchInput.value) : "";
         var filters = [];
         document.querySelectorAll('.filter-select[data-table="' + tableId + '"]').forEach(function (sel) {
             var val = sel.value;
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var rows = table.querySelectorAll("tbody tr");
         rows.forEach(function (row) {
             if (row.classList.contains("add-guest-row")) return;
-            var text = row.textContent.toLowerCase();
+            var text = window.normalizeText(row.textContent);
             var matchesSearch = !query || text.indexOf(query) !== -1;
             var matchesFilters = true;
             for (var i = 0; i < filters.length; i++) {
