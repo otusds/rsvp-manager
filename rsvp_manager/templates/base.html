@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GuestCheck</title>
-    {% set v = 73 %}
+    {% set v = 74 %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}?v={{ v }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
-<body{% if current_user.is_authenticated %} data-user-id="{{ current_user.id }}"{% endif %}>
+<body{% if current_user.is_authenticated %} data-user-id="{{ current_user.id }}" data-user-name="{{ current_user.full_name }}"{% endif %}>
     <nav>
         {% block logo %}<a href="{{ url_for('events.home') }}" class="logo">
             <svg viewBox="0 0 240 48" width="170" height="34" xmlns="http://www.w3.org/2000/svg">

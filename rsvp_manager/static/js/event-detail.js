@@ -335,7 +335,7 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .catch(function () { /* ignore */ });
 
-    // ── Populate "Added by" filter dropdown ────────────────────────────────
+    // ── Populate "Added by" filter dropdown (only for shared events) ────────
     var addedByFilter = document.getElementById("gl-added-by-filter");
     if (addedByFilter) {
         var names = new Set();
@@ -343,12 +343,16 @@ document.addEventListener("DOMContentLoaded", function () {
             var name = row.getAttribute("data-added-by-name");
             if (name) names.add(name);
         });
-        names.forEach(function (name) {
-            var opt = document.createElement("option");
-            opt.value = name;
-            opt.textContent = name;
-            addedByFilter.appendChild(opt);
-        });
+        if (names.size > 1) {
+            names.forEach(function (name) {
+                var opt = document.createElement("option");
+                opt.value = name;
+                opt.textContent = name;
+                addedByFilter.appendChild(opt);
+            });
+        } else {
+            addedByFilter.style.display = "none";
+        }
     }
 
     // ── Clear guest list filters ─────────────────────────────────────────
@@ -625,9 +629,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     var isSent = sentCheckbox && sentCheckbox.checked;
                     document.getElementById("gd-sent-toggle").checked = isSent;
                     document.getElementById("gd-sent-toggle").disabled = isViewer;
+                    var currentUserName = document.body.dataset.userName || "";
+                    function byLabel(name) { return name ? " by " + (name === currentUserName ? "You" : name) : ""; }
                     var invitedDate = row.getAttribute("data-date-invited") || "";
                     var sentByName = row.getAttribute("data-sent-by") || "";
-                    document.getElementById("gd-date-invited").textContent = invitedDate ? (invitedDate + (sentByName ? " by " + sentByName : "")) : "—";
+                    document.getElementById("gd-date-invited").textContent = invitedDate ? (invitedDate + byLabel(sentByName)) : "—";
 
                     var statusSelect = document.getElementById("gd-status");
                     var statusText = getRowStatus(row);
@@ -641,7 +647,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     window.colorStatusSelect(statusSelect);
                     var respondedDate = row.getAttribute("data-date-responded") || "";
                     var statusByName = row.getAttribute("data-status-changed-by") || "";
-                    document.getElementById("gd-date-responded").textContent = respondedDate ? (respondedDate + (statusByName ? " by " + statusByName : "")) : "—";
+                    document.getElementById("gd-date-responded").textContent = respondedDate ? (respondedDate + byLabel(statusByName)) : "—";
 
                     var notesInput = row.querySelector(".inv-notes-input");
                     document.getElementById("gd-inv-notes").value = notesInput ? notesInput.value : "";
