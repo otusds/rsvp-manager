@@ -1216,12 +1216,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         }
 
-        shareBtn.addEventListener("click", function (e) {
-            e.stopPropagation();
-            var menu = shareBtn.closest(".kebab-menu");
-            if (menu) menu.classList.remove("open");
+        shareBtn.addEventListener("click", function () {
+            var pageMenu = document.getElementById("page-menu");
+            if (pageMenu) pageMenu.classList.remove("open");
             loadShareData();
-            shareOverlay.style.display = "flex";
+            setTimeout(function () {
+                shareOverlay.style.display = "flex";
+            }, 50);
         });
         shareClose.addEventListener("click", function () { shareOverlay.style.display = "none"; });
         shareOverlay.addEventListener("click", function (e) { if (e.target === shareOverlay) shareOverlay.style.display = "none"; });
