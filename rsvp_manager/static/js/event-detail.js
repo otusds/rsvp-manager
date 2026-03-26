@@ -579,25 +579,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     gdAddToFriendsBtn.dataset.lastName = g.last_name || "";
                     gdAddToFriendsBtn.dataset.gender = g.gender;
                     if (isOtherUsersGuest) {
-                        // Check if a friend with this name already exists in my list
-                        var searchName = (g.first_name + " " + (g.last_name || "")).trim().toLowerCase();
-                        window.fetchWithCsrf("/api/v1/friends?page=1")
-                            .then(function (r) { return r.json(); })
-                            .then(function (resp) {
-                                var exists = (resp.data.items || []).some(function (f) {
-                                    return (f.first_name + " " + (f.last_name || "")).trim().toLowerCase() === searchName;
-                                });
-                                gdAddToFriendsBtn.style.display = exists ? "none" : "";
-                                if (exists) {
-                                    // Show "Already in your friends" text instead
-                                    gdAddToFriendsBtn.style.display = "";
-                                    gdAddToFriendsBtn.textContent = "Already in your friends";
-                                    gdAddToFriendsBtn.disabled = true;
-                                } else {
-                                    gdAddToFriendsBtn.textContent = "+ Add to My Friends";
-                                    gdAddToFriendsBtn.disabled = false;
-                                }
-                            });
+                        if (g.name_match_in_my_friends) {
+                            gdAddToFriendsBtn.style.display = "";
+                            gdAddToFriendsBtn.textContent = "Already in your friends";
+                            gdAddToFriendsBtn.disabled = true;
+                        } else {
+                            gdAddToFriendsBtn.style.display = "";
+                            gdAddToFriendsBtn.textContent = "+ Add to My Friends";
+                            gdAddToFriendsBtn.disabled = false;
+                        }
                     } else {
                         gdAddToFriendsBtn.style.display = "none";
                     }
