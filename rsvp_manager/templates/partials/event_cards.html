@@ -13,7 +13,7 @@
    data-guests="{{ total }}"
    data-past="{{ 'true' if event.date < today_date else 'false' }}">
     <div class="event-row-left">
-        <span class="event-row-name">{{ event.name }}</span>
+        <span class="event-row-name">{{ event.name }}{% if event.user_id != current_user.id %} <span class="shared-event-badge">shared</span>{% endif %}</span>
         {% if event.location %}
         <span class="event-row-location">{{ event.location }}</span>
         {% endif %}
