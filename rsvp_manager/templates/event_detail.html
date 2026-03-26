@@ -250,9 +250,8 @@
                         <div class="kebab-wrapper">
                             <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>
                             <div class="kebab-menu">
-                                <button type="button" class="inv-guest-detail-btn" data-guest-id="{{ inv.guest.id }}"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Friend detail</button>
+                                <button type="button" class="inv-guest-detail-btn" data-guest-id="{{ inv.guest.id }}"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Guest detail</button>
                                 {% if role in ('owner', 'cohost') %}
-                                <button type="button" class="edit-btn"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Invitation detail</button>
                                 <button type="button" class="kebab-danger remove-btn" data-inv-id="{{ inv.id }}"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Remove</button>
                                 {% endif %}
                             </div>
@@ -425,74 +424,6 @@
     </div>
 </div>
 
-<!-- Invitation Detail modal -->
-<div class="detail-overlay" id="detail-overlay" style="display:none">
-    <div class="detail-card">
-        <div class="detail-card-header">
-            <span class="modal-title">Invitation Detail</span>
-            <button type="button" class="detail-close" id="detail-close">&times;</button>
-        </div>
-        <div class="detail-card-body">
-            <form class="form modal-form" id="inv-detail-form">
-                <div class="form-row">
-                    <div class="form-field">
-                        <label for="detail-first-name">First Name</label>
-                        <textarea id="detail-first-name" required rows="1"></textarea>
-                    </div>
-                    <div class="form-field">
-                        <label for="detail-last-name">Last Name</label>
-                        <textarea id="detail-last-name" rows="1"></textarea>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-field">
-                        <label for="detail-gender">Gender</label>
-                        <select id="detail-gender">
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-field">
-                        <label>Invitation Sent</label>
-                        <label class="ios-toggle">
-                            <input type="checkbox" id="detail-sent-toggle">
-                            <span class="ios-toggle-slider"></span>
-                        </label>
-                    </div>
-                    <div class="form-field">
-                        <label>Sent on</label>
-                        <span class="inv-detail-datetime" id="detail-date-invited"></span>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-field">
-                        <label>RSVP Status</label>
-                        <select id="detail-status">
-                            <option value="Attending">Attending</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Declined">Declined</option>
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label>RSVP received on</label>
-                        <span class="inv-detail-datetime" id="detail-date-responded"></span>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-field">
-                        <label for="detail-notes">Invitation Notes</label>
-                        <textarea id="detail-notes" rows="3" placeholder="Invite note..."></textarea>
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 <!-- Edit Event modal -->
 <div class="detail-overlay" id="edit-event-overlay" style="display:none">
     <div class="detail-card">
@@ -548,16 +479,17 @@
     </div>
 </div>
 
-<!-- Guest Detail overlay -->
+<!-- Guest Detail overlay (merged: guest info + invitation info) -->
 <div class="detail-overlay" id="guest-detail-overlay" style="display:none">
     <div class="detail-card">
         <div class="detail-card-header">
-            <span class="modal-title">Friend Detail</span>
+            <span class="modal-title">Guest Detail</span>
             <button type="button" class="detail-close" id="guest-detail-close">&times;</button>
         </div>
         <div class="detail-card-body">
             <form class="form modal-form" id="guest-detail-form">
                 <input type="hidden" id="gd-guest-id">
+                <input type="hidden" id="gd-inv-id">
                 <span class="gd-is-me-label" id="gd-is-me-label" style="display:none">This is me — edit via Settings &gt; My Profile</span>
                 <span class="gd-other-user-label" id="gd-other-user-label" style="display:none">Guest added by Co-Host — view only</span>
                 <div class="form-row">
@@ -578,7 +510,7 @@
                             <option value="Female">Female</option>
                         </select>
                     </div>
-                    <div class="form-field" id="gd-is-me-row">
+                    <div class="form-field" id="gd-is-me-row" style="display:none">
                         <label>This is me</label>
                         <label class="ios-toggle">
                             <input type="checkbox" id="gd-is-me">
@@ -586,21 +518,60 @@
                         </label>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-field">
-                        <label for="gd-notes">Notes</label>
-                        <textarea id="gd-notes" rows="3" placeholder="Add notes about guest"></textarea>
+                <!-- Guest notes & tags: only shown for guest owner -->
+                <div id="gd-owner-section">
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="gd-notes">Guest Notes</label>
+                            <textarea id="gd-notes" rows="2" placeholder="Add notes about guest"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>Tags</label>
+                            <div class="tags-autocomplete-wrapper">
+                                <div class="tags-display" id="gd-tags-display"></div>
+                                <input type="text" id="gd-tags-input" placeholder="Add tag..." autocomplete="off">
+                                <div class="tags-suggestions" id="gd-tags-suggestions" style="display:none"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-field">
-                        <label>Tags</label>
-                        <div class="tags-autocomplete-wrapper">
-                            <div class="tags-display" id="gd-tags-display"></div>
-                            <input type="text" id="gd-tags-input" placeholder="Add tag..." autocomplete="off">
-                            <div class="tags-suggestions" id="gd-tags-suggestions" style="display:none"></div>
+                <!-- Invitation section: editable by all co-hosts -->
+                <div id="gd-inv-section" class="gd-section-divider">
+                    <span class="gd-added-by" id="gd-added-by" style="display:none"></span>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>Invitation Sent</label>
+                            <label class="ios-toggle">
+                                <input type="checkbox" id="gd-sent-toggle">
+                                <span class="ios-toggle-slider"></span>
+                            </label>
                         </div>
-                        <p class="form-hint">Add tags to sort your guests quickly (e.g., family, cycling, single, ...)</p>
+                        <div class="form-field">
+                            <label>Sent on</label>
+                            <span class="inv-detail-datetime" id="gd-date-invited"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>RSVP Status</label>
+                            <select id="gd-status">
+                                <option value="Attending">Attending</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Declined">Declined</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>RSVP received on</label>
+                            <span class="inv-detail-datetime" id="gd-date-responded"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="gd-inv-notes">Invitation Notes</label>
+                            <textarea id="gd-inv-notes" rows="2" placeholder="Invite note..."></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="form-actions">
@@ -608,6 +579,7 @@
                     <button type="button" class="btn btn-secondary" id="gd-add-to-friends" style="display:none">+ Add to My Friends</button>
                 </div>
             </form>
+            <!-- Invitation summary: only for guest owner -->
             <div class="guest-detail-meta" id="gd-meta"></div>
         </div>
     </div>

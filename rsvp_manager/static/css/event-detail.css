@@ -763,6 +763,20 @@ tr[data-is-me="true"] td {
     margin-bottom: 0.5rem;
 }
 
+.gd-section-divider {
+    border-top: 1px solid var(--color-border);
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+}
+
+.gd-added-by {
+    display: inline-block;
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+    font-style: italic;
+}
+
 /* ── Share Event modal ───────────────────────────────────────────────────── */
 .share-section-title {
     font-size: 0.82rem;
