@@ -41,15 +41,81 @@ document.addEventListener("DOMContentLoaded", function () {
     var shareOverlay = document.getElementById("share-event-overlay");
     var shareClose = document.getElementById("share-event-close");
     if (shareBtn && shareOverlay) {
+        var invTable = document.getElementById("invitations-table");
+        var shareEventId = invTable ? invTable.getAttribute("data-event-id") : null;
+
+        function loadShareLinks() {
+            if (!shareEventId) return;
+            var base = window.location.origin + "/join/";
+            Promise.all([
+                window.fetchWithCsrf("/api/v1/events/" + shareEventId + "/share-links", {
+                    method: "POST", body: JSON.stringify({ role: "cohost" }),
+                }).then(function (r) { return r.json(); }),
+                window.fetchWithCsrf("/api/v1/events/" + shareEventId + "/share-links", {
+                    method: "POST", body: JSON.stringify({ role: "viewer" }),
+                }).then(function (r) { return r.json(); }),
+            ]).then(function (results) {
+                var cl = document.getElementById("share-cohost-link");
+                var vl = document.getElementById("share-viewer-link");
+                if (cl && results[0].data) cl.value = base + results[0].data.token;
+                if (vl && results[1].data) vl.value = base + results[1].data.token;
+            });
+            window.fetchWithCsrf("/api/v1/events/" + shareEventId + "/cohosts")
+                .then(function (r) { return r.json(); })
+                .then(function (resp) {
+                    var list = document.getElementById("share-cohosts-list");
+                    if (!list) return;
+                    var d = resp.data || {};
+                    var members = d.data || [];
+                    var html = "";
+                    if (d.owner) {
+                        html += '<div class="share-member"><span class="share-member-name">' +
+                            window.escapeHtml(d.owner.name) + ' <span class="share-member-email">(' +
+                            window.escapeHtml(d.owner.email) + ')</span></span><span class="share-member-role">owner</span></div>';
+                    }
+                    html += members.map(function (c) {
+                        return '<div class="share-member"><span class="share-member-name">' +
+                            window.escapeHtml(c.name) + ' <span class="share-member-email">(' +
+                            window.escapeHtml(c.email) + ')</span></span><span class="share-member-role">' +
+                            c.role.replace('cohost', 'Co-Host').replace('viewer', 'Viewer') +
+                            '</span><button type="button" class="share-remove-btn" data-user-id="' +
+                            c.user_id + '">&times;</button></div>';
+                    }).join("");
+                    list.innerHTML = html;
+                    list.querySelectorAll(".share-remove-btn").forEach(function (btn) {
+                        btn.addEventListener("click", function () {
+                            if (!confirm("Remove this member?")) return;
+                            window.fetchWithCsrf("/api/v1/events/" + shareEventId + "/cohosts/" + btn.dataset.userId, {
+                                method: "DELETE"
+                            }).then(function () { loadShareLinks(); });
+                        });
+                    });
+                });
+        }
+
         shareBtn.addEventListener("click", function () {
             var menu = shareBtn.closest(".kebab-menu");
             if (menu) menu.classList.remove("open");
-            if (window._loadShareData) window._loadShareData();
+            loadShareLinks();
             shareOverlay.style.display = "flex";
         });
         shareClose.addEventListener("click", function () { shareOverlay.style.display = "none"; });
         shareOverlay.addEventListener("click", function (e) {
             if (e.target === shareOverlay) shareOverlay.style.display = "none";
+        });
+        var copyCohost = document.getElementById("copy-cohost-link");
+        if (copyCohost) copyCohost.addEventListener("click", function () {
+            navigator.clipboard.writeText(document.getElementById("share-cohost-link").value).then(function () {
+                copyCohost.textContent = "Copied!";
+                setTimeout(function () { copyCohost.textContent = "Copy"; }, 2000);
+            });
+        });
+        var copyViewer = document.getElementById("copy-viewer-link");
+        if (copyViewer) copyViewer.addEventListener("click", function () {
+            navigator.clipboard.writeText(document.getElementById("share-viewer-link").value).then(function () {
+                copyViewer.textContent = "Copied!";
+                setTimeout(function () { copyViewer.textContent = "Copy"; }, 2000);
+            });
         });
     }
 
