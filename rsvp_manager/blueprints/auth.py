@@ -4,7 +4,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from rsvp_manager.extensions import db, limiter
-from rsvp_manager.models import User
+from rsvp_manager.models import User, Guest
+from datetime import datetime, timezone
 from rsvp_manager.services.email_service import (
     send_verification_email, verify_email_token,
     send_password_reset_email, validate_reset_token, consume_reset_token,
@@ -20,16 +21,29 @@ def signup():
     if current_user.is_authenticated:
         return redirect(url_for("events.home"))
     if request.method == "POST":
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
+        gender = request.form.get("gender", "")
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
+        if not first_name:
+            return render_template("signup.html", error="First name is required")
+        if gender not in ("Male", "Female"):
+            return render_template("signup.html", error="Please select a gender")
         if not email or "@" not in email:
             return render_template("signup.html", error="Valid email is required")
         if User.query.filter_by(email=email).first():
             return render_template("signup.html", error="Email already registered")
         if len(password) < 8:
             return render_template("signup.html", error="Password must be at least 8 characters")
-        user = User(email=email, password_hash=generate_password_hash(password))
+        user = User(email=email, password_hash=generate_password_hash(password),
+                    first_name=first_name, last_name=last_name, gender=gender)
         db.session.add(user)
+        db.session.flush()
+        # Auto-create "is_me" guest from profile
+        me_guest = Guest(user_id=user.id, first_name=first_name, last_name=last_name,
+                         gender=gender, is_me=True, date_created=datetime.now(timezone.utc))
+        db.session.add(me_guest)
         db.session.commit()
         try:
             send_verification_email(user)

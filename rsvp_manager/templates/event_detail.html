@@ -544,6 +544,7 @@
         <div class="detail-card-body">
             <form class="form modal-form" id="guest-detail-form">
                 <input type="hidden" id="gd-guest-id">
+                <span class="gd-is-me-label" id="gd-is-me-label" style="display:none">This is me — edit via Settings &gt; My Profile</span>
                 <div class="form-row">
                     <div class="form-field">
                         <label for="gd-first">First Name</label>
@@ -562,7 +563,7 @@
                             <option value="Female">Female</option>
                         </select>
                     </div>
-                    <div class="form-field">
+                    <div class="form-field" id="gd-is-me-row">
                         <label>This is me</label>
                         <label class="ios-toggle">
                             <input type="checkbox" id="gd-is-me">

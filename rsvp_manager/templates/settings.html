@@ -6,6 +6,33 @@
 </div>
 
 <div class="section">
+    <h2>My Profile</h2>
+    <form method="POST" action="{{ url_for('settings.update_profile') }}" class="form settings-profile-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-row-inline">
+            <div class="form-field-half">
+                <label for="profile-first">First Name</label>
+                <input type="text" id="profile-first" name="first_name" value="{{ current_user.first_name or '' }}" required maxlength="100">
+            </div>
+            <div class="form-field-half">
+                <label for="profile-last">Last Name</label>
+                <input type="text" id="profile-last" name="last_name" value="{{ current_user.last_name or '' }}" maxlength="100">
+            </div>
+        </div>
+        <div class="form-field-half">
+            <label for="profile-gender">Gender</label>
+            <select id="profile-gender" name="gender" required>
+                <option value="Male"{{ ' selected' if current_user.gender == 'Male' }}>Male</option>
+                <option value="Female"{{ ' selected' if current_user.gender == 'Female' }}>Female</option>
+            </select>
+        </div>
+        <div class="settings-actions">
+            <button type="submit" class="btn btn-small">Save Profile</button>
+        </div>
+    </form>
+</div>
+
+<div class="section">
     <h2>Email</h2>
     <p class="settings-desc">{{ current_user.email }}</p>
     {% if current_user.email_verified %}

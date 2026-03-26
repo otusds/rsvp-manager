@@ -123,6 +123,23 @@
     line-height: 1.3;
 }
 
+/* ── Side-by-side form fields ─────────────────────────────────────────────── */
+.form-row-inline {
+    display: flex;
+    gap: 0.75rem;
+}
+.form-field-half {
+    flex: 1;
+}
+
+/* ── Settings profile form ───────────────────────────────────────────────── */
+.settings-profile-form {
+    max-width: 400px;
+}
+.settings-profile-form label {
+    margin-top: 0.75rem;
+}
+
 /* ── Inline forms ──────────────────────────────────────────────────────────── */
 .inline { display: inline; }
 

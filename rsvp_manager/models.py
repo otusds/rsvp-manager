@@ -9,6 +9,9 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(200), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
+    first_name = db.Column(db.String(100), nullable=True, default="")
+    last_name = db.Column(db.String(100), nullable=True, default="")
+    gender = db.Column(db.String(10), nullable=True, default="")
     email_verified = db.Column(db.Boolean, default=False, nullable=False)
     email_verification_token = db.Column(db.String(64), nullable=True)
     email_verification_sent_at = db.Column(db.DateTime, nullable=True)
@@ -17,6 +20,11 @@ class User(UserMixin, db.Model):
     events = db.relationship("Event", backref="user", cascade="all, delete-orphan")
     guests = db.relationship("Guest", backref="user", cascade="all, delete-orphan")
     tags = db.relationship("Tag", backref="user", cascade="all, delete-orphan")
+
+    @property
+    def full_name(self):
+        parts = [self.first_name or "", self.last_name or ""]
+        return " ".join(p for p in parts if p).strip() or self.email
 
     def __repr__(self):
         return f"<User {self.id} {self.email}>"

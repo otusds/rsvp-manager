@@ -30,6 +30,18 @@
 }
 
 /* ── Archived guest rows ─────────────────────────────────────────────────── */
+/* ── "This is me" label in friend detail ─────────────────────────────────── */
+.gd-is-me-label {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    background: var(--color-primary-pale);
+    padding: 0.25rem 0.65rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
 .archived-row td { opacity: 0.5; }
 .archived-row td:last-child { opacity: 1; }
 .archived-row input, .archived-row select { color: var(--color-text-muted); }

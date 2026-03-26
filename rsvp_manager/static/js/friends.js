@@ -861,7 +861,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById("gd-last").value = g.last_name;
                 document.getElementById("gd-gender").value = g.gender;
                 document.getElementById("gd-notes").value = g.notes;
-                document.getElementById("gd-is-me").checked = g.is_me;
+                // Handle is_me: make name fields read-only, show label
+                var gdFirst = document.getElementById("gd-first");
+                var gdLast = document.getElementById("gd-last");
+                var gdGender = document.getElementById("gd-gender");
+                var gdIsMeRow = document.getElementById("gd-is-me-row");
+                var gdIsMeLabel = document.getElementById("gd-is-me-label");
+                gdFirst.readOnly = g.is_me;
+                gdLast.readOnly = g.is_me;
+                gdGender.disabled = g.is_me;
+                if (gdIsMeRow) gdIsMeRow.style.display = "none";
+                if (gdIsMeLabel) gdIsMeLabel.style.display = g.is_me ? "" : "none";
 
                 // Populate tags
                 currentGuestTags = (g.tags || []).slice();
