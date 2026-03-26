@@ -156,14 +156,14 @@ class TestEditGuest:
 class TestAuthEdgeCases:
     def test_signup_invalid_email_no_at(self, client):
         r = client.post("/signup", data={
-            "email": "notanemail", "password": "validpass"
+            "first_name": "Test", "gender": "Male", "email": "notanemail", "password": "validpass"
         })
         assert r.status_code == 200
         assert b"Valid email" in r.data
 
     def test_signup_email_just_at(self, client):
         r = client.post("/signup", data={
-            "email": "@", "password": "validpass"
+            "first_name": "Test", "gender": "Male", "email": "@", "password": "validpass"
         })
         # "@" contains "@" so passes the basic check, but is still not valid
         # The app currently allows it — this documents the behavior
@@ -184,7 +184,7 @@ class TestAuthEdgeCases:
 
     def test_signup_password_exactly_8(self, client, test_app):
         r = client.post("/signup", data={
-            "email": "exact8@test.com", "password": "12345678"
+            "first_name": "Test", "gender": "Male", "email": "exact8@test.com", "password": "12345678"
         }, follow_redirects=True)
         assert r.status_code == 200
         with test_app.app_context():

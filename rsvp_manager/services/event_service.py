@@ -2,7 +2,7 @@ from datetime import date, datetime, timezone
 from flask import abort
 from sqlalchemy.orm import joinedload
 from rsvp_manager.extensions import db
-from rsvp_manager.models import Event, Guest, Invitation, EVENT_TYPES
+from rsvp_manager.models import Event, EventCohost, Guest, Invitation, EVENT_TYPES
 from rsvp_manager.services.history_service import log_action
 
 
@@ -10,21 +10,30 @@ EVENTS_PER_PAGE = 20
 
 
 def get_user_events(user_id, page=1):
-    return Event.query.filter_by(user_id=user_id).filter(Event.deleted_at.is_(None)).options(
+    """Get events owned by user OR where user is a co-host/viewer."""
+    owned = Event.query.filter_by(user_id=user_id).filter(Event.deleted_at.is_(None))
+    cohosted_ids = db.session.query(EventCohost.event_id).filter_by(user_id=user_id)
+    shared = Event.query.filter(Event.id.in_(cohosted_ids), Event.deleted_at.is_(None))
+    combined = owned.union(shared).options(
         joinedload(Event.invitations)
-    ).order_by(Event.date.desc()).paginate(
-        page=page, per_page=EVENTS_PER_PAGE, error_out=False
-    )
+    ).order_by(Event.date.desc())
+    return combined.paginate(page=page, per_page=EVENTS_PER_PAGE, error_out=False)
 
 
-def get_owned_event_or_404(event_id, user_id):
+def get_authorized_event(event_id, user_id):
+    """Load event with eager loading. Returns (event, role) or aborts."""
+    from rsvp_manager.services.cohost_service import require_event_access
+    event, role = require_event_access(event_id, user_id, min_role="viewer")
+    # Eager load invitations + guests + tags for the event detail page
     event = Event.query.options(
         joinedload(Event.invitations).joinedload(Invitation.guest).joinedload(Guest.tags),
-    ).filter_by(id=event_id).filter(Event.deleted_at.is_(None)).first()
-    if not event:
-        abort(404)
-    if event.user_id != user_id:
-        abort(403)
+    ).filter_by(id=event_id).first()
+    return event, role
+
+
+# Keep backward compatibility — routes that haven't been updated yet
+def get_owned_event_or_404(event_id, user_id):
+    event, role = get_authorized_event(event_id, user_id)
     return event
 
 
@@ -77,7 +86,7 @@ def create_event(user_id, form_data):
         me = Guest.query.filter_by(user_id=user_id, is_me=True).filter(Guest.deleted_at.is_(None)).first()
         if me:
             inv = Invitation(
-                event_id=event.id, guest_id=me.id,
+                event_id=event.id, guest_id=me.id, added_by=user_id,
                 status="Attending", date_invited=date.today(),
                 date_responded=date.today()
             )

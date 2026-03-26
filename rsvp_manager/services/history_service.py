@@ -6,9 +6,10 @@ from rsvp_manager.models import ActivityLog
 HISTORY_PER_PAGE = 30
 
 
-def log_action(user_id, action, entity_type, entity_id, description):
+def log_action(user_id, action, entity_type, entity_id, description, acting_user_id=None):
     entry = ActivityLog(
         user_id=user_id,
+        acting_user_id=acting_user_id,
         action=action,
         entity_type=entity_type,
         entity_id=entity_id,

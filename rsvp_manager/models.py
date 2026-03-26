@@ -47,9 +47,38 @@ class Event(db.Model):
     deleted_at = db.Column(db.DateTime, nullable=True, index=True)
     notes = db.Column(db.Text, default="")
     invitations = db.relationship("Invitation", backref="event", cascade="all, delete-orphan")
+    cohosts = db.relationship("EventCohost", backref="event", cascade="all, delete-orphan")
+    share_links = db.relationship("EventShareLink", backref="event", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Event {self.id} {self.name!r}>"
+
+
+class EventCohost(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    role = db.Column(db.String(10), nullable=False, default="cohost")
+    joined_at = db.Column(db.DateTime, nullable=False)
+    __table_args__ = (db.UniqueConstraint('event_id', 'user_id', name='uq_event_cohost'),)
+
+    user = db.relationship("User", backref="cohosted_events")
+
+    def __repr__(self):
+        return f"<EventCohost event={self.event_id} user={self.user_id} {self.role}>"
+
+
+class EventShareLink(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False, index=True)
+    token = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    role = db.Column(db.String(10), nullable=False, default="cohost")
+    created_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+    def __repr__(self):
+        return f"<EventShareLink event={self.event_id} role={self.role}>"
 
 
 guest_tags = db.Table('guest_tags',
@@ -107,6 +136,7 @@ class Tag(db.Model):
 class ActivityLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    acting_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     action = db.Column(db.String(50), nullable=False)
     entity_type = db.Column(db.String(20), nullable=False)
     entity_id = db.Column(db.Integer, nullable=True)
@@ -121,6 +151,7 @@ class Invitation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False, index=True)
     guest_id = db.Column(db.Integer, db.ForeignKey("guest.id"), nullable=False, index=True)
+    added_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     status = db.Column(db.String(20), nullable=False, default="Not Sent", index=True)
     date_invited = db.Column(db.Date, nullable=True)
     date_responded = db.Column(db.Date, nullable=True)

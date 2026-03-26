@@ -1,3 +1,4 @@
+import unicodedata
 from datetime import datetime, timezone
 from flask import abort
 from sqlalchemy.orm import joinedload
@@ -232,3 +233,52 @@ def bulk_create_guests(user_id, guests_data):
         })
     db.session.commit()
     return added
+
+
+def _normalize_name(name):
+    """Normalize name for accent-insensitive, case-insensitive matching."""
+    if not name:
+        return ""
+    # Remove accents
+    nfkd = unicodedata.normalize('NFKD', name)
+    return "".join(c for c in nfkd if not unicodedata.combining(c)).lower().strip()
+
+
+def get_shared_invitations(guest, user_id):
+    """Find events where a co-host's guest with the same name was invited.
+
+    Returns list of dicts with event_name, event_date, status for events
+    where the user is owner/co-host and another user's guest with matching
+    name was invited.
+    """
+    from rsvp_manager.models import Event, EventCohost
+    norm_first = _normalize_name(guest.first_name)
+    norm_last = _normalize_name(guest.last_name)
+
+    # Get events where user is owner or co-host
+    owned_ids = db.session.query(Event.id).filter_by(user_id=user_id).filter(Event.deleted_at.is_(None))
+    cohosted_ids = db.session.query(EventCohost.event_id).filter_by(user_id=user_id)
+    my_event_ids = set(r[0] for r in owned_ids.all()) | set(r[0] for r in cohosted_ids.all())
+
+    if not my_event_ids:
+        return []
+
+    # Find invitations in those events for guests owned by OTHER users with matching name
+    results = []
+    invitations = Invitation.query.filter(
+        Invitation.event_id.in_(my_event_ids)
+    ).join(Guest, Invitation.guest_id == Guest.id).filter(
+        Guest.user_id != user_id,
+        Guest.deleted_at.is_(None),
+    ).all()
+
+    for inv in invitations:
+        g = inv.guest
+        if _normalize_name(g.first_name) == norm_first and _normalize_name(g.last_name) == norm_last:
+            results.append({
+                "event_name": inv.event.name,
+                "event_date": inv.event.date.strftime("%d/%m/%Y") if inv.event.date else "",
+                "status": inv.status,
+                "shared": True,
+            })
+    return results

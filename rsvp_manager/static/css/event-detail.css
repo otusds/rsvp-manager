@@ -736,3 +736,87 @@ tr[data-is-me="true"] td {
     background: var(--color-bg-secondary);
     margin-bottom: 0.75rem;
 }
+
+/* ── Shared guest badge ──────────────────────────────────────────────────── */
+.added-by-badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    background: rgba(118,118,128,0.1);
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+    margin-left: 0.35rem;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.gd-other-user-label {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    background: rgba(118,118,128,0.08);
+    padding: 0.25rem 0.65rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Share Event modal ───────────────────────────────────────────────────── */
+.share-section-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 1rem 0 0.5rem;
+}
+.share-section-title:first-child { margin-top: 0; }
+.share-members-list { margin-bottom: 0.5rem; }
+.share-empty { font-size: 0.85rem; color: var(--color-text-muted); font-style: italic; }
+.share-member {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+.share-member:last-child { border-bottom: none; }
+.share-member-name { flex: 1; font-size: 0.9rem; font-weight: 500; }
+.share-member-email { font-weight: 400; font-size: 0.78rem; color: var(--color-text-muted); }
+.share-member-role {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    background: rgba(118,118,128,0.08);
+    padding: 0.1rem 0.4rem;
+    border-radius: 6px;
+}
+.share-remove-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0 0.3rem;
+    border-radius: 50%;
+    transition: color 0.15s;
+}
+.share-remove-btn:hover { color: var(--color-danger); }
+.share-link-section { margin-top: 0.75rem; }
+.share-link-row {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+.share-link-input {
+    flex: 1;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-family: inherit;
+    color: var(--color-text-muted);
+    background: var(--color-bg-secondary);
+}
