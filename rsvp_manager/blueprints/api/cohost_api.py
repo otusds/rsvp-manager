@@ -25,7 +25,7 @@ def create_share_link(event_id):
     if role not in ("cohost", "viewer"):
         return api_error("Role must be 'cohost' or 'viewer'")
     link = cohost_service.create_share_link(event_id, get_api_user().id, role)
-    return api_success({"token": link.token, "role": link.role, "id": link.id}), 201
+    return api_success({"token": link.token, "role": link.role, "id": link.id})
 
 
 @api_bp.route("/share-links/<int:link_id>/disable", methods=["POST"])
