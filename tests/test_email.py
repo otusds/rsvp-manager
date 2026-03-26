@@ -16,7 +16,7 @@ class TestEmailVerification:
     def test_signup_sends_verification_email(self, client, test_app):
         with patch("rsvp_manager.blueprints.auth.send_verification_email") as mock_send:
             resp = client.post("/signup", data={
-                "email": "new@test.com", "password": "password123"
+                "first_name": "Test", "gender": "Male", "email": "new@test.com", "password": "password123"
             }, follow_redirects=True)
             assert resp.status_code == 200
             mock_send.assert_called_once()
@@ -26,7 +26,7 @@ class TestEmailVerification:
     def test_signup_works_if_email_fails(self, client, test_app):
         with patch("rsvp_manager.blueprints.auth.send_verification_email", side_effect=Exception("SMTP error")):
             resp = client.post("/signup", data={
-                "email": "new@test.com", "password": "password123"
+                "first_name": "Test", "gender": "Male", "email": "new@test.com", "password": "password123"
             }, follow_redirects=True)
             assert resp.status_code == 200
             with test_app.app_context():

@@ -2,6 +2,8 @@
 from rsvp_manager.extensions import db
 from rsvp_manager.models import User
 
+SIGNUP_BASE = {"first_name": "Test", "gender": "Male"}
+
 
 class TestSignup:
     def test_get_signup_page(self, client):
@@ -11,7 +13,7 @@ class TestSignup:
 
     def test_signup_success(self, client, test_app):
         r = client.post("/signup", data={
-            "email": "new@test.com", "password": "validpass"
+            **SIGNUP_BASE, "email": "new@test.com", "password": "validpass"
         }, follow_redirects=True)
         assert r.status_code == 200
         with test_app.app_context():
@@ -19,38 +21,35 @@ class TestSignup:
 
     def test_signup_duplicate_email(self, client, user):
         r = client.post("/signup", data={
-            "email": "test@test.com", "password": "validpass"
+            **SIGNUP_BASE, "email": "test@test.com", "password": "validpass"
         })
         assert r.status_code == 200
         assert b"Email already registered" in r.data
 
     def test_signup_short_password(self, client):
         r = client.post("/signup", data={
-            "email": "new@test.com", "password": "1234567"
+            **SIGNUP_BASE, "email": "new@test.com", "password": "1234567"
         })
         assert r.status_code == 200
         assert b"at least 8 characters" in r.data
 
     def test_signup_missing_email(self, client):
-        r = client.post("/signup", data={"password": "validpass"})
+        r = client.post("/signup", data={**SIGNUP_BASE, "password": "validpass"})
         assert r.status_code == 200
         assert b"Valid email is required" in r.data
 
     def test_signup_missing_password(self, client):
-        r = client.post("/signup", data={"email": "new@test.com"})
+        r = client.post("/signup", data={**SIGNUP_BASE, "email": "new@test.com"})
         assert r.status_code == 200
         assert b"at least 8 characters" in r.data
 
     def test_signup_empty_email(self, client):
-        r = client.post("/signup", data={"email": "", "password": "validpass"})
-        # Empty string still goes through, but strip().lower() makes it ""
-        # The route doesn't validate empty email, so it may create a user with email=""
-        # This is a bug we should note
+        r = client.post("/signup", data={**SIGNUP_BASE, "email": "", "password": "validpass"})
         assert r.status_code in (200, 302)
 
     def test_signup_email_case_normalization(self, client, test_app):
         r = client.post("/signup", data={
-            "email": "  UPPER@Test.COM  ", "password": "validpass"
+            **SIGNUP_BASE, "email": "  UPPER@Test.COM  ", "password": "validpass"
         }, follow_redirects=True)
         assert r.status_code == 200
         with test_app.app_context():
@@ -63,7 +62,7 @@ class TestSignup:
 
     def test_signup_special_characters_in_email(self, client, test_app):
         r = client.post("/signup", data={
-            "email": "user+tag@example.com", "password": "validpass"
+            **SIGNUP_BASE, "email": "user+tag@example.com", "password": "validpass"
         }, follow_redirects=True)
         assert r.status_code == 200
         with test_app.app_context():

@@ -8,11 +8,12 @@ VALID_STATUSES = ("Attending", "Pending", "Declined")
 
 
 def get_owned_invitation_or_404(invitation_id, user_id):
+    """Check user has at least cohost access to the invitation's event."""
+    from rsvp_manager.services.cohost_service import require_event_access
     invitation = db.session.get(Invitation, invitation_id)
     if not invitation:
         abort(404)
-    if invitation.event.user_id != user_id:
-        abort(403)
+    require_event_access(invitation.event_id, user_id, min_role="cohost")
     return invitation
 
 
@@ -102,7 +103,7 @@ def bulk_add_guests(event, guest_ids, user_id):
         guest = guests_by_id.get(gid)
         if not guest:
             continue
-        inv = Invitation(event_id=event.id, guest_id=gid, status="Not Sent")
+        inv = Invitation(event_id=event.id, guest_id=gid, added_by=user_id, status="Not Sent")
         db.session.add(inv)
         db.session.flush()
         log_action(event.user_id, "added_to_event", "invitation", inv.id,
@@ -156,7 +157,7 @@ def bulk_create_and_invite(event, guests_data, user_id):
         )
         db.session.add(guest)
         db.session.flush()
-        inv = Invitation(event_id=event.id, guest_id=guest.id, status="Not Sent")
+        inv = Invitation(event_id=event.id, guest_id=guest.id, added_by=user_id, status="Not Sent")
         db.session.add(inv)
         db.session.flush()
         log_action(user_id, "created_guest", "guest", guest.id, f"You added {guest.full_name} to your friends")

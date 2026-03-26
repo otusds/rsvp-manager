@@ -1113,6 +1113,119 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // ── Share Event ─────────────────────────────────────────────────────
+    var shareOverlay = document.getElementById("share-event-overlay");
+    var shareBtn = document.getElementById("open-share-event-btn");
+    var shareClose = document.getElementById("share-event-close");
+
+    if (shareBtn && shareOverlay) {
+        var invTable = document.getElementById("invitations-table");
+        var eventId = invTable ? invTable.getAttribute("data-event-id") : null;
+
+        function loadShareData() {
+            // Load cohosts
+            window.fetchWithCsrf("/api/v1/events/" + eventId + "/cohosts")
+                .then(function (r) { return r.json(); })
+                .then(function (resp) {
+                    var list = document.getElementById("share-cohosts-list");
+                    if (!resp.data || resp.data.length === 0) {
+                        list.innerHTML = '<p class="share-empty">No co-hosts yet. Share a link to invite someone.</p>';
+                    } else {
+                        list.innerHTML = resp.data.map(function (c) {
+                            return '<div class="share-member">' +
+                                '<span class="share-member-name">' + window.escapeHtml(c.name) + '</span>' +
+                                '<span class="share-member-role">' + c.role + '</span>' +
+                                '<button type="button" class="share-remove-btn" data-user-id="' + c.user_id + '">&times;</button>' +
+                                '</div>';
+                        }).join("");
+                        list.querySelectorAll(".share-remove-btn").forEach(function (btn) {
+                            btn.addEventListener("click", function () {
+                                if (!confirm("Remove this member?")) return;
+                                window.fetchWithCsrf("/api/v1/events/" + eventId + "/cohosts/" + btn.dataset.userId, {
+                                    method: "DELETE"
+                                }).then(function () { loadShareData(); });
+                            });
+                        });
+                    }
+                });
+            // Load/create share links
+            window.fetchWithCsrf("/api/v1/events/" + eventId + "/share-links")
+                .then(function (r) { return r.json(); })
+                .then(function (resp) {
+                    var cohostLink = null, viewerLink = null;
+                    (resp.data || []).forEach(function (l) {
+                        if (l.role === "cohost") cohostLink = l;
+                        if (l.role === "viewer") viewerLink = l;
+                    });
+                    var base = window.location.origin + "/join/";
+                    if (cohostLink) {
+                        document.getElementById("share-cohost-link").value = base + cohostLink.token;
+                    } else {
+                        window.fetchWithCsrf("/api/v1/events/" + eventId + "/share-links", {
+                            method: "POST",
+                            body: JSON.stringify({ role: "cohost" }),
+                        }).then(function (r) { return r.json(); })
+                        .then(function (r) {
+                            document.getElementById("share-cohost-link").value = base + r.data.token;
+                        });
+                    }
+                    if (viewerLink) {
+                        document.getElementById("share-viewer-link").value = base + viewerLink.token;
+                    } else {
+                        window.fetchWithCsrf("/api/v1/events/" + eventId + "/share-links", {
+                            method: "POST",
+                            body: JSON.stringify({ role: "viewer" }),
+                        }).then(function (r) { return r.json(); })
+                        .then(function (r) {
+                            document.getElementById("share-viewer-link").value = base + r.data.token;
+                        });
+                    }
+                });
+        }
+
+        shareBtn.addEventListener("click", function () {
+            var menu = shareBtn.closest(".kebab-menu");
+            if (menu) menu.classList.remove("open");
+            loadShareData();
+            shareOverlay.style.display = "flex";
+        });
+        shareClose.addEventListener("click", function () { shareOverlay.style.display = "none"; });
+        shareOverlay.addEventListener("click", function (e) { if (e.target === shareOverlay) shareOverlay.style.display = "none"; });
+
+        document.getElementById("copy-cohost-link").addEventListener("click", function () {
+            var input = document.getElementById("share-cohost-link");
+            navigator.clipboard.writeText(input.value).then(function () {
+                var btn = document.getElementById("copy-cohost-link");
+                btn.textContent = "Copied!";
+                setTimeout(function () { btn.textContent = "Copy"; }, 2000);
+            });
+        });
+        document.getElementById("copy-viewer-link").addEventListener("click", function () {
+            var input = document.getElementById("share-viewer-link");
+            navigator.clipboard.writeText(input.value).then(function () {
+                var btn = document.getElementById("copy-viewer-link");
+                btn.textContent = "Copied!";
+                setTimeout(function () { btn.textContent = "Copy"; }, 2000);
+            });
+        });
+    }
+
+    // ── Leave Event (co-host/viewer) ─────────────────────────────────────
+    var leaveBtn = document.getElementById("leave-event-btn");
+    if (leaveBtn) {
+        leaveBtn.addEventListener("click", function () {
+            if (!confirm("Leave this event? You will lose access.")) return;
+            var menu = leaveBtn.closest(".kebab-menu");
+            if (menu) menu.classList.remove("open");
+            var invTable = document.getElementById("invitations-table");
+            var eventId = invTable ? invTable.getAttribute("data-event-id") : null;
+            // Remove self as cohost
+            window.fetchWithCsrf("/api/v1/events/" + eventId + "/cohosts/" + document.body.dataset.userId, {
+                method: "DELETE"
+            }).then(function () { window.location.href = "/"; });
+        });
+    }
+
     // ── Export to Text ─────────────────────────────────────────────────
     var exportTextBtn = document.getElementById("export-text-btn");
     var exportTextOverlay = document.getElementById("export-text-overlay");

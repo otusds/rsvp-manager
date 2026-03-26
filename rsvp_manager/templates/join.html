@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="join-container">
+    {% if error %}
+    <div class="join-card">
+        <svg class="join-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <h2>{{ error }}</h2>
+        <a href="{{ url_for('events.home') }}" class="btn">Go to Events</a>
+    </div>
+    {% else %}
+    <div class="join-card">
+        <svg class="join-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg>
+        <h2>You've been invited!</h2>
+        <p class="join-event-name">{{ event.name }}</p>
+        <p class="join-meta">{{ event.event_type }} · {{ event.date.strftime('%d %B %Y') }}{% if event.location %} · {{ event.location }}{% endif %}</p>
+        <p class="join-role">You'll join as <strong>{{ link.role }}</strong></p>
+        <form method="POST" action="{{ url_for('join.accept_join', token=token) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-full">Accept & Join Event</button>
+        </form>
+        <a href="{{ url_for('events.home') }}" class="join-decline">No thanks</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
