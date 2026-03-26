@@ -65,6 +65,10 @@
     color: var(--color-text-muted);
     background: rgba(118,118,128,0.1);
 }
+.shared-event-badge.badge-shared {
+    color: var(--color-primary-dark);
+    background: rgba(16,185,129,0.1);
+}
 
 .event-row-location {
     font-size: 0.8rem;

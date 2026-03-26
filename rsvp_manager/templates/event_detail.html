@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="header-row">
-    <h1>{{ event.name }}{% if role == 'cohost' %} <span class="shared-event-badge">Co-host</span>{% elif role == 'viewer' %} <span class="shared-event-badge badge-viewer">Viewer</span>{% endif %}</h1>
+    <h1>{{ event.name }}{% if role == 'cohost' %} <span class="shared-event-badge">Co-host</span>{% elif role == 'viewer' %} <span class="shared-event-badge badge-viewer">Viewer</span>{% elif role == 'owner' and event.cohosts|length > 0 %} <span class="shared-event-badge badge-shared">Shared</span>{% endif %}</h1>
     <div class="kebab-wrapper">
         <button type="button" class="icon-btn" id="page-menu-btn" aria-label="More">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>

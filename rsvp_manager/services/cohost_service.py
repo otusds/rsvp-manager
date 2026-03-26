@@ -50,6 +50,16 @@ def get_event_roles_for_user(user_id, event_ids):
     return roles
 
 
+def get_shared_event_ids(event_ids):
+    """Return set of event IDs that have at least one co-host/viewer."""
+    if not event_ids:
+        return set()
+    rows = db.session.query(EventCohost.event_id).filter(
+        EventCohost.event_id.in_(event_ids)
+    ).distinct().all()
+    return set(r[0] for r in rows)
+
+
 def get_event_cohosts(event_id):
     """Get all cohosts/viewers for an event."""
     return EventCohost.query.filter_by(event_id=event_id).all()

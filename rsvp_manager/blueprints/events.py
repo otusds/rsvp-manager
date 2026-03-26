@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, jsonif
 from flask_login import login_required, current_user
 from rsvp_manager.models import EVENT_TYPES
 from rsvp_manager.services import event_service
-from rsvp_manager.services.cohost_service import require_event_access, get_event_roles_for_user
+from rsvp_manager.services.cohost_service import require_event_access, get_event_roles_for_user, get_shared_event_ids
 
 bp = Blueprint("events", __name__)
 
@@ -13,18 +13,20 @@ bp = Blueprint("events", __name__)
 def home():
     page = request.args.get("page", 1, type=int)
     pagination = event_service.get_user_events(current_user.id, page=page)
-    event_roles = get_event_roles_for_user(current_user.id, [e.id for e in pagination.items])
+    event_ids = [e.id for e in pagination.items]
+    event_roles = get_event_roles_for_user(current_user.id, event_ids)
+    shared_ids = get_shared_event_ids(event_ids)
     if request.args.get("partial"):
         return render_template(
             "partials/event_cards.html", events=pagination.items,
-            today_date=date.today(), event_roles=event_roles
+            today_date=date.today(), event_roles=event_roles, shared_ids=shared_ids
         )
     me_exists = event_service.check_me_exists(current_user.id)
     locations = event_service.get_user_locations(current_user.id)
     return render_template(
         "home.html", events=pagination.items, event_types=EVENT_TYPES,
         today_date=date.today(), me_exists=me_exists, pagination=pagination,
-        locations=locations, event_roles=event_roles
+        locations=locations, event_roles=event_roles, shared_ids=shared_ids
     )
 
 
