@@ -106,6 +106,12 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    // ── Blocked actions for is_me profile guest ─────────────────────────────
+    document.addEventListener("click", function (e) {
+        var btn = e.target.closest(".is-me-blocked");
+        if (btn) { alert(btn.dataset.msg); }
+    });
+
     // ── Confirm dialogs ─────────────────────────────────────────────────────
     document.querySelectorAll("form[data-confirm]").forEach(function (form) {
         form.addEventListener("submit", function (e) {

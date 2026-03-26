@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, current_app, abort
+from datetime import datetime, timezone
+from flask import Blueprint, render_template, redirect, url_for, flash, current_app, abort, request
 from flask_login import login_required, current_user
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Event, Guest, Invitation, Tag, ActivityLog, guest_tags
@@ -11,6 +12,37 @@ bp = Blueprint("settings", __name__)
 @login_required
 def settings():
     return render_template("settings.html")
+
+
+@bp.route("/settings/profile", methods=["POST"])
+@login_required
+def update_profile():
+    first_name = request.form.get("first_name", "").strip()
+    last_name = request.form.get("last_name", "").strip()
+    gender = request.form.get("gender", "")
+    if not first_name:
+        flash("First name is required.")
+        return redirect(url_for("settings.settings"))
+    if gender not in ("Male", "Female"):
+        flash("Please select a gender.")
+        return redirect(url_for("settings.settings"))
+    current_user.first_name = first_name
+    current_user.last_name = last_name
+    current_user.gender = gender
+    # Sync the is_me guest
+    me_guest = Guest.query.filter_by(user_id=current_user.id, is_me=True).filter(Guest.deleted_at.is_(None)).first()
+    if me_guest:
+        me_guest.first_name = first_name
+        me_guest.last_name = last_name
+        me_guest.gender = gender
+        me_guest.date_edited = datetime.now(timezone.utc)
+    else:
+        me_guest = Guest(user_id=current_user.id, first_name=first_name, last_name=last_name,
+                         gender=gender, is_me=True, date_created=datetime.now(timezone.utc))
+        db.session.add(me_guest)
+    db.session.commit()
+    flash("Profile updated.")
+    return redirect(url_for("settings.settings"))
 
 
 @bp.route("/settings/load-sample-data", methods=["POST"])

@@ -375,6 +375,9 @@ select.status-declined {
 .kebab-menu a:hover,
 .kebab-menu button:hover { background: rgba(0,0,0,0.04); }
 
+.kebab-menu .kebab-disabled { color: var(--color-text-muted); opacity: 0.5; }
+.kebab-menu .kebab-disabled .kebab-icon { color: var(--color-text-muted); }
+
 .kebab-menu .kebab-danger { color: var(--color-danger); }
 .kebab-menu .kebab-danger .kebab-icon { color: var(--color-danger); }
 

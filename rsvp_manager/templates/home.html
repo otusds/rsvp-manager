@@ -115,17 +115,16 @@
                         </select>
                     </div>
                 </div>
+                {% if me_exists %}
                 <div class="form-row">
-                    {% if me_exists %}
-                    <div class="form-field form-field-checkbox">
-                        <label>&nbsp;</label>
+                    <div class="form-field">
                         <div class="checkbox-row">
                             <input type="checkbox" id="ne-include-me" name="include_me" checked>
                             <label for="ne-include-me">Include me as a participant</label>
                         </div>
                     </div>
-                    {% endif %}
                 </div>
+                {% endif %}
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ne-notes">Notes</label>
