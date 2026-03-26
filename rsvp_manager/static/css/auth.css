@@ -102,6 +102,13 @@
     margin: 0;
 }
 
+.auth-hint {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: 0.5rem;
+    line-height: 1.4;
+}
+
 /* ── Login layout ──────────────────────────────────────────────────────── */
 .login-container {
     display: flex;
