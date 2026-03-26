@@ -1,6 +1,6 @@
 import re
 from io import BytesIO
-from flask import send_file
+from flask import send_file, make_response
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
@@ -68,3 +68,42 @@ def export_event_guests_xlsx(event):
         ws.column_dimensions[col[0].column_letter].width = 18
     safe_name = re.sub(r"[^\w\-]", "_", event.name).strip("_").lower()
     return _to_download(wb, f"{safe_name}_guests.xlsx")
+
+
+def export_event_guests_text(event):
+    """Export attending/pending guests as formatted text for sharing."""
+    attending = []
+    pending = []
+    for inv in event.invitations:
+        if inv.guest.deleted_at:
+            continue
+        name = inv.guest.full_name
+        if inv.status == "Attending":
+            attending.append(name)
+        elif inv.status == "Pending":
+            pending.append(name)
+
+    attending.sort(key=str.lower)
+    pending.sort(key=str.lower)
+
+    lines = []
+    lines.append(f"{event.name} ({event.date.strftime('%d %B %Y')})")
+    lines.append(f"✅ {len(attending)} attending · 🟠 {len(pending)} pending")
+    lines.append("")
+
+    if attending:
+        lines.append("— Attending —")
+        for name in attending:
+            lines.append(f"• {name}")
+        lines.append("")
+
+    if pending:
+        lines.append("— Pending —")
+        for name in pending:
+            lines.append(f"• {name}")
+        lines.append("")
+
+    text = "\n".join(lines)
+    response = make_response(text)
+    response.headers["Content-Type"] = "text/plain; charset=utf-8"
+    return response
