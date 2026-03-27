@@ -95,9 +95,12 @@ def send_cohost_notification(event, joining_user, role):
         return
     role_label = "Co-Host" if role == "cohost" else "Viewer"
     subject = f"{joining_user.full_name} joined your event as {role_label}"
-    html = (
-        f"<p><strong>{joining_user.full_name}</strong> joined your event "
-        f"<strong>{event.name}</strong> as a {role_label}.</p>"
-        f"<p>Date: {event.date.strftime('%d %B %Y')}</p>"
-    )
+    event_url = url_for("events.event_detail", event_id=event.id, _external=True)
+    html = render_template("emails/cohost_joined.html",
+                           joining_name=joining_user.full_name,
+                           event_name=event.name,
+                           event_date=event.date.strftime("%d %B %Y"),
+                           event_location=event.location or "",
+                           event_url=event_url,
+                           role_label=role_label)
     _send_email(owner.email, subject, html)

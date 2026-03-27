@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="font-family: 'DM Sans', Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #FFFFFF; color: #0A2E23;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td style="background-color:#064E3B; padding:24px 24px 20px; text-align:center;">
+                <table cellpadding="0" cellspacing="0" border="0" style="display:inline-block;">
+                    <tr>
+                        <td style="border:2px solid #10B981; border-radius:10px; padding:8px 10px; vertical-align:middle;">
+                            <span style="color:#10B981; font-size:24px; line-height:1;">&#10003;</span>
+                        </td>
+                        <td style="padding-left:14px; vertical-align:middle;">
+                            <span style="font-family:'DM Sans',Helvetica,Arial,sans-serif; font-size:28px; font-weight:800; color:#FFFFFF; letter-spacing:-0.6px;">Guest</span><span style="font-family:'DM Sans',Helvetica,Arial,sans-serif; font-size:28px; font-weight:400; color:#10B981; letter-spacing:-0.6px;">Check</span>
+                        </td>
+                    </tr>
+                </table>
+                <div style="margin-top:6px;">
+                    <span style="font-family:'DM Sans',Helvetica,Arial,sans-serif; font-size:11px; color:#6B9080; letter-spacing:4px; font-weight:500; text-transform:uppercase;">RSVP MANAGEMENT</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+    <div style="max-width: 600px; margin: 0 auto; padding: 32px 24px;">
+        <h2 style="color: #0A2E23; font-family: 'DM Sans', Helvetica, Arial, sans-serif; margin-bottom: 16px;">New {{ role_label }} joined your event</h2>
+        <p style="font-family: 'DM Sans', Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #0A2E23;"><strong>{{ joining_name }}</strong> joined your event <strong>{{ event_name }}</strong> as a {{ role_label }}.</p>
+        <table cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0; font-family: 'DM Sans', Helvetica, Arial, sans-serif; font-size: 14px; color: #0A2E23;">
+            <tr>
+                <td style="padding: 4px 16px 4px 0; color: #6B7280;">Event</td>
+                <td style="padding: 4px 0; font-weight: 600;">{{ event_name }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 16px 4px 0; color: #6B7280;">Date</td>
+                <td style="padding: 4px 0;">{{ event_date }}</td>
+            </tr>
+            {% if event_location %}
+            <tr>
+                <td style="padding: 4px 16px 4px 0; color: #6B7280;">Location</td>
+                <td style="padding: 4px 0;">{{ event_location }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td style="padding: 4px 16px 4px 0; color: #6B7280;">Role</td>
+                <td style="padding: 4px 0;">{{ role_label }}</td>
+            </tr>
+        </table>
+        <p style="margin: 24px 0;">
+            <a href="{{ event_url }}" style="background-color:#10B981; color:#FFFFFF; border-radius:8px; padding:12px 24px; text-decoration:none; font-weight:600; display:inline-block; font-family:'DM Sans',Helvetica,Arial,sans-serif;">View Event</a>
+        </p>
+        <p style="font-size: 14px; color: #6B7280; font-family: 'DM Sans', Helvetica, Arial, sans-serif;">You're receiving this because someone used your share link to join an event you created on GuestCheck.</p>
+    </div>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td style="background-color:#F0FDF4; padding:16px 24px; text-align:center;">
+                <span style="font-family:'DM Sans',Helvetica,Arial,sans-serif; font-size:12px; color:#6B7280;">GuestCheck — RSVP Management</span>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
