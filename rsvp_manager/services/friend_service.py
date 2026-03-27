@@ -186,12 +186,13 @@ def bulk_add_tag(user_id, guest_ids, tag_name):
 
 
 def bulk_remove_tag(user_id, guest_ids, tag_name):
-    from rsvp_manager.services import tag_service
-    tag = None
-    for t in tag_service.get_user_tags(user_id):
-        if t.name.lower() == tag_name.lower():
-            tag = t
-            break
+    # Direct DB lookup instead of loading all tags into Python
+    from rsvp_manager.models import Tag
+    tag = Tag.query.filter(
+        Tag.user_id == user_id,
+        db.func.lower(Tag.name) == tag_name.lower(),
+        Tag.deleted_at.is_(None)
+    ).first()
     if not tag:
         return []
     guests = _get_owned_guests_by_ids(user_id, guest_ids)
