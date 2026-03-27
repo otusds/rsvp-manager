@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
+from rsvp_manager.extensions import limiter
 from rsvp_manager.models import EventShareLink, Event
 from rsvp_manager.services import cohost_service
 
@@ -7,6 +8,7 @@ bp = Blueprint("join", __name__)
 
 
 @bp.route("/join/<token>")
+@limiter.limit("20 per minute")
 @login_required
 def join_event(token):
     # Validate token before joining
@@ -27,6 +29,7 @@ def join_event(token):
 
 
 @bp.route("/join/<token>/accept", methods=["POST"])
+@limiter.limit("10 per minute")
 @login_required
 def accept_join(token):
     event, role = cohost_service.join_event(token, current_user.id)

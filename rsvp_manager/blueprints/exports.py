@@ -9,16 +9,16 @@ bp = Blueprint("exports", __name__)
 @bp.route("/export/events")
 @login_required
 def export_events():
-    events = Event.query.filter_by(user_id=current_user.id).order_by(Event.date).all()
+    events = Event.query.filter_by(user_id=current_user.id).filter(Event.deleted_at.is_(None)).order_by(Event.date).all()
     return export_service.export_events_xlsx(events)
 
 
 @bp.route("/export/friends")
 @login_required
 def export_friends():
-    guests = Guest.query.filter_by(user_id=current_user.id).order_by(
-        Guest.last_name, Guest.first_name
-    ).all()
+    guests = Guest.query.filter_by(user_id=current_user.id).filter(
+        Guest.deleted_at.is_(None)
+    ).order_by(Guest.last_name, Guest.first_name).all()
     return export_service.export_guests_xlsx(guests)
 
 

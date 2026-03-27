@@ -79,6 +79,11 @@ def create_app(config_class=Config):
         from flask import render_template
         return render_template("offline.html")
 
+    @app.route("/privacy")
+    def privacy():
+        from flask import render_template
+        return render_template("privacy.html")
+
     @app.after_request
     def set_security_headers(response):
         response.headers["X-Content-Type-Options"] = "nosniff"

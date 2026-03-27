@@ -64,9 +64,6 @@
 }
 
 /* ── Forgot password link ────────────────────────────────────────────────── */
-.forgot-row {
-    margin: 0.25rem 0 0;
-}
 
 .forgot-link {
     color: var(--color-primary);
@@ -133,42 +130,8 @@
     display: block;
 }
 
-.login-left {
-    flex: 1;
-    background: var(--color-primary-dark);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 48px;
-    color: var(--color-surface);
-}
-
-.login-tagline {
-    margin-top: 1rem;
-    font-size: 1rem;
-    color: rgba(255,255,255,0.7);
-}
-
-.login-right {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 48px;
-    background: var(--color-bg);
-}
-
 /* ── Mobile adjustments ─────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-    .login-left {
-        display: none;
-    }
-    .login-right {
-        flex: 1;
-        padding: 0 16px;
-        align-items: flex-start;
-    }
     .login-panel {
         padding: 24px;
         align-items: flex-start;
@@ -179,6 +142,22 @@
         gap: 0;
     }
 }
+
+.auth-privacy {
+    margin-top: 0.75rem;
+    font-size: 0.78rem;
+}
+.auth-privacy a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+}
+.auth-privacy a:hover { color: var(--color-text); text-decoration: underline; }
+
+.privacy-container { max-width: 600px; }
+.privacy-section { margin-bottom: 1.5rem; }
+.privacy-section h2 { font-size: 1rem; margin-bottom: 0.4rem; }
+.privacy-section p { font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.6; }
+.privacy-footer { font-size: 0.78rem; color: var(--color-placeholder); margin-top: 2rem; }
 
 /* ── Hamburger logout ────────────────────────────────────────────────────── */
 .hamburger-menu .nav-logout {

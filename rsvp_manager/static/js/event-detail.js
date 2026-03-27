@@ -266,7 +266,6 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(function (res) {
                 if (res.ok) {
                     var row = btn.closest("tr");
-                    if (currentDetailRow === row) closeDetail();
                     row.remove();
                     window.refreshSummary();
                     updateBatchCount();
@@ -677,7 +676,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 gdMeta.innerHTML = html;
                 gdOverlay.style.display = "flex";
             })
-            .catch(window.handleFetchError);
+            .catch(function () {
+                window.showToast("Guest details not available");
+            });
     }
 
     function attachGuestDetailListener(btn) {
@@ -959,7 +960,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     return window.fetchWithCsrf("/api/v1/invitations/" + invId, { method: "DELETE" })
                     .then(function (res) {
                         if (res.ok) {
-                            if (currentDetailRow === row) closeDetail();
                             row.remove();
                         }
                     });
@@ -1282,7 +1282,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     resp.data.forEach(function (g) {
                         var name = g.last_name ? g.first_name + " " + g.last_name : g.first_name;
                         var div = document.createElement("div");
-                        div.className = "friends-item" + (g.already_invited ? " disabled" : "") + (g.is_archived ? " archived-item" : "");
+                        div.className = "friends-item" + (g.already_invited ? " disabled" : "") + (g.name_match_in_event ? " name-match" : "") + (g.is_archived ? " archived-item" : "");
                         div.setAttribute("data-first", g.first_name.toLowerCase());
                         div.setAttribute("data-last", (g.last_name || "").toLowerCase());
                         div.setAttribute("data-gender", g.gender);
@@ -1298,11 +1298,12 @@ document.addEventListener("DOMContentLoaded", function () {
                             tagsHtml += '</span>';
                         }
                         var genderLabel = g.gender === "Male" ? "(M)" : g.gender === "Female" ? "(F)" : "";
+                        var matchWarning = g.name_match_in_event ? '<span class="name-match-warning">Similar name already in event</span>' : '';
                         div.innerHTML =
                             '<input type="checkbox" data-guest-id="' + g.id + '"' +
                             (g.already_invited ? ' checked disabled' : '') + '>' +
                             '<div class="friends-item-info">' +
-                            '<div class="friends-item-name">' + window.escapeHtml(name) + ' <span class="gender-inline">' + genderLabel + '</span></div>' +
+                            '<div class="friends-item-name">' + window.escapeHtml(name) + ' <span class="gender-inline">' + genderLabel + '</span>' + matchWarning + '</div>' +
                             (tagsHtml ? '<div class="friends-item-meta">' + tagsHtml + '</div>' : '') +
                             '</div>';
                         if (!g.already_invited) {

@@ -1,5 +1,5 @@
 from datetime import date
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify, abort
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from rsvp_manager.models import EVENT_TYPES
 from rsvp_manager.services import event_service
@@ -54,6 +54,22 @@ def edit_event(event_id):
     event, role = require_event_access(event_id, current_user.id, min_role="cohost")
     event_service.update_event(event, request.form)
     return redirect(url_for("events.event_detail", event_id=event.id))
+
+
+@bp.route("/event/<int:event_id>/duplicate", methods=["POST"])
+@login_required
+def duplicate_event(event_id):
+    event, role = require_event_access(event_id, current_user.id, min_role="cohost")
+    from datetime import date as date_cls
+    new_date_str = request.form.get("date", "")
+    try:
+        new_date = date_cls.fromisoformat(new_date_str) if new_date_str else None
+    except ValueError:
+        new_date = None
+    reset_status = request.form.get("reset_status", "reset") == "reset"
+    name = request.form.get("name", "").strip() or None
+    new_event = event_service.duplicate_event(event, current_user.id, new_date=new_date, reset_status=reset_status, name=name)
+    return redirect(url_for("events.event_detail", event_id=new_event.id))
 
 
 @bp.route("/event/<int:event_id>/delete", methods=["POST"])

@@ -135,14 +135,6 @@
     margin-bottom: 0.5rem;
 }
 
-.summary-bar-label {
-    font-size: 0.78rem;
-    color: var(--color-text-muted);
-    width: 130px;
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-
 .summary-bar {
     flex: 1;
     height: 20px;
@@ -170,15 +162,6 @@
 .bar-attending { background: var(--color-success); }
 .bar-pending { background: var(--color-warning); }
 .bar-declined { background: var(--color-danger); }
-
-.summary-bar-value {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--color-text);
-    min-width: 60px;
-    text-align: right;
-    white-space: nowrap;
-}
 
 /* ── Event notes (legacy, kept for other pages if needed) ─────────────────── */
 
@@ -329,12 +312,23 @@
 .friends-item.disabled:hover { background: none; }
 .friends-item.archived-item { opacity: 0.5; }
 .friends-item.archived-item .friends-item-name { font-style: italic; }
+.friends-item.name-match { background: rgba(255,149,0,0.04); }
+.name-match-warning {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--color-warning-dark);
+    background: rgba(255,149,0,0.1);
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+    margin-left: 0.3rem;
+}
 
 .friends-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--color-primary); flex-shrink: 0; }
 
 .friends-item-info { flex: 1; min-width: 0; }
 .friends-item-name { font-size: 0.92rem; font-weight: 500; }
-.friends-item-gender { font-size: 0.78rem; color: var(--color-text-muted); }
+
 
 .friends-footer {
     padding: 0.75rem 1rem; border-top: 1px solid rgba(0,0,0,0.06);
@@ -470,6 +464,16 @@
 .ag-suggestion-gender {
     font-size: 0.75rem;
     color: var(--color-text-muted);
+}
+.ag-suggestion-match { background: rgba(255,149,0,0.04); }
+.ag-match-label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--color-warning-dark);
+    background: rgba(255,149,0,0.1);
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+    margin-left: 0.2rem;
 }
 
 .add-guest-table input:disabled,
@@ -773,6 +777,17 @@ tr[data-is-me="true"] td {
 }
 
 /* ── Share Event modal ───────────────────────────────────────────────────── */
+.dup-shared-hint {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    background: rgba(255,149,0,0.06);
+    border-left: 3px solid var(--color-warning);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0 6px 6px 0;
+    margin: 0.5rem 0;
+    line-height: 1.4;
+}
+
 .share-section-title {
     font-size: 0.82rem;
     font-weight: 600;

@@ -2,8 +2,6 @@ from functools import wraps
 from flask import Blueprint, jsonify, request, g, current_app
 from flask_login import current_user
 from flask_wtf.csrf import validate_csrf
-from rsvp_manager.extensions import db
-
 api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
 
@@ -65,18 +63,23 @@ def serialize_event(event):
 
 
 def serialize_friend(guest, viewer_user_id=None):
-    attending = sum(1 for inv in guest.invitations if inv.status == "Attending")
-    pending = sum(1 for inv in guest.invitations if inv.status == "Pending")
-    declined = sum(1 for inv in guest.invitations if inv.status == "Declined")
-    invited = attending + pending + declined
+    # Single pass through invitations for counting and building list
+    attending = pending = declined = 0
     invitations = []
     for inv in guest.invitations:
+        if inv.status == "Attending":
+            attending += 1
+        elif inv.status == "Pending":
+            pending += 1
+        elif inv.status == "Declined":
+            declined += 1
         if inv.status != "Not Sent":
             invitations.append({
                 "event_name": inv.event.name,
                 "event_date": inv.event.date.strftime("%d/%m/%Y") if inv.event.date else "",
                 "status": inv.status,
             })
+    invited = attending + pending + declined
     # Add shared invitations (co-host's guest with same name in shared events)
     if viewer_user_id and viewer_user_id == guest.user_id:
         from rsvp_manager.services.friend_service import get_shared_invitations
@@ -117,7 +120,7 @@ def serialize_friend(guest, viewer_user_id=None):
 
 
 def serialize_invitation(inv):
-    from rsvp_manager.models import User
+    # Use relationships instead of db.session.get() to avoid N+1 queries
     return {
         "id": inv.id,
         "event_id": inv.event_id,
@@ -126,10 +129,10 @@ def serialize_invitation(inv):
         "notes": inv.notes or "",
         "date_invited": inv.date_invited.strftime("%d %b %Y") if inv.date_invited else "",
         "date_invited_iso": inv.date_invited.isoformat() if inv.date_invited else "",
-        "sent_by_name": db.session.get(User, inv.sent_by).full_name if inv.sent_by else "",
+        "sent_by_name": inv.sent_by_user.full_name if inv.sent_by_user else "",
         "date_responded": inv.date_responded.strftime("%d %b %Y") if inv.date_responded else "",
         "date_responded_iso": inv.date_responded.isoformat() if inv.date_responded else "",
-        "status_changed_by_name": db.session.get(User, inv.status_changed_by).full_name if inv.status_changed_by else "",
+        "status_changed_by_name": inv.status_changed_by_user.full_name if inv.status_changed_by_user else "",
         "guest": {
             "id": inv.guest.id,
             "first_name": inv.guest.first_name,
@@ -142,14 +145,13 @@ def serialize_invitation(inv):
 
 def serialize_invitation_brief(inv):
     """Invitation with inline guest info, for bulk/list responses."""
-    from rsvp_manager.models import User
-    added_by_user = db.session.get(User, inv.added_by) if inv.added_by else None
+    # Use relationships instead of db.session.get() to avoid N+1 queries
     return {
         "invitation_id": inv.id,
         "guest_id": inv.guest_id,
         "guest_owner_id": inv.guest.user_id,
         "added_by": inv.added_by,
-        "added_by_name": added_by_user.full_name if added_by_user else "",
+        "added_by_name": inv.added_by_user.full_name if inv.added_by_user else "",
         "first_name": inv.guest.first_name,
         "last_name": inv.guest.last_name or "",
         "gender": inv.guest.gender,
@@ -159,10 +161,10 @@ def serialize_invitation_brief(inv):
         "guest_tags": [{"id": t.id, "name": t.name, "color": t.color} for t in inv.guest.tags if not t.deleted_at],
         "date_invited": inv.date_invited.strftime("%d %b %Y") if inv.date_invited else "",
         "date_invited_iso": inv.date_invited.isoformat() if inv.date_invited else "",
-        "sent_by_name": db.session.get(User, inv.sent_by).full_name if inv.sent_by else "",
+        "sent_by_name": inv.sent_by_user.full_name if inv.sent_by_user else "",
         "date_responded": inv.date_responded.strftime("%d %b %Y") if inv.date_responded else "",
         "date_responded_iso": inv.date_responded.isoformat() if inv.date_responded else "",
-        "status_changed_by_name": db.session.get(User, inv.status_changed_by).full_name if inv.status_changed_by else "",
+        "status_changed_by_name": inv.status_changed_by_user.full_name if inv.status_changed_by_user else "",
     }
 
 

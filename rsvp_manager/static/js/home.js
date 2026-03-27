@@ -36,6 +36,22 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // ── Duplicate Event modal ──────────────────────────────────────────────
+    var dupBtn = document.getElementById("open-duplicate-btn");
+    var dupOverlay = document.getElementById("duplicate-overlay");
+    var dupClose = document.getElementById("duplicate-close");
+    if (dupBtn && dupOverlay) {
+        dupBtn.addEventListener("click", function () {
+            var menu = dupBtn.closest(".kebab-menu");
+            if (menu) menu.classList.remove("open");
+            dupOverlay.style.display = "flex";
+        });
+        dupClose.addEventListener("click", function () { dupOverlay.style.display = "none"; });
+        dupOverlay.addEventListener("click", function (e) {
+            if (e.target === dupOverlay) dupOverlay.style.display = "none";
+        });
+    }
+
     // ── Share Event modal (from page kebab menu) ─────────────────────────
     var shareBtn = document.getElementById("open-share-event-btn");
     var shareOverlay = document.getElementById("share-event-overlay");

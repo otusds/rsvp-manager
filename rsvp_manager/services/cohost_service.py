@@ -142,8 +142,18 @@ def join_event(token, user_id):
     )
     db.session.add(cohost)
     db.session.commit()
+    # Get joining user's name for log and notification
+    from rsvp_manager.models import User
+    joining_user = db.session.get(User, user_id)
+    joining_name = joining_user.full_name if joining_user else "Someone"
     log_action(event.user_id, "cohost_joined", "event", event.id,
-               f"A new {link.role} joined {event.name}")
+               f"{joining_name} joined {event.name} as {link.role}")
+    # Notify event owner via email (best-effort)
+    try:
+        from rsvp_manager.services.email_service import send_cohost_notification
+        send_cohost_notification(event, joining_user, link.role)
+    except Exception:
+        pass  # Don't fail join if email fails
     return event, link.role
 
 

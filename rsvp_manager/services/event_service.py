@@ -117,17 +117,66 @@ def delete_event(event):
 
 
 def get_user_events_for_selector(user_id, exclude_event_id):
-    events = Event.query.filter(
+    """Get events for the 'Add from Past Events' selector, including co-hosted."""
+    owned = Event.query.filter(
         Event.user_id == user_id,
         Event.id != exclude_event_id,
         Event.deleted_at.is_(None)
-    ).order_by(Event.date.desc()).all()
+    )
+    cohosted_ids = db.session.query(EventCohost.event_id).filter_by(user_id=user_id)
+    cohosted = Event.query.filter(
+        Event.id.in_(cohosted_ids),
+        Event.id != exclude_event_id,
+        Event.deleted_at.is_(None)
+    )
+    events = owned.union(cohosted).order_by(Event.date.desc()).all()
     return [{
         "id": e.id,
         "name": e.name,
         "date": e.date.strftime("%d %b %Y"),
         "date_iso": e.date.isoformat(),
     } for e in events]
+
+
+def duplicate_event(event, user_id, new_date=None, reset_status=True, name=None):
+    """Create a copy of an event with the same guests."""
+    new_event = Event(
+        user_id=user_id,
+        name=name or (event.name + " (copy)"),
+        event_type=event.event_type,
+        location=event.location,
+        date=new_date or event.date,
+        date_created=date.today(),
+        notes=event.notes,
+    )
+    db.session.add(new_event)
+    db.session.flush()
+    # Copy invitations (only non-deleted guests owned by this user)
+    for inv in event.invitations:
+        if inv.guest.deleted_at or inv.guest.user_id != user_id:
+            continue
+        if reset_status:
+            new_inv = Invitation(
+                event_id=new_event.id,
+                guest_id=inv.guest_id,
+                added_by=user_id,
+                status="Not Sent",
+            )
+        else:
+            new_inv = Invitation(
+                event_id=new_event.id,
+                guest_id=inv.guest_id,
+                added_by=user_id,
+                status=inv.status,
+                date_invited=inv.date_invited,
+                date_responded=inv.date_responded,
+                notes=inv.notes,
+            )
+        db.session.add(new_inv)
+    log_action(user_id, "duplicated_event", "event", new_event.id,
+               f"You duplicated event {event.name}")
+    db.session.commit()
+    return new_event
 
 
 def update_event_notes(event, notes):
