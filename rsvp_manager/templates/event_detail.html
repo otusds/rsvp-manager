@@ -12,10 +12,7 @@
             <button type="button" id="open-edit-event-btn"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit Event</button>
             {% endif %}
             {% if role in ('owner', 'cohost') %}
-            <form method="POST" action="{{ url_for('events.duplicate_event', event_id=event.id) }}" class="inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate Event</button>
-            </form>
+            <button type="button" id="open-duplicate-btn"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate Event</button>
             {% endif %}
             {% if role == 'owner' %}
             <button type="button" id="open-share-event-btn"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share to Co-Host</button>
@@ -611,6 +608,43 @@
         </div>
     </div>
 </div>
+{% if role in ('owner', 'cohost') %}
+<!-- Duplicate Event modal -->
+<div class="detail-overlay" id="duplicate-overlay" style="display:none">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <span class="modal-title">Duplicate Event</span>
+            <button type="button" class="detail-close" id="duplicate-close">&times;</button>
+        </div>
+        <div class="detail-card-body">
+            <form method="POST" action="{{ url_for('events.duplicate_event', event_id=event.id) }}" class="form modal-form" id="duplicate-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="dup-date">New Date</label>
+                        <input type="date" id="dup-date" name="date" value="{{ event.date.isoformat() }}" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>RSVP & Invitation Status</label>
+                        <select name="reset_status" id="dup-reset-status">
+                            <option value="reset" selected>Reset all to "Not Sent"</option>
+                            <option value="keep">Keep current RSVP status</option>
+                        </select>
+                    </div>
+                </div>
+                {% if event.cohosts|length > 0 %}
+                <p class="dup-shared-hint">Only guests from your friend list will be copied. Guests added by co-hosts are not included.</p>
+                {% endif %}
+                <div class="form-actions">
+                    <button type="submit" class="btn">Duplicate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% if role == 'owner' %}
 <!-- Share Event modal -->
 <div class="detail-overlay" id="share-event-overlay" style="display:none">

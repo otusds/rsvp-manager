@@ -60,7 +60,14 @@ def edit_event(event_id):
 @login_required
 def duplicate_event(event_id):
     event, role = require_event_access(event_id, current_user.id, min_role="cohost")
-    new_event = event_service.duplicate_event(event, current_user.id)
+    from datetime import date as date_cls
+    new_date_str = request.form.get("date", "")
+    try:
+        new_date = date_cls.fromisoformat(new_date_str) if new_date_str else None
+    except ValueError:
+        new_date = None
+    reset_status = request.form.get("reset_status", "reset") == "reset"
+    new_event = event_service.duplicate_event(event, current_user.id, new_date=new_date, reset_status=reset_status)
     return redirect(url_for("events.event_detail", event_id=new_event.id))
 
 

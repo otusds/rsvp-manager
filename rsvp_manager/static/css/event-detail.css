@@ -777,6 +777,17 @@ tr[data-is-me="true"] td {
 }
 
 /* ── Share Event modal ───────────────────────────────────────────────────── */
+.dup-shared-hint {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    background: rgba(255,149,0,0.06);
+    border-left: 3px solid var(--color-warning);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0 6px 6px 0;
+    margin: 0.5rem 0;
+    line-height: 1.4;
+}
+
 .share-section-title {
     font-size: 0.82rem;
     font-weight: 600;
