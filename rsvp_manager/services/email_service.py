@@ -86,3 +86,18 @@ def consume_reset_token(user):
     user.password_reset_token = None
     user.password_reset_sent_at = None
     db.session.commit()
+
+
+def send_cohost_notification(event, joining_user, role):
+    """Notify event owner that someone joined as co-host/viewer."""
+    owner = db.session.get(User, event.user_id)
+    if not owner or not owner.email:
+        return
+    role_label = "Co-Host" if role == "cohost" else "Viewer"
+    subject = f"{joining_user.full_name} joined your event as {role_label}"
+    html = (
+        f"<p><strong>{joining_user.full_name}</strong> joined your event "
+        f"<strong>{event.name}</strong> as a {role_label}.</p>"
+        f"<p>Date: {event.date.strftime('%d %B %Y')}</p>"
+    )
+    _send_email(owner.email, subject, html)

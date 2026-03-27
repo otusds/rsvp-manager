@@ -45,6 +45,31 @@ document.addEventListener("DOMContentLoaded", function () {
         return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     };
 
+    window.showToast = function (message, undoFn, duration) {
+        var existing = document.querySelector(".toast");
+        if (existing) existing.remove();
+        var toast = document.createElement("div");
+        toast.className = "toast";
+        toast.innerHTML = '<span>' + message + '</span>';
+        if (undoFn) {
+            var btn = document.createElement("button");
+            btn.className = "toast-btn";
+            btn.textContent = "Undo";
+            btn.addEventListener("click", function () { toast.remove(); undoFn(); });
+            toast.appendChild(btn);
+        }
+        document.body.appendChild(toast);
+        setTimeout(function () { if (toast.parentNode) toast.remove(); }, duration || 5000);
+    };
+
+    window.formatDate = function (isoStr) {
+        if (!isoStr) return "—";
+        var d = new Date(isoStr);
+        if (isNaN(d)) return isoStr;
+        var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+    };
+
     window.escapeHtml = function (str) {
         var div = document.createElement("div");
         div.textContent = str;

@@ -676,7 +676,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 gdMeta.innerHTML = html;
                 gdOverlay.style.display = "flex";
             })
-            .catch(window.handleFetchError);
+            .catch(function () {
+                window.showToast("Guest details not available");
+            });
     }
 
     function attachGuestDetailListener(btn) {

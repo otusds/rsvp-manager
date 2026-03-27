@@ -56,6 +56,14 @@ def edit_event(event_id):
     return redirect(url_for("events.event_detail", event_id=event.id))
 
 
+@bp.route("/event/<int:event_id>/duplicate", methods=["POST"])
+@login_required
+def duplicate_event(event_id):
+    event, role = require_event_access(event_id, current_user.id, min_role="cohost")
+    new_event = event_service.duplicate_event(event, current_user.id)
+    return redirect(url_for("events.event_detail", event_id=new_event.id))
+
+
 @bp.route("/event/<int:event_id>/delete", methods=["POST"])
 @login_required
 def delete_event(event_id):

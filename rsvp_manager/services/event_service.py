@@ -130,6 +130,36 @@ def get_user_events_for_selector(user_id, exclude_event_id):
     } for e in events]
 
 
+def duplicate_event(event, user_id):
+    """Create a copy of an event with the same guests but a new date."""
+    new_event = Event(
+        user_id=user_id,
+        name=event.name + " (copy)",
+        event_type=event.event_type,
+        location=event.location,
+        date=event.date,
+        date_created=date.today(),
+        notes=event.notes,
+    )
+    db.session.add(new_event)
+    db.session.flush()
+    # Copy invitations (only non-deleted guests owned by this user)
+    for inv in event.invitations:
+        if inv.guest.deleted_at or inv.guest.user_id != user_id:
+            continue
+        new_inv = Invitation(
+            event_id=new_event.id,
+            guest_id=inv.guest_id,
+            added_by=user_id,
+            status="Not Sent",
+        )
+        db.session.add(new_inv)
+    log_action(user_id, "duplicated_event", "event", new_event.id,
+               f"You duplicated event {event.name}")
+    db.session.commit()
+    return new_event
+
+
 def update_event_notes(event, notes):
     event.notes = notes
     event.date_edited = datetime.now(timezone.utc)
