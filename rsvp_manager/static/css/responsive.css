@@ -1,6 +1,3 @@
-/* ── Desktop nav: hide mobile-only hamburger items ───────────────────────── */
-.nav-link-mobile { display: none; }
-
 /* ── Gender header symbol (replaces "Gender" text) ───────────────────────── */
 .col-gender-symbol { display: none; }
 

@@ -266,7 +266,6 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(function (res) {
                 if (res.ok) {
                     var row = btn.closest("tr");
-                    if (currentDetailRow === row) closeDetail();
                     row.remove();
                     window.refreshSummary();
                     updateBatchCount();
@@ -959,7 +958,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     return window.fetchWithCsrf("/api/v1/invitations/" + invId, { method: "DELETE" })
                     .then(function (res) {
                         if (res.ok) {
-                            if (currentDetailRow === row) closeDetail();
                             row.remove();
                         }
                     });

@@ -304,30 +304,6 @@ h2 {
 .icon-btn:hover { background: rgba(118,118,128,0.2); }
 .icon-btn.active { background: rgba(16,185,129,0.12); color: var(--color-primary); }
 
-/* ── Page kebab menu with search ─────────────────────────────────────────── */
-.kebab-menu-search {
-    padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid rgba(0,0,0,0.06);
-}
-
-.kebab-menu-search input {
-    width: 100%;
-    padding: 0.4rem 0.6rem;
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 8px;
-    font-size: 0.82rem;
-    background: rgba(118,118,128,0.08);
-    color: var(--color-text);
-    font-family: inherit;
-}
-
-.kebab-menu-search input:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
-}
-
-.kebab-menu-search input::placeholder { color: var(--color-text-muted); }
 
 /* ── Sticky controls (frozen headers for long lists) ──────────────────────── */
 .sticky-controls {

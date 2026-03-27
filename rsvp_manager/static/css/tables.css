@@ -49,14 +49,6 @@ tbody tr:hover {
     background-color: #F5F4F1;
 }
 
-/* ── Hover-only action buttons ────────────────────────────────────────────── */
-.row-actions {
-    opacity: 0;
-    transition: opacity 0.15s ease;
-}
-tr:hover .row-actions {
-    opacity: 1;
-}
 
 /* ── Table controls ────────────────────────────────────────────────────────── */
 .table-controls {

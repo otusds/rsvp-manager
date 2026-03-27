@@ -135,14 +135,6 @@
     margin-bottom: 0.5rem;
 }
 
-.summary-bar-label {
-    font-size: 0.78rem;
-    color: var(--color-text-muted);
-    width: 130px;
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-
 .summary-bar {
     flex: 1;
     height: 20px;
@@ -170,15 +162,6 @@
 .bar-attending { background: var(--color-success); }
 .bar-pending { background: var(--color-warning); }
 .bar-declined { background: var(--color-danger); }
-
-.summary-bar-value {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--color-text);
-    min-width: 60px;
-    text-align: right;
-    white-space: nowrap;
-}
 
 /* ── Event notes (legacy, kept for other pages if needed) ─────────────────── */
 
@@ -334,7 +317,7 @@
 
 .friends-item-info { flex: 1; min-width: 0; }
 .friends-item-name { font-size: 0.92rem; font-weight: 500; }
-.friends-item-gender { font-size: 0.78rem; color: var(--color-text-muted); }
+
 
 .friends-footer {
     padding: 0.75rem 1rem; border-top: 1px solid rgba(0,0,0,0.06);
