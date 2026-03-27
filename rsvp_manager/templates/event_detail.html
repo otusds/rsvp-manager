@@ -229,13 +229,13 @@
                     data-status-changed-by="{{ inv.status_changed_by_user.full_name if inv.status_changed_by and inv.status_changed_by_user else '' }}"
                     data-added-by-name="{{ inv.added_by_user.full_name if inv.added_by and inv.added_by_user else '' }}">
                     <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
-                    <td class="guest-name-cell">{{ inv.guest.full_name }}{% if inv.guest.gender == 'Male' %} <span class="gender-tag gender-m">M</span>{% elif inv.guest.gender == 'Female' %} <span class="gender-tag gender-f">F</span>{% endif %}{% if inv.guest.user_id != current_user.id %}<svg class="share-icon-inline" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Added by {{ inv.added_by_user.full_name if inv.added_by and inv.added_by_user else 'co-host' }}"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>{% endif %}</td>
+                    <td class="guest-name-cell">{% if inv.guest.gender == 'Male' %}<span class="gender-tag gender-m">M</span> {% elif inv.guest.gender == 'Female' %}<span class="gender-tag gender-f">F</span> {% endif %}{{ inv.guest.full_name }}{% if inv.guest.user_id != current_user.id %}<svg class="share-icon-inline" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Added by {{ inv.added_by_user.full_name if inv.added_by and inv.added_by_user else 'co-host' }}"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>{% endif %}</td>
                     <td class="center">
                         <input type="checkbox" class="sent-checkbox"
                                data-inv-id="{{ inv.id }}"
                                {{ 'checked' if inv.status != 'Not Sent' }}{{ ' disabled' if role == 'viewer' }}>
                     </td>
-                    <td>
+                    <td class="center">
                         {% if inv.status == 'Not Sent' %}
                         <span class="status-not-sent">Not Sent</span>
                         {% else %}

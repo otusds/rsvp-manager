@@ -40,6 +40,11 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Request failed:", err);
     };
 
+    window.normalizeText = function (str) {
+        if (!str) return "";
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    };
+
     window.escapeHtml = function (str) {
         var div = document.createElement("div");
         div.textContent = str;
@@ -192,12 +197,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function showAgSuggestions(input, suggestionsDiv, tr) {
-        var q = input.value.trim().toLowerCase();
+        var q = window.normalizeText(input.value);
         suggestionsDiv.innerHTML = "";
         if (!q || !cachedGuestList) { suggestionsDiv.style.display = "none"; return; }
 
         var matches = cachedGuestList.filter(function (g) {
-            var full = (g.first_name + " " + (g.last_name || "")).toLowerCase();
+            var full = window.normalizeText(g.first_name + " " + (g.last_name || ""));
             return full.indexOf(q) !== -1;
         }).slice(0, 8);
 

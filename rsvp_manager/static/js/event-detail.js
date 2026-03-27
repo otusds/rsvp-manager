@@ -149,10 +149,11 @@ document.addEventListener("DOMContentLoaded", function () {
         tr.setAttribute("data-date-responded", data.date_responded || "");
         tr.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
 
-        var genderTag = genderTagText(data.gender);
+        var genderClass = data.gender === "Male" ? "gender-m" : data.gender === "Female" ? "gender-f" : "";
+        var genderLabel = data.gender === "Male" ? "M" : data.gender === "Female" ? "F" : "";
         tr.innerHTML =
             '<td class="center col-multiselect" style="display:' + multiShow + '"><input type="checkbox" class="row-select"></td>' +
-            '<td class="guest-name-cell">' + window.escapeHtml(displayName) + ' <span class="gender-tag">' + window.escapeHtml(genderTag) + '</span></td>' +
+            '<td class="guest-name-cell">' + (genderLabel ? '<span class="gender-tag ' + genderClass + '">' + genderLabel + '</span> ' : '') + window.escapeHtml(displayName) + '</td>' +
             '<td class="center"><input type="checkbox" class="sent-checkbox" data-inv-id="' + data.invitation_id + '"' + (isSent ? ' checked' : '') + '></td>' +
             '<td>' + window.buildStatusHtml(data.invitation_id, data.status) + '</td>' +
             '<td class="col-expand-mobile"><input type="text" class="inv-notes-input" data-inv-id="' + data.invitation_id + '" value="' + window.escapeHtml(data.notes || "") + '" placeholder="Invite note..." autocomplete="off"></td>' +
@@ -427,15 +428,15 @@ document.addEventListener("DOMContentLoaded", function () {
     function showTagSuggestions(query) {
         if (!gdTagsSuggestions) return;
         gdTagsSuggestions.innerHTML = "";
-        var q = query.toLowerCase().trim();
+        var q = window.normalizeText(query);
         if (!q) { gdTagsSuggestions.style.display = "none"; return; }
 
-        var currentNames = currentGuestTags.map(function (t) { return t.name.toLowerCase(); });
+        var currentNames = currentGuestTags.map(function (t) { return window.normalizeText(t.name); });
         var matches = allUserTags.filter(function (t) {
-            return t.name.toLowerCase().indexOf(q) !== -1 && currentNames.indexOf(t.name.toLowerCase()) === -1;
+            return window.normalizeText(t.name).indexOf(q) !== -1 && currentNames.indexOf(window.normalizeText(t.name)) === -1;
         });
 
-        var exactMatch = allUserTags.some(function (t) { return t.name.toLowerCase() === q; })
+        var exactMatch = allUserTags.some(function (t) { return window.normalizeText(t.name) === q; })
             || currentNames.indexOf(q) !== -1;
 
         matches.forEach(function (tag) {
@@ -1189,7 +1190,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         function applyFriendsFilters() {
-            var q = friendsSearchInput ? friendsSearchInput.value.toLowerCase() : "";
+            var q = friendsSearchInput ? window.normalizeText(friendsSearchInput.value) : "";
             var genderVal = friendsGenderFilter ? friendsGenderFilter.value : "";
             var archiveVal = friendsArchiveFilter ? friendsArchiveFilter.value : "active";
             var sortVal = friendsSort ? friendsSort.value : "first-asc";
@@ -1216,7 +1217,7 @@ document.addEventListener("DOMContentLoaded", function () {
             items.forEach(function (item) { friendsList.appendChild(item); });
 
             items.forEach(function (item) {
-                var name = item.querySelector(".friends-item-name").textContent.toLowerCase();
+                var name = window.normalizeText(item.querySelector(".friends-item-name").textContent);
                 var gender = item.getAttribute("data-gender") || "";
                 var isArchived = item.getAttribute("data-is-archived") === "true";
                 var matchSearch = !q || name.indexOf(q) !== -1;
@@ -1435,7 +1436,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         function applyEventGuestsFilters() {
-            var q = eventGuestsSearchInput ? eventGuestsSearchInput.value.toLowerCase() : "";
+            var q = eventGuestsSearchInput ? window.normalizeText(eventGuestsSearchInput.value) : "";
             var genderVal = eventGuestsGenderFilter ? eventGuestsGenderFilter.value : "";
             var statusVal = eventGuestsStatusFilter ? eventGuestsStatusFilter.value : "";
             var sortVal = eventGuestsSort ? eventGuestsSort.value : "first-asc";
@@ -1465,7 +1466,7 @@ document.addEventListener("DOMContentLoaded", function () {
             items.forEach(function (item) { eventGuestsList.appendChild(item); });
 
             items.forEach(function (item) {
-                var name = item.querySelector(".friends-item-name").textContent.toLowerCase();
+                var name = window.normalizeText(item.querySelector(".friends-item-name").textContent);
                 var gender = item.getAttribute("data-gender") || "";
                 var status = item.getAttribute("data-status") || "";
                 var matchSearch = !q || name.indexOf(q) !== -1;

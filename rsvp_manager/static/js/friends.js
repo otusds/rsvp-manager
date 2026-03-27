@@ -93,12 +93,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function applyGuestTableControls() {
         sortGuestRows();
-        var query = guestSearchInput ? guestSearchInput.value.toLowerCase() : "";
+        var query = guestSearchInput ? window.normalizeText(guestSearchInput.value) : "";
         var genderVal = guestGenderFilter ? guestGenderFilter.value : "";
         var rows = guestsTable.querySelectorAll("tbody tr");
         var visibleCount = 0;
         rows.forEach(function (row) {
-            var text = row.textContent.toLowerCase();
+            var text = window.normalizeText(row.textContent);
             var gender = row.getAttribute("data-gender");
             var matchSearch = !query || text.indexOf(query) !== -1;
             var matchGender = !genderVal || gender === genderVal;

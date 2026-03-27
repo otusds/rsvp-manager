@@ -162,21 +162,21 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function applyCardControls() {
-        var query = searchInput ? searchInput.value.toLowerCase() : "";
+        var query = searchInput ? window.normalizeText(searchInput.value) : "";
         var typeVal = typeFilter ? typeFilter.value : "";
         var allCards = Array.from(document.querySelectorAll(".event-row-card"));
         var futureCards = [];
         var pastCards = [];
 
         allCards.forEach(function (card) {
-            var name = card.getAttribute("data-name");
-            var location = card.getAttribute("data-location");
+            var name = window.normalizeText(card.getAttribute("data-name") || "");
+            var location = window.normalizeText(card.getAttribute("data-location") || "");
             var type = card.getAttribute("data-type");
             var isPast = card.getAttribute("data-past") === "true";
             var locVal = locationFilter ? locationFilter.value : "";
             var matchSearch = !query || name.indexOf(query) !== -1 || location.indexOf(query) !== -1;
             var matchType = !typeVal || type === typeVal;
-            var matchLocation = !locVal || location === locVal.toLowerCase();
+            var matchLocation = !locVal || window.normalizeText(locVal) === location;
             var show = matchSearch && matchType && matchLocation;
             card.style.display = show ? "" : "none";
             if (show) {
