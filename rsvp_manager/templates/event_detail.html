@@ -621,6 +621,12 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-row">
                     <div class="form-field">
+                        <label for="dup-name">Event Name</label>
+                        <input type="text" id="dup-name" name="name" value="{{ event.name }} (copy)" required maxlength="200">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
                         <label for="dup-date">New Date</label>
                         <input type="date" id="dup-date" name="date" value="{{ event.date.isoformat() }}" required>
                     </div>

@@ -67,7 +67,8 @@ def duplicate_event(event_id):
     except ValueError:
         new_date = None
     reset_status = request.form.get("reset_status", "reset") == "reset"
-    new_event = event_service.duplicate_event(event, current_user.id, new_date=new_date, reset_status=reset_status)
+    name = request.form.get("name", "").strip() or None
+    new_event = event_service.duplicate_event(event, current_user.id, new_date=new_date, reset_status=reset_status, name=name)
     return redirect(url_for("events.event_detail", event_id=new_event.id))
 
 

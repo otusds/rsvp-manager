@@ -138,11 +138,11 @@ def get_user_events_for_selector(user_id, exclude_event_id):
     } for e in events]
 
 
-def duplicate_event(event, user_id, new_date=None, reset_status=True):
+def duplicate_event(event, user_id, new_date=None, reset_status=True, name=None):
     """Create a copy of an event with the same guests."""
     new_event = Event(
         user_id=user_id,
-        name=event.name + " (copy)",
+        name=name or (event.name + " (copy)"),
         event_type=event.event_type,
         location=event.location,
         date=new_date or event.date,
