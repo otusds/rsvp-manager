@@ -144,10 +144,14 @@ def bulk_add_guests(event, guest_ids, user_id):
 
 
 def get_event_guests_with_status(source_event, current_event, user_id):
+    """Get guests from source event that belong to user's friend list."""
     current_invited_ids = {inv.guest_id for inv in current_event.invitations}
     result = []
     for inv in source_event.invitations:
         guest = inv.guest
+        # Only show guests from the requesting user's friend list
+        if guest.user_id != user_id or guest.deleted_at:
+            continue
         result.append({
             "id": guest.id,
             "first_name": guest.first_name,

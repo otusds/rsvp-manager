@@ -117,11 +117,19 @@ def delete_event(event):
 
 
 def get_user_events_for_selector(user_id, exclude_event_id):
-    events = Event.query.filter(
+    """Get events for the 'Add from Past Events' selector, including co-hosted."""
+    owned = Event.query.filter(
         Event.user_id == user_id,
         Event.id != exclude_event_id,
         Event.deleted_at.is_(None)
-    ).order_by(Event.date.desc()).all()
+    )
+    cohosted_ids = db.session.query(EventCohost.event_id).filter_by(user_id=user_id)
+    cohosted = Event.query.filter(
+        Event.id.in_(cohosted_ids),
+        Event.id != exclude_event_id,
+        Event.deleted_at.is_(None)
+    )
+    events = owned.union(cohosted).order_by(Event.date.desc()).all()
     return [{
         "id": e.id,
         "name": e.name,
