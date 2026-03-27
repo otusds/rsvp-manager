@@ -221,10 +221,29 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
+    // Build set of normalized names already in the event's invitation table
+    function getInvitedNames() {
+        var names = new Set();
+        var table = document.getElementById("invitations-table");
+        if (!table) return names;
+        table.querySelectorAll("tbody tr").forEach(function (row) {
+            var cell = row.querySelector(".guest-name-cell");
+            if (cell) {
+                // Extract just the text name (strip gender tags and share icons)
+                var clone = cell.cloneNode(true);
+                clone.querySelectorAll(".gender-tag, .share-icon-inline").forEach(function (el) { el.remove(); });
+                names.add(window.normalizeText(clone.textContent));
+            }
+        });
+        return names;
+    }
+
     function showAgSuggestions(input, suggestionsDiv, tr) {
         var q = window.normalizeText(input.value);
         suggestionsDiv.innerHTML = "";
         if (!q || !cachedGuestList) { suggestionsDiv.style.display = "none"; return; }
+
+        var invitedNames = getInvitedNames();
 
         var matches = cachedGuestList.filter(function (g) {
             var full = window.normalizeText(g.first_name + " " + (g.last_name || ""));
@@ -234,10 +253,13 @@ document.addEventListener("DOMContentLoaded", function () {
         if (matches.length === 0) { suggestionsDiv.style.display = "none"; return; }
 
         matches.forEach(function (g, idx) {
+            var fullNorm = window.normalizeText(g.first_name + " " + (g.last_name || ""));
+            var alreadyInEvent = invitedNames.has(fullNorm);
             var div = document.createElement("div");
-            div.className = "ag-suggestion";
+            div.className = "ag-suggestion" + (alreadyInEvent ? " ag-suggestion-match" : "");
             div.setAttribute("data-index", idx);
             div.innerHTML = '<span>' + window.escapeHtml(g.first_name + " " + (g.last_name || "")).trim() +
+                (alreadyInEvent ? ' <span class="ag-match-label">already in event</span>' : '') +
                 '</span><span class="ag-suggestion-gender">' + window.escapeHtml(g.gender) + '</span>';
             div.addEventListener("mousedown", function (e) {
                 e.preventDefault();

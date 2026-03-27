@@ -79,15 +79,27 @@ def update_field(invitation, field, value):
 
 
 def get_available_guests(event, user_id):
+    from rsvp_manager.services.friend_service import _normalize_name
     invited_ids = {inv.guest_id for inv in event.invitations}
+    # Build set of normalized names already in the event (from all hosts)
+    invited_names = set()
+    for inv in event.invitations:
+        if not inv.guest.deleted_at:
+            norm = _normalize_name(inv.guest.first_name) + "|" + _normalize_name(inv.guest.last_name)
+            invited_names.add(norm)
     all_guests = Guest.query.filter_by(user_id=user_id).filter(Guest.deleted_at.is_(None)).order_by(
         Guest.first_name, Guest.last_name
     ).all()
     result = []
     for g in all_guests:
+        already_by_id = g.id in invited_ids
+        name_key = _normalize_name(g.first_name) + "|" + _normalize_name(g.last_name)
+        name_match = name_key in invited_names and not already_by_id
         result.append({
             "id": g.id, "first_name": g.first_name, "last_name": g.last_name or "",
-            "gender": g.gender, "already_invited": g.id in invited_ids,
+            "gender": g.gender,
+            "already_invited": already_by_id,
+            "name_match_in_event": name_match,
             "is_archived": g.is_archived,
             "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in g.tags if not t.deleted_at],
         })

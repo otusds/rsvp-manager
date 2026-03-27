@@ -312,6 +312,17 @@
 .friends-item.disabled:hover { background: none; }
 .friends-item.archived-item { opacity: 0.5; }
 .friends-item.archived-item .friends-item-name { font-style: italic; }
+.friends-item.name-match { background: rgba(255,149,0,0.04); }
+.name-match-warning {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--color-warning-dark);
+    background: rgba(255,149,0,0.1);
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+    margin-left: 0.3rem;
+}
 
 .friends-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--color-primary); flex-shrink: 0; }
 
@@ -453,6 +464,16 @@
 .ag-suggestion-gender {
     font-size: 0.75rem;
     color: var(--color-text-muted);
+}
+.ag-suggestion-match { background: rgba(255,149,0,0.04); }
+.ag-match-label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--color-warning-dark);
+    background: rgba(255,149,0,0.1);
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+    margin-left: 0.2rem;
 }
 
 .add-guest-table input:disabled,
