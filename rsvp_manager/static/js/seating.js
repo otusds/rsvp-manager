@@ -492,10 +492,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function applyRotation(svgWrap, tableId) {
         var deg = tableRotations[tableId] || 0;
-        if (!deg) return;
         var svgEl = svgWrap.querySelector("svg");
         if (!svgEl) return;
+
+        // Reset
+        svgEl.style.transform = "";
+        svgWrap.style.minHeight = "";
+
+        if (!deg) return;
+
         svgEl.style.transform = "rotate(" + deg + "deg)";
+
+        // When rotated 90/270, the wide SVG needs more vertical space
+        if (deg === 90 || deg === 270) {
+            var vb = svgEl.viewBox.baseVal;
+            if (vb && vb.width > vb.height) {
+                // The SVG will be rendered at container width, but rotated.
+                // Set min-height to accommodate the rotated width.
+                var ratio = vb.width / vb.height;
+                svgWrap.style.minHeight = Math.round(svgWrap.offsetWidth * ratio * 0.65) + "px";
+            }
+        }
+
         // Counter-rotate all text elements so names stay horizontal
         var texts = svgEl.querySelectorAll("text");
         for (var i = 0; i < texts.length; i++) {
@@ -504,7 +522,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var cy = t.getAttribute("y");
             t.setAttribute("transform", "rotate(" + (-deg) + "," + cx + "," + cy + ")");
         }
-        // Also counter-rotate lock icons (the small <g> with scale)
+        // Counter-rotate lock icons
         var lockIcons = svgEl.querySelectorAll(".seating-seat-locked > g:last-child");
         for (var i = 0; i < lockIcons.length; i++) {
             var g = lockIcons[i];
