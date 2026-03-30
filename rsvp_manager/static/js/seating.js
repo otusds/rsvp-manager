@@ -103,16 +103,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ── Render tables ───────────────────────────────────────────────────────
+    var emptyMsg = document.getElementById("seating-empty");
+
     function renderTables() {
         var container = document.getElementById("seating-tables");
-        var empty = document.getElementById("seating-empty");
-        container.innerHTML = "";
+        // Remove all children except the empty message
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
         if (state.tables.length === 0) {
-            container.appendChild(empty);
-            empty.style.display = "";
+            container.appendChild(emptyMsg);
+            emptyMsg.style.display = "";
             return;
         }
-        empty.style.display = "none";
         state.tables.forEach(function (table) {
             container.appendChild(createTableCard(table));
         });
