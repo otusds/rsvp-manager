@@ -182,7 +182,6 @@
     max-width: 100%;
     height: auto;
     min-height: 120px;
-    transition: transform 0.3s ease;
 }
 
 .seating-seat { transition: opacity 0.15s; }

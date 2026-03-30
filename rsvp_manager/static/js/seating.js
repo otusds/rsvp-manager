@@ -503,31 +503,37 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!svgEl) return;
 
         // Reset
-        svgEl.style.transform = "";
         svgWrap.style.minHeight = "";
 
         if (!deg) return;
 
-        svgEl.style.transform = "rotate(" + deg + "deg)";
+        var vb = svgEl.viewBox.baseVal;
+        if (!vb) return;
+        var origW = vb.width, origH = vb.height;
 
-        // When rotated 90/270, the wide SVG needs more vertical space
+        // For 90/270: swap viewBox dimensions so the SVG container
+        // adapts to the rotated aspect ratio naturally
         if (deg === 90 || deg === 270) {
-            var vb = svgEl.viewBox.baseVal;
-            if (vb && vb.width > vb.height) {
-                // The SVG will be rendered at container width, but rotated.
-                // Set min-height to accommodate the rotated width.
-                var ratio = vb.width / vb.height;
-                svgWrap.style.minHeight = Math.round(svgWrap.offsetWidth * ratio * 0.65) + "px";
-            }
+            svgEl.setAttribute("viewBox", "0 0 " + origH + " " + origW);
+            svgEl.style.removeProperty("min-width");
         }
+
+        // Wrap all existing content in a rotated group
+        var inner = svgEl.innerHTML;
+        var cx = origW / 2, cy = origH / 2;
+        // For 90/270 the pivot needs to be at the center of the ORIGINAL viewBox
+        // then translate to center in the new viewBox
+        var newCx = (deg === 90 || deg === 270) ? origH / 2 : origW / 2;
+        var newCy = (deg === 90 || deg === 270) ? origW / 2 : origH / 2;
+        svgEl.innerHTML = '<g transform="translate(' + newCx + ',' + newCy + ') rotate(' + deg + ') translate(' + (-cx) + ',' + (-cy) + ')">' + inner + '</g>';
 
         // Counter-rotate all text elements so names stay horizontal
         var texts = svgEl.querySelectorAll("text");
         for (var i = 0; i < texts.length; i++) {
             var t = texts[i];
-            var cx = t.getAttribute("x");
-            var cy = t.getAttribute("y");
-            t.setAttribute("transform", "rotate(" + (-deg) + "," + cx + "," + cy + ")");
+            var tx = t.getAttribute("x");
+            var ty = t.getAttribute("y");
+            t.setAttribute("transform", "rotate(" + (-deg) + "," + tx + "," + ty + ")");
         }
         // Counter-rotate lock icons
         var lockIcons = svgEl.querySelectorAll(".seating-seat-locked > g:last-child");
