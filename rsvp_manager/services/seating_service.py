@@ -12,6 +12,17 @@ def get_seating_plan(event):
     return tables
 
 
+def _smart_capacity(guest_count):
+    """Return the smallest standard capacity that fits the guest count."""
+    options = [4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30]
+    # Round up to next even
+    cap = guest_count if guest_count % 2 == 0 else guest_count + 1
+    for opt in options:
+        if opt >= cap:
+            return opt
+    return 30
+
+
 def get_next_table_number(event_id):
     max_num = db.session.query(db.func.max(SeatingTable.table_number)).filter_by(
         event_id=event_id
@@ -203,12 +214,17 @@ def auto_assign(event, mode="random", acting_user_id=None):
     tables = SeatingTable.query.filter_by(event_id=event.id).order_by(
         SeatingTable.table_number
     ).all()
-    if not tables:
-        raise ValueError("No tables exist. Add tables first.")
 
     unseated = get_unseated_attending(event)
     if not unseated:
         raise ValueError("No unseated attending guests to assign.")
+
+    if not tables:
+        # Auto-create a default table sized to fit all attending guests
+        cap = _smart_capacity(len(unseated))
+        table = create_table(event, shape="rectangular", capacity=cap,
+                             acting_user_id=acting_user_id)
+        tables = [table]
 
     # Build list of empty seats per table
     table_empty_seats = {}
@@ -240,7 +256,8 @@ def shuffle_seating(event, mode="random", acting_user_id=None):
         SeatingTable.table_number
     ).all()
     if not tables:
-        raise ValueError("No tables exist. Add tables first.")
+        # Nothing to shuffle — delegate to auto_assign which will create a table
+        return auto_assign(event, mode=mode, acting_user_id=acting_user_id)
 
     # Clear unlocked assignments
     table_ids = [t.id for t in tables]
