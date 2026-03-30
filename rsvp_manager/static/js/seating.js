@@ -397,9 +397,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Seat action menu (move / remove) ────────────────────────────────────
     var seatActionMenu = null;
+    var seatMenuJustOpened = false;
 
     function showSeatActionMenu(seatGroup, assignmentId, invitationId) {
         closeSeatActionMenu();
+        seatMenuJustOpened = true;
+        setTimeout(function () { seatMenuJustOpened = false; }, 0);
         var svg = seatGroup.closest("svg");
         var wrap = svg.parentElement;
         var circle = seatGroup.querySelector("circle");
@@ -456,7 +459,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Close seat action menu when clicking elsewhere
-    document.addEventListener("click", function () {
+    document.addEventListener("click", function (e) {
+        if (seatMenuJustOpened) return;
+        // Don't close if clicking inside the menu itself
+        if (seatActionMenu && seatActionMenu.contains(e.target)) return;
         closeSeatActionMenu();
     });
 
