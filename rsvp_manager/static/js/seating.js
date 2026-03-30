@@ -20,6 +20,10 @@ document.addEventListener("DOMContentLoaded", function () {
         return window.fetchWithCsrf(BASE + (path || ""), opts)
             .then(function (r) {
                 if (r.status === 204) return null;
+                var ct = r.headers.get("content-type") || "";
+                if (ct.indexOf("application/json") === -1) {
+                    throw new Error("Server error (" + r.status + "). Please refresh and try again.");
+                }
                 return r.json().then(function (d) {
                     if (d.status === "error") throw new Error(d.message);
                     return d.data;

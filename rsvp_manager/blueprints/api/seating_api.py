@@ -33,7 +33,7 @@ def create_seating_table(event_id):
         )
     except ValueError as e:
         return api_error(str(e))
-    return api_success(seating_service._serialize_table(table)), 201
+    return api_success(seating_service._serialize_table(table), status_code=201)
 
 
 @api_bp.route("/events/<int:event_id>/seating/tables/<int:table_id>", methods=["PUT"])
