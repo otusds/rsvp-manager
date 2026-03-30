@@ -142,12 +142,12 @@ def get_unseated_attending(event):
     """Get attending invitations that don't have a seat assignment."""
     seated_inv_ids = db.session.query(SeatAssignment.invitation_id).join(
         SeatingTable
-    ).filter(SeatingTable.event_id == event.id).subquery()
+    ).filter(SeatingTable.event_id == event.id)
 
     return Invitation.query.filter(
         Invitation.event_id == event.id,
         Invitation.status == "Attending",
-        ~Invitation.id.in_(seated_inv_ids)
+        ~Invitation.id.in_(seated_inv_ids.subquery().select())
     ).all()
 
 
