@@ -167,7 +167,7 @@ class Invitation(db.Model):
         return f"<Invitation {self.id} event={self.event_id} guest={self.guest_id} {self.status}>"
 
 
-TABLE_SHAPES = ["rectangular", "round", "long"]
+TABLE_SHAPES = ["rectangular", "round", "long", "large_rect"]
 
 
 class SeatingTable(db.Model):

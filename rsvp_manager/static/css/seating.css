@@ -254,6 +254,7 @@
 
 .seating-shape-picker {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
 }
 
@@ -361,6 +362,6 @@
     .seating-unseated { padding: 0.5rem 0.75rem; }
     .seating-tables { padding: 0.5rem 0.75rem; }
     .seating-svg-wrap { padding: 0.75rem 0.25rem; }
-    .seating-shape-option { padding: 0.5rem 0.25rem; }
+    .seating-shape-option { padding: 0.5rem 0.25rem; min-width: calc(50% - 0.5rem); }
     .seating-shape-icon { width: 52px; height: 40px; }
 }

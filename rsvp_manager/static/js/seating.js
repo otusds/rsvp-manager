@@ -333,10 +333,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ── SVG Rendering ───────────────────────────────────────────────────────
+    var isMobile = window.innerWidth <= 600;
+    window.addEventListener("resize", function () { isMobile = window.innerWidth <= 600; });
+
     function buildTableSVG(table, seatR, fontSize, spacing) {
+        var isPreview = (seatR < 20); // preview uses small radius
+        var vertical = isMobile && !isPreview && table.shape !== "round";
         if (table.shape === "round") return buildRoundSVG(table, seatR, fontSize, spacing);
-        if (table.shape === "long") return buildLongSVG(table, seatR, fontSize, spacing);
-        return buildRectSVG(table, seatR, fontSize, spacing);
+        if (table.shape === "large_rect") return buildLargeRectSVG(table, seatR, fontSize, spacing, vertical);
+        if (table.shape === "long") return buildLongSVG(table, seatR, fontSize, spacing, vertical);
+        return buildRectSVG(table, seatR, fontSize, spacing, vertical);
     }
 
     function seatEl(table, pos, cx, cy, r, fontSize) {
@@ -381,7 +387,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return svg;
     }
 
-    function buildRectSVG(table, seatR, fontSize, spacing) {
+    function buildRectSVG(table, seatR, fontSize, spacing, vertical) {
         var n = table.capacity, hasEnds = n >= 6;
         var sideSeats = hasEnds ? Math.floor((n - 2) / 2) : Math.floor(n / 2);
         var endSeats = hasEnds ? 2 : 0, topCount = sideSeats;
@@ -391,7 +397,10 @@ document.addEventListener("DOMContentLoaded", function () {
         var pad = seatR + 20, endPad = hasEnds ? (seatR * 2 + 20) : 0;
         var svgW = tableW + pad * 2 + endPad, svgH = tableH + pad * 2 + seatR * 2 + 20;
         var offX = hasEnds ? (seatR + 10) : 0, tableX = pad + offX, tableY = pad + seatR + 10;
-        var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg" style="min-width:' + Math.min(svgW, 500) + 'px">';
+        // For vertical: swap viewBox dimensions and rotate content
+        var vbW = vertical ? svgH : svgW, vbH = vertical ? svgW : svgH;
+        var svg = '<svg viewBox="0 0 ' + vbW + ' ' + vbH + '" class="seating-svg"' + (vertical ? '' : ' style="min-width:' + Math.min(svgW, 500) + 'px"') + '>';
+        if (vertical) svg += '<g transform="translate(' + svgH + ',0) rotate(90)">';
         svg += '<rect x="' + tableX + '" y="' + tableY + '" width="' + tableW + '" height="' + tableH + '" rx="8" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
         var pos = 1, topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
         for (var i = 0; i < topCount; i++) svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 8), seatR, fontSize);
@@ -399,21 +408,76 @@ document.addEventListener("DOMContentLoaded", function () {
         var botStartX = tableX + (tableW - botCount * spacing) / 2 + spacing / 2;
         for (var i = botCount - 1; i >= 0; i--) svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 8), seatR, fontSize);
         if (hasEnds) svg += seatEl(table, pos++, Math.round(tableX - seatR - 12), Math.round(tableY + tableH / 2), seatR, fontSize);
+        if (vertical) svg += '</g>';
         svg += '</svg>';
         return svg;
     }
 
-    function buildLongSVG(table, seatR, fontSize, spacing) {
+    function buildLongSVG(table, seatR, fontSize, spacing, vertical) {
         var n = table.capacity, topCount = Math.ceil(n / 2), botCount = n - topCount;
         var maxSide = Math.max(topCount, botCount), tableW = maxSide * spacing + 30, tableH = 50;
         var pad = seatR + 20, svgW = tableW + pad * 2, svgH = tableH + pad * 2 + seatR * 2 + 20;
         var tableX = pad, tableY = pad + seatR + 10;
-        var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg" style="min-width:' + Math.min(svgW, 500) + 'px">';
+        var vbW = vertical ? svgH : svgW, vbH = vertical ? svgW : svgH;
+        var svg = '<svg viewBox="0 0 ' + vbW + ' ' + vbH + '" class="seating-svg"' + (vertical ? '' : ' style="min-width:' + Math.min(svgW, 500) + 'px"') + '>';
+        if (vertical) svg += '<g transform="translate(' + svgH + ',0) rotate(90)">';
         svg += '<rect x="' + tableX + '" y="' + tableY + '" width="' + tableW + '" height="' + tableH + '" rx="6" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
         var pos = 1, topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
         for (var i = 0; i < topCount; i++) svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 8), seatR, fontSize);
         var botStartX = tableX + (tableW - botCount * spacing) / 2 + spacing / 2;
         for (var i = botCount - 1; i >= 0; i--) svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 8), seatR, fontSize);
+        if (vertical) svg += '</g>';
+        svg += '</svg>';
+        return svg;
+    }
+
+    function buildLargeRectSVG(table, seatR, fontSize, spacing, vertical) {
+        // Large rectangle: seats along top and bottom, 2x2 at each end
+        var n = table.capacity;
+        // Reserve 4 for ends (2 per end), rest split top/bottom
+        var endSeats = Math.min(4, n);
+        var sideTotal = n - endSeats;
+        var topCount = Math.ceil(sideTotal / 2);
+        var botCount = sideTotal - topCount;
+
+        var maxSide = Math.max(topCount, botCount, 1);
+        var tableW = maxSide * spacing + 40, tableH = 80;
+        var pad = seatR + 20;
+        var endBlockW = seatR * 2 + spacing * 0.4;
+        var svgW = tableW + pad * 2 + endBlockW * 2 + 20;
+        var svgH = tableH + pad * 2 + seatR * 2 + 20;
+        var tableX = pad + endBlockW + 10;
+        var tableY = pad + seatR + 10;
+
+        var vbW = vertical ? svgH : svgW, vbH = vertical ? svgW : svgH;
+        var svg = '<svg viewBox="0 0 ' + vbW + ' ' + vbH + '" class="seating-svg"' + (vertical ? '' : ' style="min-width:' + Math.min(svgW, 500) + 'px"') + '>';
+        if (vertical) svg += '<g transform="translate(' + svgH + ',0) rotate(90)">';
+
+        // Table rectangle
+        svg += '<rect x="' + tableX + '" y="' + tableY + '" width="' + tableW + '" height="' + tableH + '" rx="8" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
+
+        var pos = 1;
+        // Top row seats
+        var topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
+        for (var i = 0; i < topCount; i++) {
+            svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 8), seatR, fontSize);
+        }
+        // Right end: 2 seats stacked vertically
+        var rightX = Math.round(tableX + tableW + seatR + 14);
+        var endVGap = tableH * 0.3;
+        if (endSeats >= 1) svg += seatEl(table, pos++, rightX, Math.round(tableY + tableH / 2 - endVGap), seatR, fontSize);
+        if (endSeats >= 2) svg += seatEl(table, pos++, rightX, Math.round(tableY + tableH / 2 + endVGap), seatR, fontSize);
+        // Bottom row seats (right to left)
+        var botStartX = tableX + (tableW - botCount * spacing) / 2 + spacing / 2;
+        for (var i = botCount - 1; i >= 0; i--) {
+            svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 8), seatR, fontSize);
+        }
+        // Left end: 2 seats stacked vertically
+        var leftX = Math.round(tableX - seatR - 14);
+        if (endSeats >= 3) svg += seatEl(table, pos++, leftX, Math.round(tableY + tableH / 2 + endVGap), seatR, fontSize);
+        if (endSeats >= 4) svg += seatEl(table, pos++, leftX, Math.round(tableY + tableH / 2 - endVGap), seatR, fontSize);
+
+        if (vertical) svg += '</g>';
         svg += '</svg>';
         return svg;
     }
