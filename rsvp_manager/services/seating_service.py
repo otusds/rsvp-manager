@@ -216,49 +216,58 @@ def _auto_assign_alternating(unseated, table_empty_seats, tables):
     2. Distribute minority gender evenly across tables
     3. Fill seats alternating, spacing minority as breakers
     """
+    # Count already-seated guests across all tables to determine true gender balance
+    existing_males = 0
+    existing_females = 0
+    table_info = []
+    for table in tables:
+        existing = {}
+        for sa in table.seat_assignments:
+            gender = sa.invitation.guest.gender
+            existing[sa.seat_position] = gender
+            if gender == "Male":
+                existing_males += 1
+            else:
+                existing_females += 1
+        if table.id in table_empty_seats:
+            _, empty_positions = table_empty_seats[table.id]
+            table_info.append({
+                "table": table,
+                "empty": sorted(empty_positions),
+                "existing": existing,
+                "capacity": table.capacity,
+            })
+
+    if not table_info:
+        return
+
     males = [inv for inv in unseated if inv.guest.gender == "Male"]
     females = [inv for inv in unseated if inv.guest.gender == "Female"]
     random.shuffle(males)
     random.shuffle(females)
 
-    # Determine majority/minority
-    if len(males) >= len(females):
+    # Determine majority/minority considering BOTH seated and unseated guests
+    total_males = len(males) + existing_males
+    total_females = len(females) + existing_females
+    if total_males >= total_females:
         majority, minority = males, females
-        maj_gender, min_gender = "Male", "Female"
+        min_gender = "Female"
     else:
         majority, minority = females, males
-        maj_gender, min_gender = "Female", "Male"
+        min_gender = "Male"
 
-    # For each table, get empty seats and any already-seated guests (for context)
-    table_info = []
-    for table in tables:
-        if table.id not in table_empty_seats:
-            continue
-        _, empty_positions = table_empty_seats[table.id]
-        # Existing assignments for alternation context
-        existing = {}
-        for sa in table.seat_assignments:
-            existing[sa.seat_position] = sa.invitation.guest.gender
-        table_info.append({
-            "table": table,
-            "empty": sorted(empty_positions),
-            "existing": existing,
-            "capacity": table.capacity,
-        })
-
-    if not table_info:
-        return
-
-    # Distribute minority evenly across tables proportional to empty seats
+    # Distribute minority evenly across tables, accounting for already-seated
     total_empty = sum(len(t["empty"]) for t in table_info)
     minority_remaining = list(minority)
     majority_remaining = list(majority)
 
     # Calculate how many minority to give each table
+    # Consider how many of the minority gender are already seated at each table
     minority_per_table = []
     for t in table_info:
         n_empty = len(t["empty"])
-        # Proportional allocation
+        existing_min_at_table = sum(1 for g in t["existing"].values() if g == min_gender)
+        # Target: distribute minority proportional to table total capacity
         if total_empty > 0:
             share = round(len(minority) * n_empty / total_empty)
         else:
@@ -380,6 +389,7 @@ def serialize_seating_plan(event):
     """Serialize complete seating plan for API response."""
     tables = get_seating_plan(event)
     unseated = get_unseated_attending(event)
+    unseated.sort(key=lambda inv: (inv.guest.first_name.lower(), (inv.guest.last_name or "").lower()))
 
     return {
         "tables": [_serialize_table(t) for t in tables],

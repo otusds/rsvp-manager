@@ -10,11 +10,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var state = { tables: [], unseated: [] };
     var selectedGuest = null; // for click-to-assign
+    var movingAssignment = null; // for move-guest flow
 
     // Seat circle radius for main table views
-    var SEAT_R = 28;
-    var SEAT_FONT = 11;
-    var SEAT_SPACING = 68;
+    var SEAT_R = 30;
+    var SEAT_FONT = 12;
+    var SEAT_SPACING = 76;
 
     // ── API helpers ─────────────────────────────────────────────────────────
     var BASE = "/api/v1/events/" + eventId + "/seating";
@@ -76,6 +77,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function toggleSelectGuest(guest, chip) {
+        cancelMove();
         if (selectedGuest && selectedGuest.invitation_id === guest.invitation_id) {
             selectedGuest = null;
             document.querySelectorAll(".seating-chip-selected").forEach(function (c) {
@@ -98,9 +100,31 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function clearSelection() {
         selectedGuest = null;
+        cancelMove();
         document.querySelectorAll(".seating-chip-selected").forEach(function (c) {
             c.classList.remove("seating-chip-selected");
         });
+        document.querySelectorAll(".seating-seat-highlight").forEach(function (s) {
+            s.classList.remove("seating-seat-highlight");
+        });
+    }
+
+    // ── Move guest flow ─────────────────────────────────────────────────────
+    function startMove(assignmentId, invitationId) {
+        movingAssignment = { assignmentId: assignmentId, invitationId: invitationId };
+        selectedGuest = null;
+        document.querySelectorAll(".seating-chip-selected").forEach(function (c) {
+            c.classList.remove("seating-chip-selected");
+        });
+        // Highlight empty seats
+        document.querySelectorAll(".seating-seat-empty").forEach(function (s) {
+            s.classList.add("seating-seat-highlight");
+        });
+        window.showToast("Click an empty seat to move this guest");
+    }
+
+    function cancelMove() {
+        movingAssignment = null;
         document.querySelectorAll(".seating-seat-highlight").forEach(function (s) {
             s.classList.remove("seating-seat-highlight");
         });
@@ -142,23 +166,26 @@ document.addEventListener("DOMContentLoaded", function () {
         if (canEdit) {
             var actions = document.createElement("span");
             actions.className = "seating-table-actions";
+            // Edit
             var editBtn = document.createElement("button");
             editBtn.type = "button";
             editBtn.className = "seating-action-btn";
             editBtn.title = "Edit table";
-            editBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+            editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
             editBtn.addEventListener("click", function () { openEditTable(table); });
+            // Clear seats (eraser icon)
             var clearBtn = document.createElement("button");
             clearBtn.type = "button";
             clearBtn.className = "seating-action-btn";
-            clearBtn.title = "Clear seats";
-            clearBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>';
+            clearBtn.title = "Clear all seats";
+            clearBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16c-.6-.6-.6-1.5 0-2.1l10-10c.6-.6 1.5-.6 2.1 0l6 6c.6.6.6 1.5 0 2.1L14 19"/><path d="M6 11l4 4"/></svg>';
             clearBtn.addEventListener("click", function () { clearTable(table.id); });
+            // Delete table (trash icon)
             var delBtn = document.createElement("button");
             delBtn.type = "button";
             delBtn.className = "seating-action-btn seating-action-danger";
             delBtn.title = "Delete table";
-            delBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+            delBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
             delBtn.addEventListener("click", function () { deleteTable(table.id); });
             actions.appendChild(editBtn);
             actions.appendChild(clearBtn);
@@ -191,8 +218,11 @@ document.addEventListener("DOMContentLoaded", function () {
         if (seat) {
             var color = seat.gender === "Male" ? "#d6e9f8" : "#f8d6e9";
             var stroke = seat.gender === "Male" ? "#5b9bd5" : "#d5679b";
-            var label = seat.first_name.length > 9 ? seat.first_name.substring(0, 8) + "." : seat.first_name;
-            group += '<g class="seating-seat seating-seat-filled" data-assignment-id="' + seat.assignment_id + '" data-table-id="' + table.id + '" style="cursor:' + (canEdit ? "pointer" : "default") + '">';
+            var name = seat.first_name;
+            // Truncate to fit in circle: ~1 char per 5px of radius
+            var maxChars = Math.floor(r * 2 / (fontSize * 0.6));
+            var label = name.length > maxChars ? name.substring(0, maxChars - 1) + "." : name;
+            group += '<g class="seating-seat seating-seat-filled" data-assignment-id="' + seat.assignment_id + '" data-invitation-id="' + seat.invitation_id + '" data-table-id="' + table.id + '" style="cursor:' + (canEdit ? "pointer" : "default") + '">';
             group += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + color + '" stroke="' + stroke + '" stroke-width="2"/>';
             group += '<text x="' + cx + '" y="' + (cy + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="' + fontSize + '" fill="#333" font-family="DM Sans, sans-serif">' + escapeXml(label) + '</text>';
             group += '</g>';
@@ -201,7 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var tableId = table ? table.id : 0;
             group += '<g class="seating-seat seating-seat-empty" data-table-id="' + tableId + '" data-seat-pos="' + pos + '" style="cursor:' + cursor + '">';
             group += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#f5f5f5" stroke="#ccc" stroke-width="1.5" stroke-dasharray="4 3"/>';
-            group += '<text x="' + cx + '" y="' + (cy + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="' + fontSize + '" fill="#bbb" font-family="DM Sans, sans-serif">' + pos + '</text>';
+            group += '<text x="' + cx + '" y="' + (cy + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="' + Math.round(fontSize * 0.9) + '" fill="#bbb" font-family="DM Sans, sans-serif">' + pos + '</text>';
             group += '</g>';
         }
         return group;
@@ -209,12 +239,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function buildRoundSVG(table, seatR, fontSize, spacing) {
         var n = table.capacity;
-        var tableR = Math.max(45, (spacing * n) / (2 * Math.PI));
-        var orbitR = tableR + seatR + 8;
-        var svgSize = (orbitR + seatR + 8) * 2;
+        var tableR = Math.max(50, (spacing * n) / (2 * Math.PI));
+        var orbitR = tableR + seatR + 10;
+        var svgSize = (orbitR + seatR + 10) * 2;
         var cx0 = svgSize / 2, cy0 = svgSize / 2;
 
-        var svg = '<svg viewBox="0 0 ' + svgSize + ' ' + svgSize + '" class="seating-svg">';
+        var svg = '<svg viewBox="0 0 ' + svgSize + ' ' + svgSize + '" class="seating-svg" style="min-width:' + Math.min(svgSize, 500) + 'px">';
         svg += '<circle cx="' + cx0 + '" cy="' + cy0 + '" r="' + tableR + '" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
         for (var i = 0; i < n; i++) {
             var angle = (2 * Math.PI * i / n) - Math.PI / 2;
@@ -236,32 +266,33 @@ document.addEventListener("DOMContentLoaded", function () {
         if (botCount < 0) { botCount = 0; endSeats = n - topCount; }
 
         var maxSide = Math.max(topCount, botCount);
-        var tableW = maxSide * spacing + 20;
-        var tableH = 70;
-        var pad = seatR + 16;
-        var svgW = tableW + pad * 2 + (hasEnds ? (seatR * 2 + 24) : 0);
-        var svgH = tableH + pad * 2 + seatR * 2 + 16;
-        var offX = hasEnds ? (seatR + 12) : 0;
+        var tableW = maxSide * spacing + 30;
+        var tableH = 80;
+        var pad = seatR + 20;
+        var endPad = hasEnds ? (seatR * 2 + 20) : 0;
+        var svgW = tableW + pad * 2 + endPad;
+        var svgH = tableH + pad * 2 + seatR * 2 + 20;
+        var offX = hasEnds ? (seatR + 10) : 0;
         var tableX = pad + offX;
-        var tableY = pad + seatR + 8;
+        var tableY = pad + seatR + 10;
 
-        var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg">';
+        var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg" style="min-width:' + Math.min(svgW, 500) + 'px">';
         svg += '<rect x="' + tableX + '" y="' + tableY + '" width="' + tableW + '" height="' + tableH + '" rx="8" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
 
         var pos = 1;
         var topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
         for (var i = 0; i < topCount; i++) {
-            svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 6), seatR, fontSize);
+            svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 8), seatR, fontSize);
         }
         if (hasEnds) {
-            svg += seatEl(table, pos++, Math.round(tableX + tableW + seatR + 10), Math.round(tableY + tableH / 2), seatR, fontSize);
+            svg += seatEl(table, pos++, Math.round(tableX + tableW + seatR + 12), Math.round(tableY + tableH / 2), seatR, fontSize);
         }
         var botStartX = tableX + (tableW - botCount * spacing) / 2 + spacing / 2;
         for (var i = botCount - 1; i >= 0; i--) {
-            svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 6), seatR, fontSize);
+            svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 8), seatR, fontSize);
         }
         if (hasEnds) {
-            svg += seatEl(table, pos++, Math.round(tableX - seatR - 10), Math.round(tableY + tableH / 2), seatR, fontSize);
+            svg += seatEl(table, pos++, Math.round(tableX - seatR - 12), Math.round(tableY + tableH / 2), seatR, fontSize);
         }
 
         svg += '</svg>';
@@ -274,25 +305,25 @@ document.addEventListener("DOMContentLoaded", function () {
         var botCount = n - topCount;
 
         var maxSide = Math.max(topCount, botCount);
-        var tableW = maxSide * spacing + 20;
-        var tableH = 44;
-        var pad = seatR + 16;
+        var tableW = maxSide * spacing + 30;
+        var tableH = 50;
+        var pad = seatR + 20;
         var svgW = tableW + pad * 2;
-        var svgH = tableH + pad * 2 + seatR * 2 + 16;
+        var svgH = tableH + pad * 2 + seatR * 2 + 20;
         var tableX = pad;
-        var tableY = pad + seatR + 8;
+        var tableY = pad + seatR + 10;
 
-        var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg">';
+        var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg" style="min-width:' + Math.min(svgW, 500) + 'px">';
         svg += '<rect x="' + tableX + '" y="' + tableY + '" width="' + tableW + '" height="' + tableH + '" rx="6" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
 
         var pos = 1;
         var topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
         for (var i = 0; i < topCount; i++) {
-            svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 6), seatR, fontSize);
+            svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 8), seatR, fontSize);
         }
         var botStartX = tableX + (tableW - botCount * spacing) / 2 + spacing / 2;
         for (var i = botCount - 1; i >= 0; i--) {
-            svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 6), seatR, fontSize);
+            svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 8), seatR, fontSize);
         }
 
         svg += '</svg>';
@@ -302,8 +333,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ── Mini preview SVG (for modal) ────────────────────────────────────────
     function buildPreviewSVG(shape, capacity) {
         var fakeTable = { capacity: capacity, seats: {}, shape: shape, id: 0 };
-        var miniR = 14, miniFontSize = 7, miniSpacing = 36;
-        return buildTableSVG(fakeTable, miniR, miniFontSize, miniSpacing);
+        return buildTableSVG(fakeTable, 16, 8, 40);
     }
 
     function escapeXml(s) {
@@ -319,18 +349,35 @@ document.addEventListener("DOMContentLoaded", function () {
         if (seatGroup.closest("#seating-table-overlay")) return;
 
         if (seatGroup.classList.contains("seating-seat-filled")) {
+            // Click on filled seat — show move/remove popup
             var aId = seatGroup.dataset.assignmentId;
-            if (confirm("Remove this guest from their seat?")) {
-                api("DELETE", "/assign/" + aId).then(function () {
-                    clearSelection();
-                    load();
-                }).catch(window.handleFetchError);
-            }
+            var invId = seatGroup.dataset.invitationId;
+            showSeatActionMenu(seatGroup, aId, invId);
+            e.stopPropagation();
             return;
         }
 
+        // Click on empty seat
         var tableId = parseInt(seatGroup.dataset.tableId);
         var seatPos = parseInt(seatGroup.dataset.seatPos);
+
+        // Moving an existing guest to a new seat
+        if (movingAssignment) {
+            // Remove old, assign new
+            api("DELETE", "/assign/" + movingAssignment.assignmentId).then(function () {
+                return api("POST", "/assign", {
+                    invitation_id: parseInt(movingAssignment.invitationId),
+                    table_id: tableId,
+                    seat_position: seatPos
+                });
+            }).then(function () {
+                cancelMove();
+                load();
+            }).catch(function (err) {
+                window.showToast(err.message || "Failed to move guest");
+            });
+            return;
+        }
 
         if (selectedGuest) {
             api("POST", "/assign", {
@@ -346,6 +393,71 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             openPicker(tableId, seatPos);
         }
+    });
+
+    // ── Seat action menu (move / remove) ────────────────────────────────────
+    var seatActionMenu = null;
+
+    function showSeatActionMenu(seatGroup, assignmentId, invitationId) {
+        closeSeatActionMenu();
+        var svg = seatGroup.closest("svg");
+        var wrap = svg.parentElement;
+        var circle = seatGroup.querySelector("circle");
+        var cx = parseFloat(circle.getAttribute("cx"));
+        var cy = parseFloat(circle.getAttribute("cy"));
+
+        // Convert SVG coordinates to pixel coordinates
+        var svgRect = svg.getBoundingClientRect();
+        var vb = svg.viewBox.baseVal;
+        var scaleX = svgRect.width / vb.width;
+        var scaleY = svgRect.height / vb.height;
+        var pixelX = (cx - vb.x) * scaleX;
+        var pixelY = (cy - vb.y) * scaleY;
+
+        var menu = document.createElement("div");
+        menu.className = "seating-seat-menu";
+        menu.style.left = Math.round(pixelX) + "px";
+        menu.style.top = Math.round(pixelY - 10) + "px";
+
+        var moveBtn = document.createElement("button");
+        moveBtn.type = "button";
+        moveBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg> Move';
+        moveBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            closeSeatActionMenu();
+            startMove(assignmentId, invitationId);
+        });
+
+        var removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "seating-seat-menu-danger";
+        removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Remove';
+        removeBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            closeSeatActionMenu();
+            api("DELETE", "/assign/" + assignmentId).then(function () {
+                clearSelection();
+                load();
+            }).catch(window.handleFetchError);
+        });
+
+        menu.appendChild(moveBtn);
+        menu.appendChild(removeBtn);
+        wrap.style.position = "relative";
+        wrap.appendChild(menu);
+        seatActionMenu = menu;
+    }
+
+    function closeSeatActionMenu() {
+        if (seatActionMenu && seatActionMenu.parentNode) {
+            seatActionMenu.parentNode.removeChild(seatActionMenu);
+        }
+        seatActionMenu = null;
+    }
+
+    // Close seat action menu when clicking elsewhere
+    document.addEventListener("click", function () {
+        closeSeatActionMenu();
     });
 
     // ── Seat picker modal ───────────────────────────────────────────────────
@@ -403,13 +515,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Smart default capacity ──────────────────────────────────────────────
     function getDefaultCapacity() {
-        // Total attending (seated + unseated)
         var attending = state.unseated.length;
         state.tables.forEach(function (t) { attending += Object.keys(t.seats).length; });
         if (attending <= 0) return 12;
-        // Round up to next even number
         var cap = attending % 2 === 0 ? attending : attending + 1;
-        // Clamp to valid options
         var options = [4,6,8,10,12,14,16,18,20,24,30];
         for (var i = 0; i < options.length; i++) {
             if (options[i] >= cap) return options[i];
@@ -441,7 +550,6 @@ document.addEventListener("DOMContentLoaded", function () {
         previewContainer.innerHTML = buildPreviewSVG(shape, capacity);
     }
 
-    // Shape option clicks
     shapeOptions.forEach(function (opt) {
         opt.addEventListener("click", function () {
             setSelectedShape(opt.dataset.shape);
@@ -449,11 +557,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Capacity change
     if (capacitySelect) {
-        capacitySelect.addEventListener("change", function () {
-            updatePreview();
-        });
+        capacitySelect.addEventListener("change", function () { updatePreview(); });
     }
 
     if (addTableBtn) {
@@ -548,7 +653,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ── Clear single table ──────────────────────────────────────────────────
+    // ── Clear / delete single table ─────────────────────────────────────────
     function clearTable(tableId) {
         if (!confirm("Clear all seats on this table?")) return;
         api("POST", "/tables/" + tableId + "/clear").then(function () {
@@ -567,9 +672,9 @@ document.addEventListener("DOMContentLoaded", function () {
     var section = document.getElementById("seating-section");
     var loaded = false;
     if (section) {
-        var header = section.querySelector(".collapsible-header");
-        if (header) {
-            header.addEventListener("click", function () {
+        var sectionHeader = section.querySelector(".collapsible-header");
+        if (sectionHeader) {
+            sectionHeader.addEventListener("click", function () {
                 if (!loaded) {
                     loaded = true;
                     load();

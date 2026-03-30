@@ -281,6 +281,38 @@
 .seating-picker-item.seating-chip-male { border-color: #c5d8f0; }
 .seating-picker-item.seating-chip-female { border-color: #f0c5d8; }
 
+/* ── Seat action menu (move/remove popup) ────────────────────────────────── */
+
+.seating-seat-menu {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    z-index: 30;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    overflow: hidden;
+    min-width: 120px;
+}
+
+.seating-seat-menu button {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    background: none;
+    font-size: 0.82rem;
+    cursor: pointer;
+    color: #444;
+    white-space: nowrap;
+}
+
+.seating-seat-menu button:hover { background: #f5f5f5; }
+.seating-seat-menu-danger { color: #d32f2f !important; }
+.seating-seat-menu-danger:hover { background: #fce8e8 !important; }
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 
 @media (max-width: 600px) {
