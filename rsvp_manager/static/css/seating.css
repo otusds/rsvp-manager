@@ -211,16 +211,13 @@
 /* ── Action circles (unseat X + lock) ────────────────────────────────────── */
 
 .seating-action-circles {
-    position: absolute;
-    transform: translate(-50%, -100%);
-    display: flex;
-    gap: 0.3rem;
-    z-index: 25;
+    pointer-events: none;
 }
 
 .seating-action-circle {
-    width: 28px;
-    height: 28px;
+    pointer-events: auto;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     border: 2px solid #ccc;
     background: #fff;

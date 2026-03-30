@@ -162,16 +162,18 @@ document.addEventListener("DOMContentLoaded", function () {
         var pixelX = (cx - vb.x) * scaleX;
         var pixelY = (cy - vb.y) * scaleY;
 
-        var container = document.createElement("div");
-        container.className = "seating-action-circles";
-        container.style.left = Math.round(pixelX) + "px";
-        container.style.top = Math.round(pixelY - SEAT_R * scaleY - 8) + "px";
+        // Position circles overlapping the seat at top-left (X) and top-right (lock)
+        var seatPixelR = SEAT_R * scaleX;
+        var offset = seatPixelR * 0.65; // how far from center along 45-degree angle
 
-        // X button (unseat)
+        // X button (unseat) — top-left of seat
         var xBtn = document.createElement("button");
         xBtn.type = "button";
         xBtn.className = "seating-action-circle seating-action-circle-x";
         xBtn.title = "Unseat";
+        xBtn.style.position = "absolute";
+        xBtn.style.left = Math.round(pixelX - offset - 10) + "px";
+        xBtn.style.top = Math.round(pixelY - offset - 10) + "px";
         xBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
         xBtn.addEventListener("click", function (e) {
             e.stopPropagation();
@@ -195,10 +197,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
         }
+        // Lock button — top-right of seat
         var lockBtn = document.createElement("button");
         lockBtn.type = "button";
         lockBtn.className = "seating-action-circle seating-action-circle-lock" + (isLocked ? " seating-action-circle-locked" : "");
         lockBtn.title = isLocked ? "Unlock" : "Lock";
+        lockBtn.style.position = "absolute";
+        lockBtn.style.left = Math.round(pixelX + offset - 10) + "px";
+        lockBtn.style.top = Math.round(pixelY - offset - 10) + "px";
         lockBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
         lockBtn.addEventListener("click", function (e) {
             e.stopPropagation();
@@ -208,6 +214,9 @@ document.addEventListener("DOMContentLoaded", function () {
             }).catch(window.handleFetchError);
         });
 
+        // Create a container for cleanup
+        var container = document.createElement("div");
+        container.className = "seating-action-circles";
         container.appendChild(xBtn);
         container.appendChild(lockBtn);
         wrap.appendChild(container);
