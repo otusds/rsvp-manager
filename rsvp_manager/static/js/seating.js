@@ -11,6 +11,11 @@ document.addEventListener("DOMContentLoaded", function () {
     var state = { tables: [], unseated: [] };
     var selectedGuest = null; // for click-to-assign
 
+    // Seat circle radius for main table views
+    var SEAT_R = 28;
+    var SEAT_FONT = 11;
+    var SEAT_SPACING = 68;
+
     // ── API helpers ─────────────────────────────────────────────────────────
     var BASE = "/api/v1/events/" + eventId + "/seating";
 
@@ -85,7 +90,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 c.classList.remove("seating-chip-selected");
             });
             chip.classList.add("seating-chip-selected");
-            // Highlight empty seats
             document.querySelectorAll(".seating-seat-empty").forEach(function (s) {
                 s.classList.add("seating-seat-highlight");
             });
@@ -107,7 +111,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function renderTables() {
         var container = document.getElementById("seating-tables");
-        // Remove all children except the empty message
         while (container.firstChild) {
             container.removeChild(container.firstChild);
         }
@@ -168,145 +171,139 @@ document.addEventListener("DOMContentLoaded", function () {
         // SVG visual
         var svgWrap = document.createElement("div");
         svgWrap.className = "seating-svg-wrap";
-        svgWrap.innerHTML = buildTableSVG(table);
+        svgWrap.innerHTML = buildTableSVG(table, SEAT_R, SEAT_FONT, SEAT_SPACING);
         card.appendChild(svgWrap);
 
         return card;
     }
 
     // ── SVG Table Rendering ─────────────────────────────────────────────────
-    function buildTableSVG(table) {
-        if (table.shape === "round") return buildRoundSVG(table);
-        if (table.shape === "long") return buildLongSVG(table);
-        return buildRectSVG(table);
+
+    function buildTableSVG(table, seatR, fontSize, spacing) {
+        if (table.shape === "round") return buildRoundSVG(table, seatR, fontSize, spacing);
+        if (table.shape === "long") return buildLongSVG(table, seatR, fontSize, spacing);
+        return buildRectSVG(table, seatR, fontSize, spacing);
     }
 
-    function seatEl(table, pos, cx, cy) {
-        var seat = table.seats[String(pos)];
+    function seatEl(table, pos, cx, cy, r, fontSize) {
+        var seat = table ? table.seats[String(pos)] : null;
         var group = "";
         if (seat) {
             var color = seat.gender === "Male" ? "#d6e9f8" : "#f8d6e9";
             var stroke = seat.gender === "Male" ? "#5b9bd5" : "#d5679b";
-            var label = seat.first_name.length > 8 ? seat.first_name.substring(0, 7) + "." : seat.first_name;
+            var label = seat.first_name.length > 9 ? seat.first_name.substring(0, 8) + "." : seat.first_name;
             group += '<g class="seating-seat seating-seat-filled" data-assignment-id="' + seat.assignment_id + '" data-table-id="' + table.id + '" style="cursor:' + (canEdit ? "pointer" : "default") + '">';
-            group += '<circle cx="' + cx + '" cy="' + cy + '" r="22" fill="' + color + '" stroke="' + stroke + '" stroke-width="2"/>';
-            group += '<text x="' + cx + '" y="' + (cy + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="#333" font-family="DM Sans, sans-serif">' + escapeXml(label) + '</text>';
+            group += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + color + '" stroke="' + stroke + '" stroke-width="2"/>';
+            group += '<text x="' + cx + '" y="' + (cy + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="' + fontSize + '" fill="#333" font-family="DM Sans, sans-serif">' + escapeXml(label) + '</text>';
             group += '</g>';
         } else {
-            group += '<g class="seating-seat seating-seat-empty" data-table-id="' + table.id + '" data-seat-pos="' + pos + '" style="cursor:' + (canEdit ? "pointer" : "default") + '">';
-            group += '<circle cx="' + cx + '" cy="' + cy + '" r="22" fill="#f5f5f5" stroke="#ccc" stroke-width="1.5" stroke-dasharray="4 3"/>';
-            group += '<text x="' + cx + '" y="' + (cy + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="#bbb" font-family="DM Sans, sans-serif">' + pos + '</text>';
+            var cursor = (table && canEdit) ? "pointer" : "default";
+            var tableId = table ? table.id : 0;
+            group += '<g class="seating-seat seating-seat-empty" data-table-id="' + tableId + '" data-seat-pos="' + pos + '" style="cursor:' + cursor + '">';
+            group += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#f5f5f5" stroke="#ccc" stroke-width="1.5" stroke-dasharray="4 3"/>';
+            group += '<text x="' + cx + '" y="' + (cy + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="' + fontSize + '" fill="#bbb" font-family="DM Sans, sans-serif">' + pos + '</text>';
             group += '</g>';
         }
         return group;
     }
 
-    function buildRoundSVG(table) {
+    function buildRoundSVG(table, seatR, fontSize, spacing) {
         var n = table.capacity;
-        var centerX = 140, centerY = 140;
-        var tableR = Math.max(40, 18 * n / Math.PI);
-        var seatR = tableR + 32;
-        var svgSize = (seatR + 30) * 2;
-        centerX = svgSize / 2;
-        centerY = svgSize / 2;
+        var tableR = Math.max(45, (spacing * n) / (2 * Math.PI));
+        var orbitR = tableR + seatR + 8;
+        var svgSize = (orbitR + seatR + 8) * 2;
+        var cx0 = svgSize / 2, cy0 = svgSize / 2;
 
         var svg = '<svg viewBox="0 0 ' + svgSize + ' ' + svgSize + '" class="seating-svg">';
-        // Table circle
-        svg += '<circle cx="' + centerX + '" cy="' + centerY + '" r="' + tableR + '" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
-        // Seats
+        svg += '<circle cx="' + cx0 + '" cy="' + cy0 + '" r="' + tableR + '" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
         for (var i = 0; i < n; i++) {
             var angle = (2 * Math.PI * i / n) - Math.PI / 2;
-            var cx = centerX + seatR * Math.cos(angle);
-            var cy = centerY + seatR * Math.sin(angle);
-            svg += seatEl(table, i + 1, Math.round(cx), Math.round(cy));
+            var sx = cx0 + orbitR * Math.cos(angle);
+            var sy = cy0 + orbitR * Math.sin(angle);
+            svg += seatEl(table, i + 1, Math.round(sx), Math.round(sy), seatR, fontSize);
         }
         svg += '</svg>';
         return svg;
     }
 
-    function buildRectSVG(table) {
+    function buildRectSVG(table, seatR, fontSize, spacing) {
         var n = table.capacity;
-        // Seats: top side, bottom side, optionally left end and right end
         var hasEnds = n >= 6;
         var sideSeats = hasEnds ? Math.floor((n - 2) / 2) : Math.floor(n / 2);
         var endSeats = hasEnds ? 2 : 0;
-        // Adjust if odd total
         var topCount = sideSeats;
         var botCount = n - topCount - endSeats;
         if (botCount < 0) { botCount = 0; endSeats = n - topCount; }
 
-        var seatSpacing = 54;
         var maxSide = Math.max(topCount, botCount);
-        var tableW = maxSide * seatSpacing + 20;
-        var tableH = 60;
-        var pad = 50;
-        var svgW = tableW + pad * 2 + (hasEnds ? 80 : 0);
-        var svgH = tableH + pad * 2 + 60;
-        var offX = hasEnds ? 40 : 0;
+        var tableW = maxSide * spacing + 20;
+        var tableH = 70;
+        var pad = seatR + 16;
+        var svgW = tableW + pad * 2 + (hasEnds ? (seatR * 2 + 24) : 0);
+        var svgH = tableH + pad * 2 + seatR * 2 + 16;
+        var offX = hasEnds ? (seatR + 12) : 0;
         var tableX = pad + offX;
-        var tableY = pad + 30;
+        var tableY = pad + seatR + 8;
 
         var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg">';
-        // Table rect
         svg += '<rect x="' + tableX + '" y="' + tableY + '" width="' + tableW + '" height="' + tableH + '" rx="8" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
 
         var pos = 1;
-        // Top seats
-        var topStartX = tableX + (tableW - topCount * seatSpacing) / 2 + seatSpacing / 2;
+        var topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
         for (var i = 0; i < topCount; i++) {
-            svg += seatEl(table, pos++, Math.round(topStartX + i * seatSpacing), tableY - 28);
+            svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 6), seatR, fontSize);
         }
-        // Right end
         if (hasEnds) {
-            svg += seatEl(table, pos++, Math.round(tableX + tableW + 34), Math.round(tableY + tableH / 2));
+            svg += seatEl(table, pos++, Math.round(tableX + tableW + seatR + 10), Math.round(tableY + tableH / 2), seatR, fontSize);
         }
-        // Bottom seats (right to left to make clockwise)
-        var botStartX = tableX + (tableW - botCount * seatSpacing) / 2 + seatSpacing / 2;
+        var botStartX = tableX + (tableW - botCount * spacing) / 2 + spacing / 2;
         for (var i = botCount - 1; i >= 0; i--) {
-            svg += seatEl(table, pos++, Math.round(botStartX + i * seatSpacing), Math.round(tableY + tableH + 28));
+            svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 6), seatR, fontSize);
         }
-        // Left end
         if (hasEnds) {
-            svg += seatEl(table, pos++, Math.round(tableX - 34), Math.round(tableY + tableH / 2));
+            svg += seatEl(table, pos++, Math.round(tableX - seatR - 10), Math.round(tableY + tableH / 2), seatR, fontSize);
         }
 
         svg += '</svg>';
         return svg;
     }
 
-    function buildLongSVG(table) {
+    function buildLongSVG(table, seatR, fontSize, spacing) {
         var n = table.capacity;
         var topCount = Math.ceil(n / 2);
         var botCount = n - topCount;
 
-        var seatSpacing = 54;
         var maxSide = Math.max(topCount, botCount);
-        var tableW = maxSide * seatSpacing + 20;
-        var tableH = 40;
-        var pad = 50;
+        var tableW = maxSide * spacing + 20;
+        var tableH = 44;
+        var pad = seatR + 16;
         var svgW = tableW + pad * 2;
-        var svgH = tableH + pad * 2 + 60;
+        var svgH = tableH + pad * 2 + seatR * 2 + 16;
         var tableX = pad;
-        var tableY = pad + 30;
+        var tableY = pad + seatR + 8;
 
         var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg">';
-        // Table rect (narrower for banquet style)
         svg += '<rect x="' + tableX + '" y="' + tableY + '" width="' + tableW + '" height="' + tableH + '" rx="6" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
 
         var pos = 1;
-        // Top row
-        var topStartX = tableX + (tableW - topCount * seatSpacing) / 2 + seatSpacing / 2;
+        var topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
         for (var i = 0; i < topCount; i++) {
-            svg += seatEl(table, pos++, Math.round(topStartX + i * seatSpacing), tableY - 28);
+            svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 6), seatR, fontSize);
         }
-        // Bottom row (right to left for clockwise)
-        var botStartX = tableX + (tableW - botCount * seatSpacing) / 2 + seatSpacing / 2;
+        var botStartX = tableX + (tableW - botCount * spacing) / 2 + spacing / 2;
         for (var i = botCount - 1; i >= 0; i--) {
-            svg += seatEl(table, pos++, Math.round(botStartX + i * seatSpacing), Math.round(tableY + tableH + 28));
+            svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 6), seatR, fontSize);
         }
 
         svg += '</svg>';
         return svg;
+    }
+
+    // ── Mini preview SVG (for modal) ────────────────────────────────────────
+    function buildPreviewSVG(shape, capacity) {
+        var fakeTable = { capacity: capacity, seats: {}, shape: shape, id: 0 };
+        var miniR = 14, miniFontSize = 7, miniSpacing = 36;
+        return buildTableSVG(fakeTable, miniR, miniFontSize, miniSpacing);
     }
 
     function escapeXml(s) {
@@ -318,9 +315,10 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!canEdit) return;
         var seatGroup = e.target.closest(".seating-seat");
         if (!seatGroup) return;
+        // Ignore clicks inside the modal preview
+        if (seatGroup.closest("#seating-table-overlay")) return;
 
         if (seatGroup.classList.contains("seating-seat-filled")) {
-            // Click on filled seat — show unseat option
             var aId = seatGroup.dataset.assignmentId;
             if (confirm("Remove this guest from their seat?")) {
                 api("DELETE", "/assign/" + aId).then(function () {
@@ -331,12 +329,10 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // Click on empty seat
         var tableId = parseInt(seatGroup.dataset.tableId);
         var seatPos = parseInt(seatGroup.dataset.seatPos);
 
         if (selectedGuest) {
-            // Assign selected guest
             api("POST", "/assign", {
                 invitation_id: selectedGuest.invitation_id,
                 table_id: tableId,
@@ -348,7 +344,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 window.showToast(err.message || "Failed to assign seat");
             });
         } else {
-            // Open picker modal
             openPicker(tableId, seatPos);
         }
     });
@@ -406,15 +401,69 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // ── Smart default capacity ──────────────────────────────────────────────
+    function getDefaultCapacity() {
+        // Total attending (seated + unseated)
+        var attending = state.unseated.length;
+        state.tables.forEach(function (t) { attending += Object.keys(t.seats).length; });
+        if (attending <= 0) return 12;
+        // Round up to next even number
+        var cap = attending % 2 === 0 ? attending : attending + 1;
+        // Clamp to valid options
+        var options = [4,6,8,10,12,14,16,18,20,24,30];
+        for (var i = 0; i < options.length; i++) {
+            if (options[i] >= cap) return options[i];
+        }
+        return 30;
+    }
+
     // ── Add / Edit table modal ──────────────────────────────────────────────
     var addTableBtn = document.getElementById("seating-add-table-btn");
+    var shapeOptions = document.querySelectorAll(".seating-shape-option");
+    var capacitySelect = document.getElementById("seating-table-capacity");
+    var previewContainer = document.getElementById("seating-table-preview");
+
+    function getSelectedShape() {
+        var active = document.querySelector(".seating-shape-option.active");
+        return active ? active.dataset.shape : "rectangular";
+    }
+
+    function setSelectedShape(shape) {
+        shapeOptions.forEach(function (opt) {
+            opt.classList.toggle("active", opt.dataset.shape === shape);
+        });
+    }
+
+    function updatePreview() {
+        if (!previewContainer) return;
+        var shape = getSelectedShape();
+        var capacity = parseInt(capacitySelect.value) || 12;
+        previewContainer.innerHTML = buildPreviewSVG(shape, capacity);
+    }
+
+    // Shape option clicks
+    shapeOptions.forEach(function (opt) {
+        opt.addEventListener("click", function () {
+            setSelectedShape(opt.dataset.shape);
+            updatePreview();
+        });
+    });
+
+    // Capacity change
+    if (capacitySelect) {
+        capacitySelect.addEventListener("change", function () {
+            updatePreview();
+        });
+    }
+
     if (addTableBtn) {
         addTableBtn.addEventListener("click", function () {
             document.getElementById("seating-table-modal-title").textContent = "Add Table";
             document.getElementById("seating-table-id").value = "";
             document.getElementById("seating-table-label").value = "";
-            document.getElementById("seating-table-shape").value = "rectangular";
-            document.getElementById("seating-table-capacity").value = "12";
+            setSelectedShape("rectangular");
+            capacitySelect.value = String(getDefaultCapacity());
+            updatePreview();
             document.getElementById("seating-table-overlay").style.display = "flex";
         });
     }
@@ -423,8 +472,9 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("seating-table-modal-title").textContent = "Edit Table";
         document.getElementById("seating-table-id").value = table.id;
         document.getElementById("seating-table-label").value = table.label || "";
-        document.getElementById("seating-table-shape").value = table.shape;
-        document.getElementById("seating-table-capacity").value = String(table.capacity);
+        setSelectedShape(table.shape);
+        capacitySelect.value = String(table.capacity);
+        updatePreview();
         document.getElementById("seating-table-overlay").style.display = "flex";
     }
 
@@ -441,8 +491,8 @@ document.addEventListener("DOMContentLoaded", function () {
             var id = document.getElementById("seating-table-id").value;
             var data = {
                 label: document.getElementById("seating-table-label").value,
-                shape: document.getElementById("seating-table-shape").value,
-                capacity: parseInt(document.getElementById("seating-table-capacity").value),
+                shape: getSelectedShape(),
+                capacity: parseInt(capacitySelect.value),
             };
             var promise;
             if (id) {
@@ -481,7 +531,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             });
         });
-        // Close dropdown when clicking elsewhere
         document.addEventListener("click", function () {
             autoMenu.style.display = "none";
         });
@@ -515,7 +564,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ── Initial load ────────────────────────────────────────────────────────
-    // Load when section is first expanded
     var section = document.getElementById("seating-section");
     var loaded = false;
     if (section) {
@@ -528,7 +576,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
         }
-        // If section is not collapsed on load, load immediately
         if (!section.classList.contains("collapsed")) {
             loaded = true;
             load();
