@@ -325,13 +325,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 rotBtn.title = "Rotate table";
                 rotBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>';
                 rotBtn.addEventListener("click", function () {
-                    var cur = tableRotations[table.id] || 0;
-                    tableRotations[table.id] = (cur + 90) % 360;
-                    var wrap = card.querySelector(".seating-svg-wrap");
-                    if (wrap) {
-                        wrap.innerHTML = buildTableSVG(table, SEAT_R, SEAT_FONT, SEAT_SPACING);
-                        applyRotation(wrap, table.id);
-                    }
+                    api("POST", "/tables/" + table.id + "/rotate").then(function (data) {
+                        // Update local state
+                        table.rotation = data.rotation;
+                        var wrap = card.querySelector(".seating-svg-wrap");
+                        if (wrap) {
+                            wrap.innerHTML = buildTableSVG(table, SEAT_R, SEAT_FONT, SEAT_SPACING);
+                            applyRotation(wrap, table.id);
+                        }
+                    }).catch(window.handleFetchError);
                 });
                 actions.appendChild(rotBtn);
             }
@@ -352,7 +354,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ── SVG Rendering ───────────────────────────────────────────────────────
-    var tableRotations = {}; // tableId -> degrees (0, 90, 180, 270)
+    function getTableRotation(tableId) {
+        for (var i = 0; i < state.tables.length; i++) {
+            if (state.tables[i].id === tableId) return state.tables[i].rotation || 0;
+        }
+        return 0;
+    }
 
     function buildTableSVG(table, seatR, fontSize, spacing) {
         if (table.shape === "round") return buildRoundSVG(table, seatR, fontSize, spacing);
@@ -491,7 +498,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function applyRotation(svgWrap, tableId) {
-        var deg = tableRotations[tableId] || 0;
+        var deg = getTableRotation(tableId);
         var svgEl = svgWrap.querySelector("svg");
         if (!svgEl) return;
 

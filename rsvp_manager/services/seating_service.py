@@ -601,6 +601,7 @@ def _serialize_table(table):
         "label": table.label or "",
         "shape": table.shape,
         "capacity": table.capacity,
+        "rotation": table.rotation or 0,
         "seats": seats,
     }
 

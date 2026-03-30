@@ -57,6 +57,19 @@ def update_seating_table(event_id, table_id):
     return api_success(seating_service._serialize_table(table))
 
 
+@api_bp.route("/events/<int:event_id>/seating/tables/<int:table_id>/rotate", methods=["POST"])
+@api_auth_required
+def rotate_seating_table(event_id, table_id):
+    event, user = _get_event_for_seating(event_id, min_role="cohost")
+    table = SeatingTable.query.filter_by(id=table_id, event_id=event.id).first()
+    if not table:
+        return api_error("Table not found", "NOT_FOUND", 404)
+    from rsvp_manager.extensions import db
+    table.rotation = ((table.rotation or 0) + 90) % 360
+    db.session.commit()
+    return api_success({"rotation": table.rotation})
+
+
 @api_bp.route("/events/<int:event_id>/seating/tables/<int:table_id>", methods=["DELETE"])
 @api_auth_required
 def delete_seating_table(event_id, table_id):

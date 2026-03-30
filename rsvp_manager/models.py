@@ -177,6 +177,7 @@ class SeatingTable(db.Model):
     label = db.Column(db.String(100), nullable=True, default="")
     shape = db.Column(db.String(20), nullable=False, default="rectangular")
     capacity = db.Column(db.Integer, nullable=False, default=12)
+    rotation = db.Column(db.Integer, nullable=False, default=0, server_default=db.text("0"))
     seat_assignments = db.relationship("SeatAssignment", backref="table", cascade="all, delete-orphan")
 
     event = db.relationship("Event", backref="seating_tables")
