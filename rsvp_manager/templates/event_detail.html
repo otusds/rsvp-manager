@@ -325,36 +325,38 @@
             <button type="button" class="detail-close" id="seating-table-close">&times;</button>
         </div>
         <div class="detail-card-body" style="padding:1rem">
-            <input type="hidden" id="seating-table-id" value="">
-            <div class="form-group">
-                <label for="seating-table-label">Label (optional)</label>
-                <input type="text" id="seating-table-label" maxlength="100" placeholder="e.g. Head Table">
-            </div>
-            <div class="form-group">
-                <label for="seating-table-shape">Shape</label>
-                <select id="seating-table-shape">
-                    <option value="rectangular">Rectangular</option>
-                    <option value="round">Round</option>
-                    <option value="long">Long / Banquet</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="seating-table-capacity">Seats</label>
-                <select id="seating-table-capacity">
-                    <option value="4">4</option>
-                    <option value="6">6</option>
-                    <option value="8">8</option>
-                    <option value="10">10</option>
-                    <option value="12" selected>12</option>
-                    <option value="14">14</option>
-                    <option value="16">16</option>
-                    <option value="18">18</option>
-                    <option value="20">20</option>
-                    <option value="24">24</option>
-                    <option value="30">30</option>
-                </select>
-            </div>
-            <button type="button" class="btn" id="seating-table-save" style="width:100%;margin-top:0.5rem">Save</button>
+            <form id="seating-table-form" novalidate autocomplete="off" onsubmit="return false;">
+                <input type="hidden" id="seating-table-id" value="">
+                <div class="form-group">
+                    <label for="seating-table-label">Label (optional)</label>
+                    <input type="text" id="seating-table-label" maxlength="100" placeholder="e.g. Head Table" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="seating-table-shape">Shape</label>
+                    <select id="seating-table-shape">
+                        <option value="rectangular">Rectangular</option>
+                        <option value="round">Round</option>
+                        <option value="long">Long / Banquet</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="seating-table-capacity">Seats</label>
+                    <select id="seating-table-capacity">
+                        <option value="4">4</option>
+                        <option value="6">6</option>
+                        <option value="8">8</option>
+                        <option value="10">10</option>
+                        <option value="12" selected>12</option>
+                        <option value="14">14</option>
+                        <option value="16">16</option>
+                        <option value="18">18</option>
+                        <option value="20">20</option>
+                        <option value="24">24</option>
+                        <option value="30">30</option>
+                    </select>
+                </div>
+                <button type="button" class="btn" id="seating-table-save" style="width:100%;margin-top:0.5rem">Save</button>
+            </form>
         </div>
     </div>
 </div>
