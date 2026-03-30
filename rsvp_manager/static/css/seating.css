@@ -189,6 +189,12 @@
 
 .seating-seat-filled:hover circle { filter: brightness(0.92); }
 
+.seating-seat-swap-highlight circle {
+    stroke: #f0a030 !important;
+    stroke-width: 3 !important;
+    filter: brightness(0.95);
+}
+
 /* ── Shape picker (modal) ────────────────────────────────────────────────── */
 
 .seating-shape-picker {

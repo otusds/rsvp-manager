@@ -88,6 +88,25 @@ def assign_seat(event_id):
     return api_success({"assignment_id": assignment.id})
 
 
+@api_bp.route("/events/<int:event_id>/seating/swap", methods=["POST"])
+@api_auth_required
+def swap_seats(event_id):
+    event, user = _get_event_for_seating(event_id, min_role="cohost")
+    data = request.get_json()
+    if not data:
+        return api_error("Request body must be JSON")
+    try:
+        seating_service.swap_seats(
+            event,
+            assignment_id_a=data["assignment_id_a"],
+            assignment_id_b=data["assignment_id_b"],
+            acting_user_id=user.id,
+        )
+    except (ValueError, KeyError) as e:
+        return api_error(str(e))
+    return api_success()
+
+
 @api_bp.route("/events/<int:event_id>/seating/assign/<int:assignment_id>", methods=["DELETE"])
 @api_auth_required
 def unseat_guest(event_id, assignment_id):

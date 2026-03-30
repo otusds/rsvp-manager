@@ -116,17 +116,25 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".seating-chip-selected").forEach(function (c) {
             c.classList.remove("seating-chip-selected");
         });
-        // Highlight empty seats
+        // Highlight all seats (empty and filled, except the moving one)
         document.querySelectorAll(".seating-seat-empty").forEach(function (s) {
             s.classList.add("seating-seat-highlight");
         });
-        window.showToast("Click an empty seat to move this guest");
+        document.querySelectorAll(".seating-seat-filled").forEach(function (s) {
+            if (s.dataset.assignmentId !== assignmentId) {
+                s.classList.add("seating-seat-swap-highlight");
+            }
+        });
+        window.showToast("Click an empty seat to move, or another guest to swap");
     }
 
     function cancelMove() {
         movingAssignment = null;
         document.querySelectorAll(".seating-seat-highlight").forEach(function (s) {
             s.classList.remove("seating-seat-highlight");
+        });
+        document.querySelectorAll(".seating-seat-swap-highlight").forEach(function (s) {
+            s.classList.remove("seating-seat-swap-highlight");
         });
     }
 
@@ -349,10 +357,26 @@ document.addEventListener("DOMContentLoaded", function () {
         if (seatGroup.closest("#seating-table-overlay")) return;
 
         if (seatGroup.classList.contains("seating-seat-filled")) {
-            // Click on filled seat — show move/remove popup
             var aId = seatGroup.dataset.assignmentId;
             var invId = seatGroup.dataset.invitationId;
-            showSeatActionMenu(seatGroup, aId, invId);
+
+            // If we're in move mode, swap the two guests
+            if (movingAssignment && movingAssignment.assignmentId !== aId) {
+                api("POST", "/swap", {
+                    assignment_id_a: parseInt(movingAssignment.assignmentId),
+                    assignment_id_b: parseInt(aId)
+                }).then(function () {
+                    cancelMove();
+                    load();
+                }).catch(function (err) {
+                    window.showToast(err.message || "Failed to swap seats");
+                });
+                e.stopPropagation();
+                return;
+            }
+
+            // Otherwise show move/remove popup
+            showSeatActionMenu(e, seatGroup, aId, invId);
             e.stopPropagation();
             return;
         }
@@ -361,9 +385,8 @@ document.addEventListener("DOMContentLoaded", function () {
         var tableId = parseInt(seatGroup.dataset.tableId);
         var seatPos = parseInt(seatGroup.dataset.seatPos);
 
-        // Moving an existing guest to a new seat
+        // Moving an existing guest to an empty seat
         if (movingAssignment) {
-            // Remove old, assign new
             api("DELETE", "/assign/" + movingAssignment.assignmentId).then(function () {
                 return api("POST", "/assign", {
                     invitation_id: parseInt(movingAssignment.invitationId),
@@ -399,28 +422,45 @@ document.addEventListener("DOMContentLoaded", function () {
     var seatActionMenu = null;
     var seatMenuJustOpened = false;
 
-    function showSeatActionMenu(seatGroup, assignmentId, invitationId) {
+    function showSeatActionMenu(clickEvent, seatGroup, assignmentId, invitationId) {
         closeSeatActionMenu();
         seatMenuJustOpened = true;
         setTimeout(function () { seatMenuJustOpened = false; }, 0);
-        var svg = seatGroup.closest("svg");
-        var wrap = svg.parentElement;
-        var circle = seatGroup.querySelector("circle");
-        var cx = parseFloat(circle.getAttribute("cx"));
-        var cy = parseFloat(circle.getAttribute("cy"));
 
-        // Convert SVG coordinates to pixel coordinates
-        var svgRect = svg.getBoundingClientRect();
-        var vb = svg.viewBox.baseVal;
-        var scaleX = svgRect.width / vb.width;
-        var scaleY = svgRect.height / vb.height;
-        var pixelX = (cx - vb.x) * scaleX;
-        var pixelY = (cy - vb.y) * scaleY;
+        var wrap = seatGroup.closest(".seating-svg-wrap");
+        var wrapRect = wrap.getBoundingClientRect();
+
+        // Position relative to wrap using click coordinates
+        var x = clickEvent.clientX - wrapRect.left + wrap.scrollLeft;
+        var y = clickEvent.clientY - wrapRect.top + wrap.scrollTop;
 
         var menu = document.createElement("div");
         menu.className = "seating-seat-menu";
-        menu.style.left = Math.round(pixelX) + "px";
-        menu.style.top = Math.round(pixelY - 10) + "px";
+
+        // Place menu to the right of click, clamp to stay visible
+        wrap.style.position = "relative";
+        wrap.appendChild(menu);
+
+        // Measure menu size after appending
+        var menuW = menu.offsetWidth;
+        var menuH = menu.offsetHeight;
+
+        // Prefer positioning above and centered on click
+        var left = x - menuW / 2;
+        var top = y - menuH - 8;
+
+        // Clamp horizontal: keep within visible wrap area
+        var visibleLeft = wrap.scrollLeft;
+        var visibleRight = visibleLeft + wrapRect.width;
+        if (left < visibleLeft + 4) left = visibleLeft + 4;
+        if (left + menuW > visibleRight - 4) left = visibleRight - menuW - 4;
+
+        // If menu would go above visible area, place below click instead
+        var visibleTop = wrap.scrollTop;
+        if (top < visibleTop) top = y + 8;
+
+        menu.style.left = Math.round(left) + "px";
+        menu.style.top = Math.round(top) + "px";
 
         var moveBtn = document.createElement("button");
         moveBtn.type = "button";
@@ -446,8 +486,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         menu.appendChild(moveBtn);
         menu.appendChild(removeBtn);
-        wrap.style.position = "relative";
-        wrap.appendChild(menu);
         seatActionMenu = menu;
     }
 

@@ -112,6 +112,22 @@ def assign_seat(event, invitation_id, table_id, seat_position, acting_user_id=No
     return assignment
 
 
+def swap_seats(event, assignment_id_a, assignment_id_b, acting_user_id=None):
+    """Swap two seated guests."""
+    a = SeatAssignment.query.get(assignment_id_a)
+    b = SeatAssignment.query.get(assignment_id_b)
+    if not a or not b:
+        raise ValueError("Assignment not found")
+    if a.table.event_id != event.id or b.table.event_id != event.id:
+        raise ValueError("Assignment not found")
+    # Swap positions and tables
+    a.table_id, b.table_id = b.table_id, a.table_id
+    a.seat_position, b.seat_position = b.seat_position, a.seat_position
+    log_action(event.user_id, "updated_seating", "event", event.id,
+               f"Changes to seating plan for {event.name}", acting_user_id=acting_user_id)
+    db.session.commit()
+
+
 def unseat_guest(event, assignment_id, acting_user_id=None):
     assignment = SeatAssignment.query.get(assignment_id)
     if not assignment or assignment.table.event_id != event.id:
