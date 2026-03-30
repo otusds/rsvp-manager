@@ -278,7 +278,7 @@
 <div class="collapsible section collapsed" id="seating-section">
     <div class="collapsible-header">
         <span class="collapse-icon">▼</span>
-        <h2>Seating Plan <span style="font-size:0.55em;font-weight:500;color:#999;vertical-align:middle">(beta)</span></h2>
+        <h2>Seating Plan <span style="font-size:0.55em;font-weight:500;color:#999;vertical-align:middle">(beta)</span> <span id="seating-header-count" style="font-size:0.55em;font-weight:500;color:#999;vertical-align:middle"></span></h2>
     </div>
     <div class="collapsible-body">
         <div id="seating-app" data-event-id="{{ event.id }}" data-role="{{ role }}">
@@ -295,11 +295,20 @@
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div class="seating-dropdown" id="seating-auto-menu" style="display:none">
-                        <button type="button" data-mode="random">Random</button>
-                        <button type="button" data-mode="alternating">Alternate M / F</button>
+                        <button type="button" data-action="assign" data-mode="random">Random</button>
+                        <button type="button" data-action="assign" data-mode="alternating">Alternate M / F</button>
+                        <div class="seating-dropdown-divider"></div>
+                        <button type="button" data-action="shuffle" data-mode="random">Shuffle Random</button>
+                        <button type="button" data-action="shuffle" data-mode="alternating">Shuffle M / F</button>
                     </div>
                 </div>
-                <button type="button" class="btn btn-small btn-secondary" id="seating-clear-all-btn">Clear All</button>
+                <div class="seating-dropdown-wrapper">
+                    <button type="button" class="btn btn-small btn-secondary" id="seating-clear-all-btn">Clear All</button>
+                    <div class="seating-dropdown" id="seating-clear-menu" style="display:none">
+                        <button type="button" id="clear-unlocked-btn">Clear Unlocked Seats</button>
+                        <button type="button" id="clear-everything-btn" class="seating-dropdown-danger">Clear Everything (incl. Locked)</button>
+                    </div>
+                </div>
                 {% endif %}
             </div>
 
@@ -402,7 +411,7 @@
 <div class="detail-overlay" id="seating-picker-overlay" style="display:none">
     <div class="detail-card" style="max-width:320px">
         <div class="detail-card-header">
-            <span class="modal-title">Assign Guest</span>
+            <span class="modal-title">Unseated Guests</span>
             <button type="button" class="detail-close" id="seating-picker-close">&times;</button>
         </div>
         <div class="detail-card-body" style="padding:1rem">

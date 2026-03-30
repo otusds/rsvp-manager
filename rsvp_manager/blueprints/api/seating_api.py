@@ -118,6 +118,30 @@ def unseat_guest(event_id, assignment_id):
     return "", 204
 
 
+@api_bp.route("/events/<int:event_id>/seating/assign/<int:assignment_id>/lock", methods=["POST"])
+@api_auth_required
+def toggle_seat_lock(event_id, assignment_id):
+    event, user = _get_event_for_seating(event_id, min_role="cohost")
+    try:
+        sa = seating_service.toggle_lock(event, assignment_id, acting_user_id=user.id)
+    except ValueError as e:
+        return api_error(str(e))
+    return api_success({"is_locked": sa.is_locked})
+
+
+@api_bp.route("/events/<int:event_id>/seating/tables/<int:table_id>/lock", methods=["POST"])
+@api_auth_required
+def lock_table(event_id, table_id):
+    event, user = _get_event_for_seating(event_id, min_role="cohost")
+    data = request.get_json() or {}
+    lock = data.get("lock", True)
+    try:
+        seating_service.lock_table(event, table_id, lock=lock, acting_user_id=user.id)
+    except ValueError as e:
+        return api_error(str(e))
+    return api_success()
+
+
 @api_bp.route("/events/<int:event_id>/seating/auto-assign", methods=["POST"])
 @api_auth_required
 def auto_assign_seating(event_id):
@@ -131,12 +155,27 @@ def auto_assign_seating(event_id):
     return api_success(seating_service.serialize_seating_plan(event))
 
 
-@api_bp.route("/events/<int:event_id>/seating", methods=["DELETE"])
+@api_bp.route("/events/<int:event_id>/seating/shuffle", methods=["POST"])
+@api_auth_required
+def shuffle_seating(event_id):
+    event, user = _get_event_for_seating(event_id, min_role="cohost")
+    data = request.get_json() or {}
+    mode = data.get("mode", "random")
+    try:
+        seating_service.shuffle_seating(event, mode=mode, acting_user_id=user.id)
+    except ValueError as e:
+        return api_error(str(e))
+    return api_success(seating_service.serialize_seating_plan(event))
+
+
+@api_bp.route("/events/<int:event_id>/seating/clear", methods=["POST"])
 @api_auth_required
 def clear_seating(event_id):
     event, user = _get_event_for_seating(event_id, min_role="cohost")
-    seating_service.clear_all_seating(event, acting_user_id=user.id)
-    return "", 204
+    data = request.get_json() or {}
+    include_locked = data.get("include_locked", False)
+    seating_service.clear_all_seating(event, include_locked=include_locked, acting_user_id=user.id)
+    return api_success()
 
 
 @api_bp.route("/events/<int:event_id>/seating/tables/<int:table_id>/clear", methods=["POST"])
@@ -146,5 +185,7 @@ def clear_table(event_id, table_id):
     table = SeatingTable.query.filter_by(id=table_id, event_id=event.id).first()
     if not table:
         return api_error("Table not found", "NOT_FOUND", 404)
-    seating_service.clear_table_seats(table, acting_user_id=user.id)
+    data = request.get_json() or {}
+    include_locked = data.get("include_locked", False)
+    seating_service.clear_table_seats(table, include_locked=include_locked, acting_user_id=user.id)
     return api_success()

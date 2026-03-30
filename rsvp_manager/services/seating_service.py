@@ -138,17 +138,43 @@ def unseat_guest(event, assignment_id, acting_user_id=None):
     db.session.commit()
 
 
-def clear_table_seats(table, acting_user_id=None):
-    SeatAssignment.query.filter_by(table_id=table.id).delete()
+def toggle_lock(event, assignment_id, acting_user_id=None):
+    """Toggle lock on a seat assignment."""
+    assignment = SeatAssignment.query.get(assignment_id)
+    if not assignment or assignment.table.event_id != event.id:
+        raise ValueError("Assignment not found")
+    assignment.is_locked = not assignment.is_locked
+    db.session.commit()
+    return assignment
+
+
+def lock_table(event, table_id, lock=True, acting_user_id=None):
+    """Lock or unlock all seats at a table."""
+    table = SeatingTable.query.filter_by(id=table_id, event_id=event.id).first()
+    if not table:
+        raise ValueError("Table not found")
+    for sa in table.seat_assignments:
+        sa.is_locked = lock
+    db.session.commit()
+
+
+def clear_table_seats(table, include_locked=False, acting_user_id=None):
+    q = SeatAssignment.query.filter_by(table_id=table.id)
+    if not include_locked:
+        q = q.filter_by(is_locked=False)
+    q.delete()
     log_action(table.event.user_id, "updated_seating", "event", table.event_id,
                f"Changes to seating plan for {table.event.name}", acting_user_id=acting_user_id)
     db.session.commit()
 
 
-def clear_all_seating(event, acting_user_id=None):
+def clear_all_seating(event, include_locked=False, acting_user_id=None):
     table_ids = [t.id for t in SeatingTable.query.filter_by(event_id=event.id).all()]
     if table_ids:
-        SeatAssignment.query.filter(SeatAssignment.table_id.in_(table_ids)).delete()
+        q = SeatAssignment.query.filter(SeatAssignment.table_id.in_(table_ids))
+        if not include_locked:
+            q = q.filter_by(is_locked=False)
+        q.delete()
     log_action(event.user_id, "updated_seating", "event", event.id,
                f"Changes to seating plan for {event.name}", acting_user_id=acting_user_id)
     db.session.commit()
@@ -202,6 +228,53 @@ def auto_assign(event, mode="random", acting_user_id=None):
         _auto_assign_alternating(unseated, table_empty_seats, tables)
     else:
         raise ValueError(f"Unknown mode: {mode}")
+
+    log_action(event.user_id, "updated_seating", "event", event.id,
+               f"Changes to seating plan for {event.name}", acting_user_id=acting_user_id)
+    db.session.commit()
+
+
+def shuffle_seating(event, mode="random", acting_user_id=None):
+    """Clear all unlocked seats and re-assign everyone (locked seats stay)."""
+    tables = SeatingTable.query.filter_by(event_id=event.id).order_by(
+        SeatingTable.table_number
+    ).all()
+    if not tables:
+        raise ValueError("No tables exist. Add tables first.")
+
+    # Clear unlocked assignments
+    table_ids = [t.id for t in tables]
+    SeatAssignment.query.filter(
+        SeatAssignment.table_id.in_(table_ids),
+        SeatAssignment.is_locked == False  # noqa: E712
+    ).delete()
+    db.session.flush()
+
+    # Now auto-assign (all unlocked guests are now unseated)
+    unseated = get_unseated_attending(event)
+    if not unseated:
+        log_action(event.user_id, "updated_seating", "event", event.id,
+                   f"Changes to seating plan for {event.name}", acting_user_id=acting_user_id)
+        db.session.commit()
+        return
+
+    table_empty_seats = {}
+    for table in tables:
+        taken = {sa.seat_position for sa in table.seat_assignments}
+        empty = [p for p in range(1, table.capacity + 1) if p not in taken]
+        if empty:
+            table_empty_seats[table.id] = (table, empty)
+
+    if not table_empty_seats:
+        log_action(event.user_id, "updated_seating", "event", event.id,
+                   f"Changes to seating plan for {event.name}", acting_user_id=acting_user_id)
+        db.session.commit()
+        return
+
+    if mode == "random":
+        _auto_assign_random(unseated, table_empty_seats)
+    elif mode == "alternating":
+        _auto_assign_alternating(unseated, table_empty_seats, tables)
 
     log_action(event.user_id, "updated_seating", "event", event.id,
                f"Changes to seating plan for {event.name}", acting_user_id=acting_user_id)
@@ -425,6 +498,7 @@ def _serialize_table(table):
             "last_name": guest.last_name or "",
             "gender": guest.gender,
             "full_name": guest.full_name,
+            "is_locked": sa.is_locked,
         }
     return {
         "id": table.id,

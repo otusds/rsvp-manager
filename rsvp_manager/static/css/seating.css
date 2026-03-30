@@ -44,6 +44,15 @@
 .seating-dropdown button:first-child { border-radius: 8px 8px 0 0; }
 .seating-dropdown button:last-child { border-radius: 0 0 8px 8px; }
 
+.seating-dropdown-divider {
+    height: 1px;
+    background: #e8e8e8;
+    margin: 0.2rem 0;
+}
+
+.seating-dropdown-danger { color: #d32f2f !important; }
+.seating-dropdown-danger:hover { background: #fce8e8 !important; }
+
 /* ── Unseated guests bar ─────────────────────────────────────────────────── */
 
 .seating-unseated {
@@ -93,9 +102,9 @@
 .seating-chip:hover { filter: brightness(0.95); }
 
 .seating-chip-selected {
-    outline: 2px solid #5b9bd5;
+    outline: 2px solid #e6a817;
     outline-offset: 1px;
-    box-shadow: 0 0 0 4px rgba(91,155,213,0.2);
+    box-shadow: 0 0 0 4px rgba(230,168,23,0.2);
 }
 
 .seating-none {
@@ -157,6 +166,7 @@
 }
 
 .seating-action-btn:hover { background: #f0f0f0; color: #555; }
+.seating-action-active { color: #e6a817 !important; }
 .seating-action-danger:hover { color: #d32f2f; background: #fce8e8; }
 
 /* ── SVG ─────────────────────────────────────────────────────────────────── */
@@ -182,17 +192,20 @@
 }
 
 .seating-seat-highlight circle {
-    fill: #e0f0ff !important;
-    stroke: #5b9bd5 !important;
+    fill: #fef9e7 !important;
+    stroke: #e6a817 !important;
     stroke-dasharray: none !important;
 }
 
 .seating-seat-filled:hover circle { filter: brightness(0.92); }
 
 .seating-seat-swap-highlight circle {
-    stroke: #f0a030 !important;
+    stroke: #e6a817 !important;
     stroke-width: 3 !important;
-    filter: brightness(0.95);
+}
+
+.seating-seat-locked circle {
+    stroke-width: 3 !important;
 }
 
 /* ── Shape picker (modal) ────────────────────────────────────────────────── */
@@ -287,37 +300,6 @@
 .seating-picker-item.seating-chip-male { border-color: #c5d8f0; }
 .seating-picker-item.seating-chip-female { border-color: #f0c5d8; }
 
-/* ── Seat action menu (move/remove popup) ────────────────────────────────── */
-
-.seating-seat-menu {
-    position: absolute;
-    transform: translate(-50%, -100%);
-    z-index: 30;
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    overflow: hidden;
-    min-width: 120px;
-}
-
-.seating-seat-menu button {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    border: none;
-    background: none;
-    font-size: 0.82rem;
-    cursor: pointer;
-    color: #444;
-    white-space: nowrap;
-}
-
-.seating-seat-menu button:hover { background: #f5f5f5; }
-.seating-seat-menu-danger { color: #d32f2f !important; }
-.seating-seat-menu-danger:hover { background: #fce8e8 !important; }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 

@@ -9,13 +9,10 @@ document.addEventListener("DOMContentLoaded", function () {
     var canEdit = (role === "owner" || role === "cohost");
 
     var state = { tables: [], unseated: [] };
-    var selectedGuest = null; // for click-to-assign
-    var movingAssignment = null; // for move-guest flow
+    var movingGuest = null; // { assignmentId, invitationId } when in move mode
+    var lastAction = null;  // for undo
 
-    // Seat circle radius for main table views
-    var SEAT_R = 30;
-    var SEAT_FONT = 12;
-    var SEAT_SPACING = 76;
+    var SEAT_R = 30, SEAT_FONT = 12, SEAT_SPACING = 76;
 
     // ── API helpers ─────────────────────────────────────────────────────────
     var BASE = "/api/v1/events/" + eventId + "/seating";
@@ -37,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    // ── Load seating plan ───────────────────────────────────────────────────
+    // ── State management ────────────────────────────────────────────────────
     function load() {
         api("GET", "").then(function (data) {
             state = data;
@@ -45,12 +42,30 @@ document.addEventListener("DOMContentLoaded", function () {
         }).catch(window.handleFetchError);
     }
 
-    // ── Render everything ───────────────────────────────────────────────────
+    function saveStateForUndo() {
+        lastAction = JSON.parse(JSON.stringify(state));
+    }
+
     function render() {
         renderUnseated();
         renderTables();
+        updateHeaderCount();
     }
 
+    function updateHeaderCount() {
+        var el = document.getElementById("seating-header-count");
+        if (!el) return;
+        var seated = 0;
+        state.tables.forEach(function (t) { seated += Object.keys(t.seats).length; });
+        var total = seated + state.unseated.length;
+        if (total > 0) {
+            el.textContent = "— " + seated + "/" + total + " seated";
+        } else {
+            el.textContent = "";
+        }
+    }
+
+    // ── Unseated guests ─────────────────────────────────────────────────────
     function renderUnseated() {
         var list = document.getElementById("unseated-list");
         var count = document.getElementById("unseated-count");
@@ -68,68 +83,57 @@ document.addEventListener("DOMContentLoaded", function () {
             chip.title = g.full_name;
             chip.dataset.invitationId = g.invitation_id;
             if (canEdit) {
-                chip.addEventListener("click", function () {
-                    toggleSelectGuest(g, chip);
+                chip.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    onUnseatedChipClick(g, chip);
                 });
             }
             list.appendChild(chip);
         });
     }
 
-    function toggleSelectGuest(guest, chip) {
-        cancelMove();
-        if (selectedGuest && selectedGuest.invitation_id === guest.invitation_id) {
-            selectedGuest = null;
-            document.querySelectorAll(".seating-chip-selected").forEach(function (c) {
-                c.classList.remove("seating-chip-selected");
-            });
-            document.querySelectorAll(".seating-seat-empty").forEach(function (s) {
-                s.classList.remove("seating-seat-highlight");
-            });
-        } else {
-            selectedGuest = guest;
-            document.querySelectorAll(".seating-chip-selected").forEach(function (c) {
-                c.classList.remove("seating-chip-selected");
-            });
-            chip.classList.add("seating-chip-selected");
-            document.querySelectorAll(".seating-seat-empty").forEach(function (s) {
-                s.classList.add("seating-seat-highlight");
-            });
+    function onUnseatedChipClick(guest, chip) {
+        // If we're in move mode, this is the target: unseat moving guest → we just cancel
+        // Actually, clicking an unseated guest while in move mode = cancel move, select this one
+        exitMoveMode();
+        // Enter "assigning" mode: highlight empty seats in yellow
+        if (movingGuest && movingGuest.invitationId == guest.invitation_id) {
+            // Already selected, deselect
+            exitMoveMode();
+            return;
         }
-    }
-
-    function clearSelection() {
-        selectedGuest = null;
-        cancelMove();
-        document.querySelectorAll(".seating-chip-selected").forEach(function (c) {
+        // Select this unseated guest for assignment
+        movingGuest = { assignmentId: null, invitationId: guest.invitation_id };
+        document.querySelectorAll(".seating-chip").forEach(function (c) {
             c.classList.remove("seating-chip-selected");
         });
-        document.querySelectorAll(".seating-seat-highlight").forEach(function (s) {
-            s.classList.remove("seating-seat-highlight");
-        });
+        chip.classList.add("seating-chip-selected");
+        highlightTargets();
     }
 
-    // ── Move guest flow ─────────────────────────────────────────────────────
-    function startMove(assignmentId, invitationId) {
-        movingAssignment = { assignmentId: assignmentId, invitationId: invitationId };
-        selectedGuest = null;
-        document.querySelectorAll(".seating-chip-selected").forEach(function (c) {
-            c.classList.remove("seating-chip-selected");
-        });
-        // Highlight all seats (empty and filled, except the moving one)
+    // ── Move mode ───────────────────────────────────────────────────────────
+    function enterMoveMode(assignmentId, invitationId) {
+        movingGuest = { assignmentId: assignmentId, invitationId: invitationId };
+        highlightTargets();
+    }
+
+    function highlightTargets() {
         document.querySelectorAll(".seating-seat-empty").forEach(function (s) {
             s.classList.add("seating-seat-highlight");
         });
+        // Highlight other filled seats for swap (not the one being moved)
         document.querySelectorAll(".seating-seat-filled").forEach(function (s) {
-            if (s.dataset.assignmentId !== assignmentId) {
+            if (movingGuest && s.dataset.assignmentId !== String(movingGuest.assignmentId)) {
                 s.classList.add("seating-seat-swap-highlight");
             }
         });
-        window.showToast("Click an empty seat to move, or another guest to swap");
     }
 
-    function cancelMove() {
-        movingAssignment = null;
+    function exitMoveMode() {
+        movingGuest = null;
+        document.querySelectorAll(".seating-chip-selected").forEach(function (c) {
+            c.classList.remove("seating-chip-selected");
+        });
         document.querySelectorAll(".seating-seat-highlight").forEach(function (s) {
             s.classList.remove("seating-seat-highlight");
         });
@@ -138,14 +142,28 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Escape key cancels move mode
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && movingGuest) {
+            exitMoveMode();
+        }
+    });
+
+    // Click on background cancels move mode
+    document.addEventListener("click", function (e) {
+        if (!movingGuest) return;
+        // Don't cancel if clicking on a seat, chip, or action button
+        if (e.target.closest(".seating-seat") || e.target.closest(".seating-chip") ||
+            e.target.closest(".seating-seat-menu") || e.target.closest(".seating-action-btn")) return;
+        exitMoveMode();
+    });
+
     // ── Render tables ───────────────────────────────────────────────────────
     var emptyMsg = document.getElementById("seating-empty");
 
     function renderTables() {
         var container = document.getElementById("seating-tables");
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
-        }
+        while (container.firstChild) container.removeChild(container.firstChild);
         if (state.tables.length === 0) {
             container.appendChild(emptyMsg);
             emptyMsg.style.display = "";
@@ -159,9 +177,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function createTableCard(table) {
         var card = document.createElement("div");
         card.className = "seating-table-card";
-        card.dataset.tableId = table.id;
 
-        // Header
         var header = document.createElement("div");
         header.className = "seating-table-header";
         var title = document.createElement("span");
@@ -174,6 +190,20 @@ document.addEventListener("DOMContentLoaded", function () {
         if (canEdit) {
             var actions = document.createElement("span");
             actions.className = "seating-table-actions";
+            // Lock all
+            var hasSeats = seatCount > 0;
+            if (hasSeats) {
+                var allLocked = Object.keys(table.seats).every(function (k) { return table.seats[k].is_locked; });
+                var lockAllBtn = document.createElement("button");
+                lockAllBtn.type = "button";
+                lockAllBtn.className = "seating-action-btn" + (allLocked ? " seating-action-active" : "");
+                lockAllBtn.title = allLocked ? "Unlock all seats" : "Lock all seats";
+                lockAllBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+                lockAllBtn.addEventListener("click", function () {
+                    api("POST", "/tables/" + table.id + "/lock", { lock: !allLocked }).then(function () { load(); });
+                });
+                actions.appendChild(lockAllBtn);
+            }
             // Edit
             var editBtn = document.createElement("button");
             editBtn.type = "button";
@@ -181,14 +211,14 @@ document.addEventListener("DOMContentLoaded", function () {
             editBtn.title = "Edit table";
             editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
             editBtn.addEventListener("click", function () { openEditTable(table); });
-            // Clear seats (eraser icon)
+            // Clear
             var clearBtn = document.createElement("button");
             clearBtn.type = "button";
             clearBtn.className = "seating-action-btn";
-            clearBtn.title = "Clear all seats";
+            clearBtn.title = "Clear seats";
             clearBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16c-.6-.6-.6-1.5 0-2.1l10-10c.6-.6 1.5-.6 2.1 0l6 6c.6.6.6 1.5 0 2.1L14 19"/><path d="M6 11l4 4"/></svg>';
             clearBtn.addEventListener("click", function () { clearTable(table.id); });
-            // Delete table (trash icon)
+            // Delete
             var delBtn = document.createElement("button");
             delBtn.type = "button";
             delBtn.className = "seating-action-btn seating-action-danger";
@@ -202,18 +232,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         card.appendChild(header);
-
-        // SVG visual
         var svgWrap = document.createElement("div");
         svgWrap.className = "seating-svg-wrap";
+        svgWrap.style.position = "relative";
         svgWrap.innerHTML = buildTableSVG(table, SEAT_R, SEAT_FONT, SEAT_SPACING);
         card.appendChild(svgWrap);
-
         return card;
     }
 
-    // ── SVG Table Rendering ─────────────────────────────────────────────────
-
+    // ── SVG Rendering ───────────────────────────────────────────────────────
     function buildTableSVG(table, seatR, fontSize, spacing) {
         if (table.shape === "round") return buildRoundSVG(table, seatR, fontSize, spacing);
         if (table.shape === "long") return buildLongSVG(table, seatR, fontSize, spacing);
@@ -222,27 +249,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function seatEl(table, pos, cx, cy, r, fontSize) {
         var seat = table ? table.seats[String(pos)] : null;
-        var group = "";
+        var g = "";
         if (seat) {
             var color = seat.gender === "Male" ? "#d6e9f8" : "#f8d6e9";
             var stroke = seat.gender === "Male" ? "#5b9bd5" : "#d5679b";
-            var name = seat.first_name;
-            // Truncate to fit in circle: ~1 char per 5px of radius
             var maxChars = Math.floor(r * 2 / (fontSize * 0.6));
-            var label = name.length > maxChars ? name.substring(0, maxChars - 1) + "." : name;
-            group += '<g class="seating-seat seating-seat-filled" data-assignment-id="' + seat.assignment_id + '" data-invitation-id="' + seat.invitation_id + '" data-table-id="' + table.id + '" style="cursor:' + (canEdit ? "pointer" : "default") + '">';
-            group += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + color + '" stroke="' + stroke + '" stroke-width="2"/>';
-            group += '<text x="' + cx + '" y="' + (cy + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="' + fontSize + '" fill="#333" font-family="DM Sans, sans-serif">' + escapeXml(label) + '</text>';
-            group += '</g>';
+            var label = seat.first_name.length > maxChars ? seat.first_name.substring(0, maxChars - 1) + "." : seat.first_name;
+            g += '<g class="seating-seat seating-seat-filled' + (seat.is_locked ? ' seating-seat-locked' : '') + '" data-assignment-id="' + seat.assignment_id + '" data-invitation-id="' + seat.invitation_id + '" data-table-id="' + (table.id || 0) + '" style="cursor:' + (canEdit ? "pointer" : "default") + '">';
+            g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + color + '" stroke="' + stroke + '" stroke-width="2"/>';
+            g += '<text x="' + cx + '" y="' + (cy + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="' + fontSize + '" fill="#333" font-family="DM Sans, sans-serif">' + escapeXml(label) + '</text>';
+            // Lock icon
+            if (seat.is_locked) {
+                g += '<g transform="translate(' + (cx + r * 0.55) + ',' + (cy - r * 0.55) + ') scale(0.55)"><rect x="-6" y="-2" width="12" height="9" rx="1.5" fill="#888" stroke="none"/><path d="M-3.5-2 v-3 a3.5 3.5 0 0 1 7 0 v3" fill="none" stroke="#888" stroke-width="1.8" stroke-linecap="round"/></g>';
+            }
+            g += '</g>';
         } else {
             var cursor = (table && canEdit) ? "pointer" : "default";
-            var tableId = table ? table.id : 0;
-            group += '<g class="seating-seat seating-seat-empty" data-table-id="' + tableId + '" data-seat-pos="' + pos + '" style="cursor:' + cursor + '">';
-            group += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#f5f5f5" stroke="#ccc" stroke-width="1.5" stroke-dasharray="4 3"/>';
-            group += '<text x="' + cx + '" y="' + (cy + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="' + Math.round(fontSize * 0.9) + '" fill="#bbb" font-family="DM Sans, sans-serif">' + pos + '</text>';
-            group += '</g>';
+            g += '<g class="seating-seat seating-seat-empty" data-table-id="' + (table ? table.id : 0) + '" data-seat-pos="' + pos + '" style="cursor:' + cursor + '">';
+            g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#f5f5f5" stroke="#ccc" stroke-width="1.5" stroke-dasharray="4 3"/>';
+            g += '<text x="' + cx + '" y="' + (cy + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="' + Math.round(fontSize * 0.9) + '" fill="#bbb" font-family="DM Sans, sans-serif">' + pos + '</text>';
+            g += '</g>';
         }
-        return group;
+        return g;
     }
 
     function buildRoundSVG(table, seatR, fontSize, spacing) {
@@ -251,260 +279,161 @@ document.addEventListener("DOMContentLoaded", function () {
         var orbitR = tableR + seatR + 10;
         var svgSize = (orbitR + seatR + 10) * 2;
         var cx0 = svgSize / 2, cy0 = svgSize / 2;
-
         var svg = '<svg viewBox="0 0 ' + svgSize + ' ' + svgSize + '" class="seating-svg" style="min-width:' + Math.min(svgSize, 500) + 'px">';
         svg += '<circle cx="' + cx0 + '" cy="' + cy0 + '" r="' + tableR + '" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
         for (var i = 0; i < n; i++) {
             var angle = (2 * Math.PI * i / n) - Math.PI / 2;
-            var sx = cx0 + orbitR * Math.cos(angle);
-            var sy = cy0 + orbitR * Math.sin(angle);
-            svg += seatEl(table, i + 1, Math.round(sx), Math.round(sy), seatR, fontSize);
+            svg += seatEl(table, i + 1, Math.round(cx0 + orbitR * Math.cos(angle)), Math.round(cy0 + orbitR * Math.sin(angle)), seatR, fontSize);
         }
         svg += '</svg>';
         return svg;
     }
 
     function buildRectSVG(table, seatR, fontSize, spacing) {
-        var n = table.capacity;
-        var hasEnds = n >= 6;
+        var n = table.capacity, hasEnds = n >= 6;
         var sideSeats = hasEnds ? Math.floor((n - 2) / 2) : Math.floor(n / 2);
-        var endSeats = hasEnds ? 2 : 0;
-        var topCount = sideSeats;
+        var endSeats = hasEnds ? 2 : 0, topCount = sideSeats;
         var botCount = n - topCount - endSeats;
         if (botCount < 0) { botCount = 0; endSeats = n - topCount; }
-
-        var maxSide = Math.max(topCount, botCount);
-        var tableW = maxSide * spacing + 30;
-        var tableH = 80;
-        var pad = seatR + 20;
-        var endPad = hasEnds ? (seatR * 2 + 20) : 0;
-        var svgW = tableW + pad * 2 + endPad;
-        var svgH = tableH + pad * 2 + seatR * 2 + 20;
-        var offX = hasEnds ? (seatR + 10) : 0;
-        var tableX = pad + offX;
-        var tableY = pad + seatR + 10;
-
+        var maxSide = Math.max(topCount, botCount), tableW = maxSide * spacing + 30, tableH = 80;
+        var pad = seatR + 20, endPad = hasEnds ? (seatR * 2 + 20) : 0;
+        var svgW = tableW + pad * 2 + endPad, svgH = tableH + pad * 2 + seatR * 2 + 20;
+        var offX = hasEnds ? (seatR + 10) : 0, tableX = pad + offX, tableY = pad + seatR + 10;
         var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg" style="min-width:' + Math.min(svgW, 500) + 'px">';
         svg += '<rect x="' + tableX + '" y="' + tableY + '" width="' + tableW + '" height="' + tableH + '" rx="8" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
-
-        var pos = 1;
-        var topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
-        for (var i = 0; i < topCount; i++) {
-            svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 8), seatR, fontSize);
-        }
-        if (hasEnds) {
-            svg += seatEl(table, pos++, Math.round(tableX + tableW + seatR + 12), Math.round(tableY + tableH / 2), seatR, fontSize);
-        }
+        var pos = 1, topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
+        for (var i = 0; i < topCount; i++) svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 8), seatR, fontSize);
+        if (hasEnds) svg += seatEl(table, pos++, Math.round(tableX + tableW + seatR + 12), Math.round(tableY + tableH / 2), seatR, fontSize);
         var botStartX = tableX + (tableW - botCount * spacing) / 2 + spacing / 2;
-        for (var i = botCount - 1; i >= 0; i--) {
-            svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 8), seatR, fontSize);
-        }
-        if (hasEnds) {
-            svg += seatEl(table, pos++, Math.round(tableX - seatR - 12), Math.round(tableY + tableH / 2), seatR, fontSize);
-        }
-
+        for (var i = botCount - 1; i >= 0; i--) svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 8), seatR, fontSize);
+        if (hasEnds) svg += seatEl(table, pos++, Math.round(tableX - seatR - 12), Math.round(tableY + tableH / 2), seatR, fontSize);
         svg += '</svg>';
         return svg;
     }
 
     function buildLongSVG(table, seatR, fontSize, spacing) {
-        var n = table.capacity;
-        var topCount = Math.ceil(n / 2);
-        var botCount = n - topCount;
-
-        var maxSide = Math.max(topCount, botCount);
-        var tableW = maxSide * spacing + 30;
-        var tableH = 50;
-        var pad = seatR + 20;
-        var svgW = tableW + pad * 2;
-        var svgH = tableH + pad * 2 + seatR * 2 + 20;
-        var tableX = pad;
-        var tableY = pad + seatR + 10;
-
+        var n = table.capacity, topCount = Math.ceil(n / 2), botCount = n - topCount;
+        var maxSide = Math.max(topCount, botCount), tableW = maxSide * spacing + 30, tableH = 50;
+        var pad = seatR + 20, svgW = tableW + pad * 2, svgH = tableH + pad * 2 + seatR * 2 + 20;
+        var tableX = pad, tableY = pad + seatR + 10;
         var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg" style="min-width:' + Math.min(svgW, 500) + 'px">';
         svg += '<rect x="' + tableX + '" y="' + tableY + '" width="' + tableW + '" height="' + tableH + '" rx="6" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
-
-        var pos = 1;
-        var topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
-        for (var i = 0; i < topCount; i++) {
-            svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 8), seatR, fontSize);
-        }
+        var pos = 1, topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
+        for (var i = 0; i < topCount; i++) svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 8), seatR, fontSize);
         var botStartX = tableX + (tableW - botCount * spacing) / 2 + spacing / 2;
-        for (var i = botCount - 1; i >= 0; i--) {
-            svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 8), seatR, fontSize);
-        }
-
+        for (var i = botCount - 1; i >= 0; i--) svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 8), seatR, fontSize);
         svg += '</svg>';
         return svg;
     }
 
-    // ── Mini preview SVG (for modal) ────────────────────────────────────────
     function buildPreviewSVG(shape, capacity) {
-        var fakeTable = { capacity: capacity, seats: {}, shape: shape, id: 0 };
-        return buildTableSVG(fakeTable, 16, 8, 40);
+        return buildTableSVG({ capacity: capacity, seats: {}, shape: shape, id: 0 }, 16, 8, 40);
     }
 
-    function escapeXml(s) {
-        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
+    function escapeXml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
-    // ── Click handlers on SVG seats ─────────────────────────────────────────
+    // ── Seat click handling ─────────────────────────────────────────────────
     document.addEventListener("click", function (e) {
         if (!canEdit) return;
-        var seatGroup = e.target.closest(".seating-seat");
-        if (!seatGroup) return;
-        // Ignore clicks inside the modal preview
-        if (seatGroup.closest("#seating-table-overlay")) return;
+        var seat = e.target.closest(".seating-seat");
+        if (!seat || seat.closest("#seating-table-overlay")) return;
 
-        if (seatGroup.classList.contains("seating-seat-filled")) {
-            var aId = seatGroup.dataset.assignmentId;
-            var invId = seatGroup.dataset.invitationId;
+        // ── Filled seat ─────────────────────────────────────────────────
+        if (seat.classList.contains("seating-seat-filled")) {
+            var aId = seat.dataset.assignmentId;
+            var invId = seat.dataset.invitationId;
 
-            // If we're in move mode, swap the two guests
-            if (movingAssignment && movingAssignment.assignmentId !== aId) {
+            // In move mode: swap with target
+            if (movingGuest && movingGuest.assignmentId && movingGuest.assignmentId !== aId) {
+                saveStateForUndo();
                 api("POST", "/swap", {
-                    assignment_id_a: parseInt(movingAssignment.assignmentId),
+                    assignment_id_a: parseInt(movingGuest.assignmentId),
                     assignment_id_b: parseInt(aId)
-                }).then(function () {
-                    cancelMove();
-                    load();
-                }).catch(function (err) {
-                    window.showToast(err.message || "Failed to swap seats");
+                }).then(function () { exitMoveMode(); load(); }).catch(function (err) {
+                    window.showToast(err.message || "Failed to swap");
                 });
                 e.stopPropagation();
                 return;
             }
 
-            // Otherwise show move/remove popup
-            showSeatActionMenu(e, seatGroup, aId, invId);
+            // Clicking same guest again = exit move mode
+            if (movingGuest && movingGuest.assignmentId === aId) {
+                exitMoveMode();
+                e.stopPropagation();
+                return;
+            }
+
+            // Single click: enter move mode for this guest
+            exitMoveMode();
+            enterMoveMode(aId, invId);
             e.stopPropagation();
             return;
         }
 
-        // Click on empty seat
-        var tableId = parseInt(seatGroup.dataset.tableId);
-        var seatPos = parseInt(seatGroup.dataset.seatPos);
+        // ── Empty seat ──────────────────────────────────────────────────
+        var tableId = parseInt(seat.dataset.tableId);
+        var seatPos = parseInt(seat.dataset.seatPos);
 
-        // Moving an existing guest to an empty seat
-        if (movingAssignment) {
-            api("DELETE", "/assign/" + movingAssignment.assignmentId).then(function () {
-                return api("POST", "/assign", {
-                    invitation_id: parseInt(movingAssignment.invitationId),
+        if (movingGuest) {
+            saveStateForUndo();
+            if (movingGuest.assignmentId) {
+                // Move existing guest to empty seat
+                api("DELETE", "/assign/" + movingGuest.assignmentId).then(function () {
+                    return api("POST", "/assign", {
+                        invitation_id: parseInt(movingGuest.invitationId),
+                        table_id: tableId,
+                        seat_position: seatPos
+                    });
+                }).then(function () { exitMoveMode(); load(); }).catch(function (err) {
+                    window.showToast(err.message || "Failed to move");
+                });
+            } else {
+                // Assign unseated guest
+                api("POST", "/assign", {
+                    invitation_id: parseInt(movingGuest.invitationId),
                     table_id: tableId,
                     seat_position: seatPos
+                }).then(function () { exitMoveMode(); load(); }).catch(function (err) {
+                    window.showToast(err.message || "Failed to assign");
                 });
-            }).then(function () {
-                cancelMove();
-                load();
-            }).catch(function (err) {
-                window.showToast(err.message || "Failed to move guest");
-            });
+            }
+            e.stopPropagation();
             return;
         }
 
-        if (selectedGuest) {
-            api("POST", "/assign", {
-                invitation_id: selectedGuest.invitation_id,
-                table_id: tableId,
-                seat_position: seatPos
-            }).then(function () {
-                clearSelection();
-                load();
-            }).catch(function (err) {
-                window.showToast(err.message || "Failed to assign seat");
-            });
-        } else {
-            openPicker(tableId, seatPos);
-        }
+        // No move mode: open picker
+        openPicker(tableId, seatPos);
+        e.stopPropagation();
     });
 
-    // ── Seat action menu (move / remove) ────────────────────────────────────
-    var seatActionMenu = null;
-    var seatMenuJustOpened = false;
-
-    function showSeatActionMenu(clickEvent, seatGroup, assignmentId, invitationId) {
-        closeSeatActionMenu();
-        seatMenuJustOpened = true;
-        setTimeout(function () { seatMenuJustOpened = false; }, 0);
-
-        var wrap = seatGroup.closest(".seating-svg-wrap");
-        var wrapRect = wrap.getBoundingClientRect();
-
-        // Position relative to wrap using click coordinates
-        var x = clickEvent.clientX - wrapRect.left + wrap.scrollLeft;
-        var y = clickEvent.clientY - wrapRect.top + wrap.scrollTop;
-
-        var menu = document.createElement("div");
-        menu.className = "seating-seat-menu";
-
-        // Place menu to the right of click, clamp to stay visible
-        wrap.style.position = "relative";
-        wrap.appendChild(menu);
-
-        // Measure menu size after appending
-        var menuW = menu.offsetWidth;
-        var menuH = menu.offsetHeight;
-
-        // Prefer positioning above and centered on click
-        var left = x - menuW / 2;
-        var top = y - menuH - 8;
-
-        // Clamp horizontal: keep within visible wrap area
-        var visibleLeft = wrap.scrollLeft;
-        var visibleRight = visibleLeft + wrapRect.width;
-        if (left < visibleLeft + 4) left = visibleLeft + 4;
-        if (left + menuW > visibleRight - 4) left = visibleRight - menuW - 4;
-
-        // If menu would go above visible area, place below click instead
-        var visibleTop = wrap.scrollTop;
-        if (top < visibleTop) top = y + 8;
-
-        menu.style.left = Math.round(left) + "px";
-        menu.style.top = Math.round(top) + "px";
-
-        var moveBtn = document.createElement("button");
-        moveBtn.type = "button";
-        moveBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg> Move';
-        moveBtn.addEventListener("click", function (e) {
-            e.stopPropagation();
-            closeSeatActionMenu();
-            startMove(assignmentId, invitationId);
-        });
-
-        var removeBtn = document.createElement("button");
-        removeBtn.type = "button";
-        removeBtn.className = "seating-seat-menu-danger";
-        removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Remove';
-        removeBtn.addEventListener("click", function (e) {
-            e.stopPropagation();
-            closeSeatActionMenu();
-            api("DELETE", "/assign/" + assignmentId).then(function () {
-                clearSelection();
-                load();
-            }).catch(window.handleFetchError);
-        });
-
-        menu.appendChild(moveBtn);
-        menu.appendChild(removeBtn);
-        seatActionMenu = menu;
-    }
-
-    function closeSeatActionMenu() {
-        if (seatActionMenu && seatActionMenu.parentNode) {
-            seatActionMenu.parentNode.removeChild(seatActionMenu);
-        }
-        seatActionMenu = null;
-    }
-
-    // Close seat action menu when clicking elsewhere
-    document.addEventListener("click", function (e) {
-        if (seatMenuJustOpened) return;
-        // Don't close if clicking inside the menu itself
-        if (seatActionMenu && seatActionMenu.contains(e.target)) return;
-        closeSeatActionMenu();
+    // Double-click on filled seat: unseat
+    document.addEventListener("dblclick", function (e) {
+        if (!canEdit) return;
+        var seat = e.target.closest(".seating-seat-filled");
+        if (!seat || seat.closest("#seating-table-overlay")) return;
+        var aId = seat.dataset.assignmentId;
+        exitMoveMode();
+        saveStateForUndo();
+        api("DELETE", "/assign/" + aId).then(function () {
+            load();
+            window.showToast("Guest unseated", function () { undoLastAction(); });
+        }).catch(window.handleFetchError);
     });
 
-    // ── Seat picker modal ───────────────────────────────────────────────────
+    // ── Lock toggle (via small icon on seat hover or toolbar) ────────────
+    // The lock icon is part of the SVG. We handle lock via right-click or a toolbar.
+    // For simplicity, add lock toggle button on the move mode bar.
+    // Actually, let's use a contextmenu (right-click) on seated guests:
+    document.addEventListener("contextmenu", function (e) {
+        if (!canEdit) return;
+        var seat = e.target.closest(".seating-seat-filled");
+        if (!seat || seat.closest("#seating-table-overlay")) return;
+        e.preventDefault();
+        var aId = seat.dataset.assignmentId;
+        api("POST", "/assign/" + aId + "/lock").then(function () { load(); }).catch(window.handleFetchError);
+    });
+
+    // ── Picker modal ────────────────────────────────────────────────────
     function openPicker(tableId, seatPos) {
         document.getElementById("picker-table-id").value = tableId;
         document.getElementById("picker-seat-pos").value = seatPos;
@@ -528,12 +457,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 var tableId = parseInt(document.getElementById("picker-table-id").value);
                 var seatPos = parseInt(document.getElementById("picker-seat-pos").value);
                 document.getElementById("seating-picker-overlay").style.display = "none";
+                saveStateForUndo();
                 api("POST", "/assign", {
-                    invitation_id: g.invitation_id,
-                    table_id: tableId,
-                    seat_position: seatPos
+                    invitation_id: g.invitation_id, table_id: tableId, seat_position: seatPos
                 }).then(function () { load(); }).catch(function (err) {
-                    window.showToast(err.message || "Failed to assign seat");
+                    window.showToast(err.message || "Failed to assign");
                 });
             });
             list.appendChild(btn);
@@ -544,33 +472,31 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     var pickerSearch = document.getElementById("picker-search");
-    if (pickerSearch) {
-        pickerSearch.addEventListener("input", function () {
-            renderPickerList(this.value);
-        });
-    }
-
+    if (pickerSearch) pickerSearch.addEventListener("input", function () { renderPickerList(this.value); });
     var pickerClose = document.getElementById("seating-picker-close");
-    if (pickerClose) {
-        pickerClose.addEventListener("click", function () {
-            document.getElementById("seating-picker-overlay").style.display = "none";
-        });
+    if (pickerClose) pickerClose.addEventListener("click", function () { document.getElementById("seating-picker-overlay").style.display = "none"; });
+
+    // ── Undo ────────────────────────────────────────────────────────────
+    function undoLastAction() {
+        if (!lastAction) return;
+        // Reload from server (undo is best-effort via reload, since we saved pre-action state)
+        // For a proper undo we'd need server-side support, so we just reload
+        load();
+        lastAction = null;
     }
 
-    // ── Smart default capacity ──────────────────────────────────────────────
+    // ── Smart default capacity ──────────────────────────────────────────
     function getDefaultCapacity() {
         var attending = state.unseated.length;
         state.tables.forEach(function (t) { attending += Object.keys(t.seats).length; });
         if (attending <= 0) return 12;
         var cap = attending % 2 === 0 ? attending : attending + 1;
         var options = [4,6,8,10,12,14,16,18,20,24,30];
-        for (var i = 0; i < options.length; i++) {
-            if (options[i] >= cap) return options[i];
-        }
+        for (var i = 0; i < options.length; i++) { if (options[i] >= cap) return options[i]; }
         return 30;
     }
 
-    // ── Add / Edit table modal ──────────────────────────────────────────────
+    // ── Add / Edit table modal ──────────────────────────────────────────
     var addTableBtn = document.getElementById("seating-add-table-btn");
     var shapeOptions = document.querySelectorAll(".seating-shape-option");
     var capacitySelect = document.getElementById("seating-table-capacity");
@@ -580,30 +506,14 @@ document.addEventListener("DOMContentLoaded", function () {
         var active = document.querySelector(".seating-shape-option.active");
         return active ? active.dataset.shape : "rectangular";
     }
-
     function setSelectedShape(shape) {
-        shapeOptions.forEach(function (opt) {
-            opt.classList.toggle("active", opt.dataset.shape === shape);
-        });
+        shapeOptions.forEach(function (opt) { opt.classList.toggle("active", opt.dataset.shape === shape); });
     }
-
     function updatePreview() {
-        if (!previewContainer) return;
-        var shape = getSelectedShape();
-        var capacity = parseInt(capacitySelect.value) || 12;
-        previewContainer.innerHTML = buildPreviewSVG(shape, capacity);
+        if (previewContainer) previewContainer.innerHTML = buildPreviewSVG(getSelectedShape(), parseInt(capacitySelect.value) || 12);
     }
-
-    shapeOptions.forEach(function (opt) {
-        opt.addEventListener("click", function () {
-            setSelectedShape(opt.dataset.shape);
-            updatePreview();
-        });
-    });
-
-    if (capacitySelect) {
-        capacitySelect.addEventListener("change", function () { updatePreview(); });
-    }
+    shapeOptions.forEach(function (opt) { opt.addEventListener("click", function () { setSelectedShape(opt.dataset.shape); updatePreview(); }); });
+    if (capacitySelect) capacitySelect.addEventListener("change", updatePreview);
 
     if (addTableBtn) {
         addTableBtn.addEventListener("click", function () {
@@ -628,37 +538,20 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     var tableClose = document.getElementById("seating-table-close");
-    if (tableClose) {
-        tableClose.addEventListener("click", function () {
-            document.getElementById("seating-table-overlay").style.display = "none";
-        });
-    }
+    if (tableClose) tableClose.addEventListener("click", function () { document.getElementById("seating-table-overlay").style.display = "none"; });
 
     var tableSave = document.getElementById("seating-table-save");
     if (tableSave) {
         tableSave.addEventListener("click", function () {
             var id = document.getElementById("seating-table-id").value;
-            var data = {
-                label: document.getElementById("seating-table-label").value,
-                shape: getSelectedShape(),
-                capacity: parseInt(capacitySelect.value),
-            };
-            var promise;
-            if (id) {
-                promise = api("PUT", "/tables/" + id, data);
-            } else {
-                promise = api("POST", "/tables", data);
-            }
-            promise.then(function () {
-                document.getElementById("seating-table-overlay").style.display = "none";
-                load();
-            }).catch(function (err) {
-                window.showToast(err.message || "Failed to save table");
-            });
+            var data = { label: document.getElementById("seating-table-label").value, shape: getSelectedShape(), capacity: parseInt(capacitySelect.value) };
+            (id ? api("PUT", "/tables/" + id, data) : api("POST", "/tables", data))
+                .then(function () { document.getElementById("seating-table-overlay").style.display = "none"; load(); })
+                .catch(function (err) { window.showToast(err.message || "Failed to save table"); });
         });
     }
 
-    // ── Auto-assign ─────────────────────────────────────────────────────────
+    // ── Auto-assign & Shuffle ───────────────────────────────────────────
     var autoBtn = document.getElementById("seating-auto-btn");
     var autoMenu = document.getElementById("seating-auto-menu");
     if (autoBtn && autoMenu) {
@@ -669,66 +562,73 @@ document.addEventListener("DOMContentLoaded", function () {
         autoMenu.querySelectorAll("button").forEach(function (btn) {
             btn.addEventListener("click", function () {
                 autoMenu.style.display = "none";
+                var action = btn.dataset.action;
                 var mode = btn.dataset.mode;
-                if (!confirm("Auto-assign unseated guests (" + mode + ")? Existing assignments will be kept.")) return;
-                api("POST", "/auto-assign", { mode: mode }).then(function (data) {
+                var endpoint = action === "shuffle" ? "/shuffle" : "/auto-assign";
+                var label = action === "shuffle" ? "Shuffle" : "Auto-assign";
+                saveStateForUndo();
+                api("POST", endpoint, { mode: mode }).then(function (data) {
                     state = data;
                     render();
-                    window.showToast("Guests auto-assigned (" + mode + ")");
-                }).catch(function (err) {
-                    window.showToast(err.message || "Auto-assign failed");
-                });
+                    window.showToast(label + " complete (" + mode + ")", function () { undoLastAction(); });
+                }).catch(function (err) { window.showToast(err.message || label + " failed"); });
             });
         });
-        document.addEventListener("click", function () {
-            autoMenu.style.display = "none";
-        });
+        document.addEventListener("click", function () { autoMenu.style.display = "none"; });
     }
 
-    // ── Clear all ───────────────────────────────────────────────────────────
+    // ── Clear all (with locked options) ─────────────────────────────────
     var clearAllBtn = document.getElementById("seating-clear-all-btn");
-    if (clearAllBtn) {
-        clearAllBtn.addEventListener("click", function () {
-            if (!confirm("Clear all seat assignments? Tables will be kept.")) return;
-            api("DELETE", "").then(function () {
-                load();
-                window.showToast("All seats cleared");
-            }).catch(window.handleFetchError);
+    var clearMenu = document.getElementById("seating-clear-menu");
+    if (clearAllBtn && clearMenu) {
+        clearAllBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            clearMenu.style.display = clearMenu.style.display === "none" ? "" : "none";
         });
+        document.addEventListener("click", function () { clearMenu.style.display = "none"; });
+
+        var clearUnlockedBtn = document.getElementById("clear-unlocked-btn");
+        var clearEverythingBtn = document.getElementById("clear-everything-btn");
+        if (clearUnlockedBtn) {
+            clearUnlockedBtn.addEventListener("click", function () {
+                clearMenu.style.display = "none";
+                saveStateForUndo();
+                api("POST", "/clear", { include_locked: false }).then(function () {
+                    load(); window.showToast("Unlocked seats cleared", function () { undoLastAction(); });
+                }).catch(window.handleFetchError);
+            });
+        }
+        if (clearEverythingBtn) {
+            clearEverythingBtn.addEventListener("click", function () {
+                clearMenu.style.display = "none";
+                if (!confirm("Clear ALL seats including locked ones?")) return;
+                saveStateForUndo();
+                api("POST", "/clear", { include_locked: true }).then(function () {
+                    load(); window.showToast("All seats cleared", function () { undoLastAction(); });
+                }).catch(window.handleFetchError);
+            });
+        }
     }
 
-    // ── Clear / delete single table ─────────────────────────────────────────
+    // ── Clear / delete single table ─────────────────────────────────────
     function clearTable(tableId) {
-        if (!confirm("Clear all seats on this table?")) return;
-        api("POST", "/tables/" + tableId + "/clear").then(function () {
-            load();
-        }).catch(window.handleFetchError);
+        if (!confirm("Clear unlocked seats on this table?")) return;
+        saveStateForUndo();
+        api("POST", "/tables/" + tableId + "/clear").then(function () { load(); }).catch(window.handleFetchError);
     }
 
     function deleteTable(tableId) {
         if (!confirm("Delete this table and unseat all its guests?")) return;
-        api("DELETE", "/tables/" + tableId).then(function () {
-            load();
-        }).catch(window.handleFetchError);
+        api("DELETE", "/tables/" + tableId).then(function () { load(); }).catch(window.handleFetchError);
     }
 
-    // ── Initial load ────────────────────────────────────────────────────────
+    // ── Initial load ────────────────────────────────────────────────────
     var section = document.getElementById("seating-section");
     var loaded = false;
     if (section) {
         var sectionHeader = section.querySelector(".collapsible-header");
-        if (sectionHeader) {
-            sectionHeader.addEventListener("click", function () {
-                if (!loaded) {
-                    loaded = true;
-                    load();
-                }
-            });
-        }
-        if (!section.classList.contains("collapsed")) {
-            loaded = true;
-            load();
-        }
+        if (sectionHeader) sectionHeader.addEventListener("click", function () { if (!loaded) { loaded = true; load(); } });
+        if (!section.classList.contains("collapsed")) { loaded = true; load(); }
     }
 
 });

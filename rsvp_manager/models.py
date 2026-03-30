@@ -190,6 +190,7 @@ class SeatAssignment(db.Model):
     table_id = db.Column(db.Integer, db.ForeignKey("seating_table.id"), nullable=False, index=True)
     invitation_id = db.Column(db.Integer, db.ForeignKey("invitation.id"), nullable=False, index=True)
     seat_position = db.Column(db.Integer, nullable=False)
+    is_locked = db.Column(db.Boolean, default=False, server_default=db.text("false"), nullable=False)
 
     invitation = db.relationship("Invitation", backref="seat_assignment")
 
