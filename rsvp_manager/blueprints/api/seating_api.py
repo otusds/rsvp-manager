@@ -142,6 +142,24 @@ def lock_table(event_id, table_id):
     return api_success()
 
 
+@api_bp.route("/events/<int:event_id>/seating/smart-assign", methods=["POST"])
+@api_auth_required
+def smart_assign_seating(event_id):
+    """Auto-detect: if unseated guests exist, assign them. If all seated, shuffle unlocked."""
+    event, user = _get_event_for_seating(event_id, min_role="cohost")
+    data = request.get_json() or {}
+    mode = data.get("mode", "random")
+    unseated = seating_service.get_unseated_attending(event)
+    try:
+        if unseated:
+            seating_service.auto_assign(event, mode=mode, acting_user_id=user.id)
+        else:
+            seating_service.shuffle_seating(event, mode=mode, acting_user_id=user.id)
+    except ValueError as e:
+        return api_error(str(e))
+    return api_success(seating_service.serialize_seating_plan(event))
+
+
 @api_bp.route("/events/<int:event_id>/seating/auto-assign", methods=["POST"])
 @api_auth_required
 def auto_assign_seating(event_id):

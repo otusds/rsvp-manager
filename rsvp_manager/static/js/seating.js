@@ -131,6 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function exitMoveMode() {
         movingGuest = null;
+        removeActionCircles();
         document.querySelectorAll(".seating-chip-selected").forEach(function (c) {
             c.classList.remove("seating-chip-selected");
         });
@@ -140,6 +141,84 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".seating-seat-swap-highlight").forEach(function (s) {
             s.classList.remove("seating-seat-swap-highlight");
         });
+    }
+
+    // ── Action circles (X to unseat, lock toggle) ──────────────────────────
+    var actionCirclesEl = null;
+
+    function showActionCircles(seatGroup, assignmentId) {
+        removeActionCircles();
+        var svg = seatGroup.closest("svg");
+        var wrap = svg.parentElement;
+        var circle = seatGroup.querySelector("circle");
+        var cx = parseFloat(circle.getAttribute("cx"));
+        var cy = parseFloat(circle.getAttribute("cy"));
+
+        // Convert SVG coords to pixel coords
+        var svgRect = svg.getBoundingClientRect();
+        var vb = svg.viewBox.baseVal;
+        var scaleX = svgRect.width / vb.width;
+        var scaleY = svgRect.height / vb.height;
+        var pixelX = (cx - vb.x) * scaleX;
+        var pixelY = (cy - vb.y) * scaleY;
+
+        var container = document.createElement("div");
+        container.className = "seating-action-circles";
+        container.style.left = Math.round(pixelX) + "px";
+        container.style.top = Math.round(pixelY - SEAT_R * scaleY - 8) + "px";
+
+        // X button (unseat)
+        var xBtn = document.createElement("button");
+        xBtn.type = "button";
+        xBtn.className = "seating-action-circle seating-action-circle-x";
+        xBtn.title = "Unseat";
+        xBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        xBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            saveStateForUndo();
+            exitMoveMode();
+            api("DELETE", "/assign/" + assignmentId).then(function () {
+                load();
+                window.showToast("Guest unseated", function () { undoLastAction(); });
+            }).catch(window.handleFetchError);
+        });
+
+        // Lock button
+        var isLocked = false;
+        // Find if this seat is locked
+        for (var ti = 0; ti < state.tables.length; ti++) {
+            var seats = state.tables[ti].seats;
+            for (var p in seats) {
+                if (String(seats[p].assignment_id) === assignmentId) {
+                    isLocked = seats[p].is_locked;
+                    break;
+                }
+            }
+        }
+        var lockBtn = document.createElement("button");
+        lockBtn.type = "button";
+        lockBtn.className = "seating-action-circle seating-action-circle-lock" + (isLocked ? " seating-action-circle-locked" : "");
+        lockBtn.title = isLocked ? "Unlock" : "Lock";
+        lockBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+        lockBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            api("POST", "/assign/" + assignmentId + "/lock").then(function () {
+                exitMoveMode();
+                load();
+            }).catch(window.handleFetchError);
+        });
+
+        container.appendChild(xBtn);
+        container.appendChild(lockBtn);
+        wrap.appendChild(container);
+        actionCirclesEl = container;
+    }
+
+    function removeActionCircles() {
+        if (actionCirclesEl && actionCirclesEl.parentNode) {
+            actionCirclesEl.parentNode.removeChild(actionCirclesEl);
+        }
+        actionCirclesEl = null;
     }
 
     // Escape key cancels move mode
@@ -154,7 +233,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!movingGuest) return;
         // Don't cancel if clicking on a seat, chip, or action button
         if (e.target.closest(".seating-seat") || e.target.closest(".seating-chip") ||
-            e.target.closest(".seating-seat-menu") || e.target.closest(".seating-action-btn")) return;
+            e.target.closest(".seating-action-circle") || e.target.closest(".seating-action-btn")) return;
         exitMoveMode();
     });
 
@@ -335,6 +414,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // ── Seat click handling ─────────────────────────────────────────────────
     document.addEventListener("click", function (e) {
         if (!canEdit) return;
+        // Check if clicking action circles
+        if (e.target.closest(".seating-action-circle")) return;
         var seat = e.target.closest(".seating-seat");
         if (!seat || seat.closest("#seating-table-overlay")) return;
 
@@ -342,8 +423,9 @@ document.addEventListener("DOMContentLoaded", function () {
         if (seat.classList.contains("seating-seat-filled")) {
             var aId = seat.dataset.assignmentId;
             var invId = seat.dataset.invitationId;
+            var tId = seat.dataset.tableId;
 
-            // In move mode: swap with target
+            // In move mode with a SEATED guest: swap
             if (movingGuest && movingGuest.assignmentId && movingGuest.assignmentId !== aId) {
                 saveStateForUndo();
                 api("POST", "/swap", {
@@ -351,6 +433,37 @@ document.addEventListener("DOMContentLoaded", function () {
                     assignment_id_b: parseInt(aId)
                 }).then(function () { exitMoveMode(); load(); }).catch(function (err) {
                     window.showToast(err.message || "Failed to swap");
+                });
+                e.stopPropagation();
+                return;
+            }
+
+            // In move mode with an UNSEATED guest: replace the seated guest
+            if (movingGuest && !movingGuest.assignmentId) {
+                saveStateForUndo();
+                // Find the seat position of the occupied seat
+                var seatPos = null;
+                // We need to find this seat's position from the state
+                for (var ti = 0; ti < state.tables.length; ti++) {
+                    var seats = state.tables[ti].seats;
+                    for (var p in seats) {
+                        if (String(seats[p].assignment_id) === aId) {
+                            seatPos = parseInt(p);
+                            tId = state.tables[ti].id;
+                            break;
+                        }
+                    }
+                    if (seatPos) break;
+                }
+                // Remove the seated guest, then assign the unseated one
+                api("DELETE", "/assign/" + aId).then(function () {
+                    return api("POST", "/assign", {
+                        invitation_id: parseInt(movingGuest.invitationId),
+                        table_id: tId,
+                        seat_position: seatPos
+                    });
+                }).then(function () { exitMoveMode(); load(); }).catch(function (err) {
+                    window.showToast(err.message || "Failed to replace");
                 });
                 e.stopPropagation();
                 return;
@@ -366,6 +479,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // Single click: enter move mode for this guest
             exitMoveMode();
             enterMoveMode(aId, invId);
+            showActionCircles(seat, aId);
             e.stopPropagation();
             return;
         }
@@ -562,16 +676,13 @@ document.addEventListener("DOMContentLoaded", function () {
         autoMenu.querySelectorAll("button").forEach(function (btn) {
             btn.addEventListener("click", function () {
                 autoMenu.style.display = "none";
-                var action = btn.dataset.action;
                 var mode = btn.dataset.mode;
-                var endpoint = action === "shuffle" ? "/shuffle" : "/auto-assign";
-                var label = action === "shuffle" ? "Shuffle" : "Auto-assign";
                 saveStateForUndo();
-                api("POST", endpoint, { mode: mode }).then(function (data) {
+                api("POST", "/smart-assign", { mode: mode }).then(function (data) {
                     state = data;
                     render();
-                    window.showToast(label + " complete (" + mode + ")", function () { undoLastAction(); });
-                }).catch(function (err) { window.showToast(err.message || label + " failed"); });
+                    window.showToast("Seating updated (" + mode + ")", function () { undoLastAction(); });
+                }).catch(function (err) { window.showToast(err.message || "Auto-assign failed"); });
             });
         });
         document.addEventListener("click", function () { autoMenu.style.display = "none"; });
@@ -614,7 +725,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function clearTable(tableId) {
         if (!confirm("Clear unlocked seats on this table?")) return;
         saveStateForUndo();
-        api("POST", "/tables/" + tableId + "/clear").then(function () { load(); }).catch(window.handleFetchError);
+        api("POST", "/tables/" + tableId + "/clear", { include_locked: false }).then(function () { load(); }).catch(window.handleFetchError);
     }
 
     function deleteTable(tableId) {
