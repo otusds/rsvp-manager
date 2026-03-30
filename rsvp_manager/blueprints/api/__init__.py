@@ -192,4 +192,4 @@ def handle_422(e):
 
 # -- Register sub-modules -----------------------------------------------------
 
-from rsvp_manager.blueprints.api import events_api, friends_api, invitations_api, exports_api, tags_api, trash_api, cohost_api  # noqa: E402, F401
+from rsvp_manager.blueprints.api import events_api, friends_api, invitations_api, exports_api, tags_api, trash_api, cohost_api, seating_api  # noqa: E402, F401

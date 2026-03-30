@@ -165,3 +165,37 @@ class Invitation(db.Model):
 
     def __repr__(self):
         return f"<Invitation {self.id} event={self.event_id} guest={self.guest_id} {self.status}>"
+
+
+TABLE_SHAPES = ["rectangular", "round", "long"]
+
+
+class SeatingTable(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False, index=True)
+    table_number = db.Column(db.Integer, nullable=False)
+    label = db.Column(db.String(100), nullable=True, default="")
+    shape = db.Column(db.String(20), nullable=False, default="rectangular")
+    capacity = db.Column(db.Integer, nullable=False, default=12)
+    seat_assignments = db.relationship("SeatAssignment", backref="table", cascade="all, delete-orphan")
+
+    event = db.relationship("Event", backref="seating_tables")
+
+    def __repr__(self):
+        return f"<SeatingTable {self.id} event={self.event_id} #{self.table_number}>"
+
+
+class SeatAssignment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    table_id = db.Column(db.Integer, db.ForeignKey("seating_table.id"), nullable=False, index=True)
+    invitation_id = db.Column(db.Integer, db.ForeignKey("invitation.id"), nullable=False, index=True)
+    seat_position = db.Column(db.Integer, nullable=False)
+
+    invitation = db.relationship("Invitation", backref="seat_assignment")
+
+    __table_args__ = (
+        db.UniqueConstraint('invitation_id', name='uq_seat_invitation'),
+    )
+
+    def __repr__(self):
+        return f"<SeatAssignment {self.id} table={self.table_id} seat={self.seat_position}>"

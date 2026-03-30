@@ -51,11 +51,23 @@ def export_guests_xlsx(guests):
     return _to_download(wb, "guests.xlsx")
 
 
+def _get_seating_label(inv):
+    """Get seating assignment label for an invitation, e.g. 'Head Table - Seat 3'."""
+    # seat_assignment is a list via backref (one-to-many, but unique constraint means max 1)
+    assignments = inv.seat_assignment
+    if not assignments:
+        return ""
+    sa = assignments[0] if isinstance(assignments, list) else assignments
+    table = sa.table
+    label = table.label or ("Table " + str(table.table_number))
+    return label + " - Seat " + str(sa.seat_position)
+
+
 def export_event_guests_xlsx(event):
     wb = Workbook()
     ws = _styled_sheet(wb, event.name[:31],
                        ["Last Name", "First Name", "Gender", "Sent",
-                        "Invited On", "Status", "Responded On", "Inv. Notes", "Guest Notes"])
+                        "Invited On", "Status", "Responded On", "Seating", "Inv. Notes", "Guest Notes"])
     for inv in event.invitations:
         g = inv.guest
         sent = "Yes" if inv.status != "Not Sent" else "No"
@@ -63,6 +75,7 @@ def export_event_guests_xlsx(event):
                    inv.date_invited.strftime("%Y-%m-%d") if inv.date_invited else "",
                    inv.status,
                    inv.date_responded.strftime("%Y-%m-%d") if inv.date_responded else "",
+                   _get_seating_label(inv),
                    inv.notes or "", g.notes or ""])
     for col in ws.columns:
         ws.column_dimensions[col[0].column_letter].width = 18
