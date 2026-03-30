@@ -154,17 +154,21 @@ document.addEventListener("DOMContentLoaded", function () {
         var cx = parseFloat(circle.getAttribute("cx"));
         var cy = parseFloat(circle.getAttribute("cy"));
 
-        // Convert SVG coords to pixel coords
+        // Convert SVG coords to pixel coords relative to the wrap container
+        var wrapRect = wrap.getBoundingClientRect();
         var svgRect = svg.getBoundingClientRect();
         var vb = svg.viewBox.baseVal;
         var scaleX = svgRect.width / vb.width;
         var scaleY = svgRect.height / vb.height;
-        var pixelX = (cx - vb.x) * scaleX;
-        var pixelY = (cy - vb.y) * scaleY;
+        // SVG position within wrap (accounts for centering via flexbox)
+        var svgOffsetX = svgRect.left - wrapRect.left + wrap.scrollLeft;
+        var svgOffsetY = svgRect.top - wrapRect.top + wrap.scrollTop;
+        var pixelX = svgOffsetX + (cx - vb.x) * scaleX;
+        var pixelY = svgOffsetY + (cy - vb.y) * scaleY;
 
         // Position circles overlapping the seat at top-left (X) and top-right (lock)
         var seatPixelR = SEAT_R * scaleX;
-        var offset = seatPixelR * 0.65; // how far from center along 45-degree angle
+        var offset = seatPixelR * 0.65;
 
         // X button (unseat) — top-left of seat
         var xBtn = document.createElement("button");

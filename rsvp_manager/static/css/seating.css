@@ -321,15 +321,15 @@
     max-height: 280px;
     overflow-y: auto;
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
+    flex-direction: column;
+    gap: 0.3rem;
 }
 
 .seating-picker-item {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    padding: 0.3rem 0.7rem;
-    border-radius: 16px;
+    padding: 0.4rem 0.75rem;
+    border-radius: 12px;
     font-size: 0.82rem;
     font-weight: 500;
     cursor: pointer;

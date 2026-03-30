@@ -298,180 +298,258 @@ def _auto_assign_random(unseated, table_empty_seats):
 
 
 def _auto_assign_alternating(unseated, table_empty_seats, tables):
-    """Assign guests alternating M/F, minimizing same-gender runs.
+    """Assign guests to maximize M/F alternation, respecting locked seats.
 
-    Strategy:
-    1. Separate guests into M and F, shuffle each
-    2. Distribute minority gender evenly across tables
-    3. Fill seats alternating, spacing minority as breakers
+    Strategy: greedy seat-by-seat placement. For each empty seat, score what
+    gender would be best there based on its neighbors, then assign guests
+    one at a time picking the seat+guest combo that minimizes same-gender
+    adjacency across the whole plan.
+
+    Table topology:
+    - Round: seat N wraps to seat 1 (circular)
+    - Rectangular: seats go clockwise — top row L→R, right end, bottom row R→L, left end
+    - Long/Banquet: top row L→R then bottom row R→L (two parallel rows, no wrap)
+
+    For all shapes, the seat numbering is sequential and the adjacency is
+    pos-1 ↔ pos ↔ pos+1, with wrapping for round tables.
     """
-    # Count already-seated guests across all tables to determine true gender balance
-    existing_males = 0
-    existing_females = 0
-    table_info = []
-    for table in tables:
-        existing = {}
-        for sa in table.seat_assignments:
-            gender = sa.invitation.guest.gender
-            existing[sa.seat_position] = gender
-            if gender == "Male":
-                existing_males += 1
-            else:
-                existing_females += 1
-        if table.id in table_empty_seats:
-            _, empty_positions = table_empty_seats[table.id]
-            table_info.append({
-                "table": table,
-                "empty": sorted(empty_positions),
-                "existing": existing,
-                "capacity": table.capacity,
-            })
-
-    if not table_info:
-        return
-
     males = [inv for inv in unseated if inv.guest.gender == "Male"]
     females = [inv for inv in unseated if inv.guest.gender == "Female"]
     random.shuffle(males)
     random.shuffle(females)
 
-    # Determine majority/minority considering BOTH seated and unseated guests
-    total_males = len(males) + existing_males
-    total_females = len(females) + existing_females
-    if total_males >= total_females:
-        majority, minority = males, females
-        min_gender = "Female"
-    else:
-        majority, minority = females, males
-        min_gender = "Male"
+    # Build per-table state: a map of position → gender for all seats (existing + to-fill)
+    table_states = []
+    for table in tables:
+        if table.id not in table_empty_seats:
+            continue
+        _, empty_positions = table_empty_seats[table.id]
+        # Map of position → gender for already-seated guests
+        seat_map = {}
+        for sa in table.seat_assignments:
+            seat_map[sa.seat_position] = sa.invitation.guest.gender
+        is_round = table.shape == "round"
+        table_states.append({
+            "table": table,
+            "seat_map": seat_map,
+            "empty": set(empty_positions),
+            "capacity": table.capacity,
+            "is_round": is_round,
+        })
 
-    # Distribute minority evenly across tables, accounting for already-seated
-    total_empty = sum(len(t["empty"]) for t in table_info)
-    minority_remaining = list(minority)
-    majority_remaining = list(majority)
+    if not table_states:
+        return
 
-    # Calculate how many minority to give each table
-    # Consider how many of the minority gender are already seated at each table
-    minority_per_table = []
-    for t in table_info:
-        n_empty = len(t["empty"])
-        existing_min_at_table = sum(1 for g in t["existing"].values() if g == min_gender)
-        # Target: distribute minority proportional to table total capacity
-        if total_empty > 0:
-            share = round(len(minority) * n_empty / total_empty)
-        else:
-            share = 0
-        minority_per_table.append(min(share, n_empty))
+    # Pool of guests by gender
+    male_pool = list(males)
+    female_pool = list(females)
 
-    # Adjust to not exceed available minority
-    while sum(minority_per_table) > len(minority_remaining):
-        # Remove from table with most allocation
-        idx = minority_per_table.index(max(minority_per_table))
-        minority_per_table[idx] -= 1
-    while sum(minority_per_table) < len(minority_remaining) and sum(minority_per_table) < total_empty:
-        # Add to table with most empty seats relative to allocation
-        best = -1
-        best_ratio = -1
-        for i, t in enumerate(table_info):
-            remaining = len(t["empty"]) - minority_per_table[i]
-            if remaining > 0 and (best == -1 or remaining > best_ratio):
-                best = i
-                best_ratio = remaining
-        if best == -1:
-            break
-        minority_per_table[best] += 1
+    # Step 1: For each table, compute the ideal gender for each empty seat.
+    # We do this by building the best possible gender pattern for the full
+    # table, respecting locked positions, then reading off the empty seats.
+    all_assignments = []  # (table_state, pos, gender_needed)
 
-    # Now assign to each table
-    for i, t in enumerate(table_info):
-        n_minority = minority_per_table[i]
-        n_majority = len(t["empty"]) - n_minority
-
-        # Take guests from pools
-        table_minority = minority_remaining[:n_minority]
-        minority_remaining = minority_remaining[n_minority:]
-        table_majority = majority_remaining[:n_majority]
-        majority_remaining = majority_remaining[n_majority:]
-
-        # Interleave for best alternation
-        arranged = _interleave_for_table(
-            table_minority, table_majority, t["empty"], t["existing"], t["table"]
+    for ts in table_states:
+        if not ts["empty"]:
+            continue
+        pattern = _compute_ideal_pattern(
+            ts["seat_map"], ts["capacity"], ts["is_round"],
+            len(male_pool), len(female_pool)
         )
-        for inv, pos in arranged:
+        for pos in sorted(ts["empty"]):
+            all_assignments.append((ts, pos, pattern.get(pos)))
+
+    # Step 2: Assign guests to match the ideal pattern
+    # First pass: fill seats where we have the requested gender
+    unmatched = []
+    for ts, pos, ideal_gender in all_assignments:
+        pool = male_pool if ideal_gender == "Male" else female_pool
+        if pool:
+            inv = pool.pop()
+            ts["seat_map"][pos] = inv.guest.gender
+            ts["empty"].discard(pos)
             db.session.add(SeatAssignment(
-                table_id=t["table"].id, invitation_id=inv.id, seat_position=pos
+                table_id=ts["table"].id, invitation_id=inv.id, seat_position=pos
             ))
+        else:
+            unmatched.append((ts, pos))
 
-    # Assign any remaining guests (if rounding left some unassigned)
-    leftover = minority_remaining + majority_remaining
-    if leftover:
-        all_remaining_seats = []
-        for t in table_info:
-            assigned_positions = {a[1] for a in _get_new_assignments_for_table(t["table"].id)}
-            for pos in t["empty"]:
-                if pos not in assigned_positions:
-                    all_remaining_seats.append((t["table"].id, pos))
-        for inv, (tid, pos) in zip(leftover, all_remaining_seats):
-            db.session.add(SeatAssignment(
-                table_id=tid, invitation_id=inv.id, seat_position=pos
-            ))
+    # Second pass: fill remaining seats with whatever gender is left
+    remaining = male_pool + female_pool
+    random.shuffle(remaining)
+    for inv, (ts, pos) in zip(remaining, unmatched):
+        ts["seat_map"][pos] = inv.guest.gender
+        ts["empty"].discard(pos)
+        db.session.add(SeatAssignment(
+            table_id=ts["table"].id, invitation_id=inv.id, seat_position=pos
+        ))
 
 
-def _get_new_assignments_for_table(table_id):
-    """Get pending (not yet committed) assignments for a table from the session."""
-    assignments = []
-    for obj in db.session.new:
-        if isinstance(obj, SeatAssignment) and obj.table_id == table_id:
-            assignments.append((obj.invitation_id, obj.seat_position))
-    return assignments
+def _compute_ideal_pattern(seat_map, capacity, is_round, n_males_avail, n_females_avail):
+    """Compute the ideal gender for each empty seat to maximize alternation.
 
-
-def _interleave_for_table(minority_guests, majority_guests, empty_positions, existing, table):
-    """Place guests in empty positions, alternating genders.
-
-    For the empty seats, arrange so minority guests are evenly spaced
-    among majority guests, minimizing the longest same-gender run.
+    Strategy: space the minority gender evenly across ALL seats (including
+    locked ones), then for each empty seat, read off the ideal gender.
+    Locked seats are constraints; the pattern wraps around them.
     """
-    total = len(minority_guests) + len(majority_guests)
-    if total == 0:
-        return []
+    n = capacity
+    empty_positions = sorted(p for p in range(1, n + 1) if p not in seat_map)
+    n_empty = len(empty_positions)
+    if n_empty == 0:
+        return {}
 
-    # Build an arrangement sequence: interleave minority as evenly as possible
-    sequence = []
-    n_min = len(minority_guests)
-    n_maj = len(majority_guests)
+    existing_m = sum(1 for g in seat_map.values() if g == "Male")
+    existing_f = sum(1 for g in seat_map.values() if g == "Female")
 
-    if n_min == 0:
-        sequence = list(majority_guests)
-    elif n_maj == 0:
-        sequence = list(minority_guests)
+    # Calculate how many of each gender to place
+    need_m = min(n_males_avail, n_empty)
+    need_f = min(n_females_avail, n_empty)
+    # Try to balance: aim for ~50/50 total
+    total = existing_m + existing_f + n_empty
+    ideal_m_total = (total + 1) // 2
+    ideal_f_total = total - ideal_m_total
+    want_m = max(0, min(ideal_m_total - existing_m, n_males_avail, n_empty))
+    want_f = max(0, min(ideal_f_total - existing_f, n_females_avail, n_empty))
+    leftover = n_empty - want_m - want_f
+    if leftover > 0:
+        if n_males_avail - want_m > 0:
+            extra = min(leftover, n_males_avail - want_m)
+            want_m += extra
+            leftover -= extra
+        if leftover > 0 and n_females_avail - want_f > 0:
+            extra = min(leftover, n_females_avail - want_f)
+            want_f += extra
+
+    total_m = existing_m + want_m
+    total_f = existing_f + want_f
+    if total_f <= total_m:
+        min_g, maj_g = "Female", "Male"
+        n_min_total, n_maj_total = total_f, total_m
+        need_min, need_maj = want_f, want_m
     else:
-        # Place minority at evenly-spaced intervals among majority
-        # E.g., 2 minority among 6 majority -> M m M M m M M M
-        # The minority acts as "breakers" to prevent long same-gender runs
-        sequence = []
-        min_idx = 0
-        maj_idx = 0
+        min_g, maj_g = "Male", "Female"
+        n_min_total, n_maj_total = total_m, total_f
+        need_min, need_maj = want_m, want_f
 
-        # Calculate spacing: place a minority guest every N positions
-        spacing = total / n_min  # e.g., 8 total / 2 minority = every 4 positions
+    # Build ideal full-table pattern: place minority at evenly-spaced positions
+    # across ALL n seats, then check if empty seats match.
+    # The spacing between minority members should be ~ n / n_min_total.
+    if n_min_total == 0:
+        return {p: maj_g for p in empty_positions}
 
-        for pos_idx in range(total):
-            # Place minority at evenly distributed positions
-            # A minority goes at positions: spacing/2, spacing/2 + spacing, ...
-            expected_minority_count = int((pos_idx + spacing / 2) / spacing)
-            if min_idx < n_min and expected_minority_count > min_idx:
-                sequence.append(minority_guests[min_idx])
-                min_idx += 1
-            elif maj_idx < n_maj:
-                sequence.append(majority_guests[maj_idx])
-                maj_idx += 1
-            elif min_idx < n_min:
-                sequence.append(minority_guests[min_idx])
-                min_idx += 1
+    spacing = n / n_min_total  # e.g., 10 seats / 3 minority = every 3.33 seats
 
-    # Map sequence to empty positions
-    result = list(zip(sequence, sorted(empty_positions)))
+    # Find best starting offset to align with existing locked minority positions
+    # Try each possible offset and pick the one that conflicts least with locks
+    best_offset = 0
+    best_conflicts = n + 1
+    for trial_offset in range(n):
+        conflicts = 0
+        min_positions = set()
+        for i in range(n_min_total):
+            pos = int(round(trial_offset + i * spacing)) % n + 1
+            min_positions.add(pos)
+        # Check conflicts with locked seats
+        for pos, gender in seat_map.items():
+            if pos in min_positions and gender != min_g:
+                conflicts += 1
+            elif pos not in min_positions and gender == min_g:
+                conflicts += 1
+        if conflicts < best_conflicts:
+            best_conflicts = conflicts
+            best_offset = trial_offset
+
+    # Generate minority positions with best offset
+    minority_positions = set()
+    for i in range(n_min_total):
+        pos = int(round(best_offset + i * spacing)) % n + 1
+        minority_positions.add(pos)
+
+    # Build the result: for each empty position, assign ideal gender
+    result = {}
+    min_placed = 0
+    maj_placed = 0
+    for pos in empty_positions:
+        if pos in minority_positions and min_placed < need_min:
+            result[pos] = min_g
+            min_placed += 1
+        elif pos not in minority_positions and maj_placed < need_maj:
+            result[pos] = maj_g
+            maj_placed += 1
+        else:
+            # Fallback: assign whatever we still need
+            if min_placed < need_min:
+                result[pos] = min_g
+                min_placed += 1
+            else:
+                result[pos] = maj_g
+                maj_placed += 1
+
     return result
+
+
+def _adjacency_score(seat_map, pos, gender, capacity, is_round):
+    """Score how bad it would be to place `gender` at `pos`.
+
+    Lower is better. Penalizes:
+    - Each same-gender neighbor: +2
+    - Creating a run of 3+ same gender: +5 per extra
+    - Having both neighbors same gender (sandwiched): +3
+    Rewards:
+    - Each opposite-gender neighbor: -1
+    - Being next to an empty seat (neutral): 0
+    """
+    neighbors = _get_neighbors(pos, capacity, is_round)
+    same = 0
+    opposite = 0
+    for n in neighbors:
+        ng = seat_map.get(n)
+        if ng == gender:
+            same += 1
+        elif ng is not None:
+            opposite += 1
+
+    score = same * 2 - opposite
+
+    # Extra penalty: check if this creates a run of 3+
+    # Look in each direction and count consecutive same-gender
+    for direction in [-1, 1]:
+        run = 0
+        p = pos + direction
+        while True:
+            if is_round:
+                p = ((p - 1) % capacity) + 1
+            if p < 1 or p > capacity:
+                break
+            if seat_map.get(p) == gender:
+                run += 1
+                p += direction
+            else:
+                break
+            if not is_round and (p < 1 or p > capacity):
+                break
+        if run >= 2:
+            score += 5 * (run - 1)  # Heavy penalty for runs of 3+
+
+    # Penalty for being sandwiched (both neighbors same gender)
+    if same == 2:
+        score += 3
+
+    return score
+
+
+def _get_neighbors(pos, capacity, is_round):
+    """Get adjacent seat positions."""
+    neighbors = []
+    if is_round:
+        neighbors.append(((pos - 2) % capacity) + 1)
+        neighbors.append((pos % capacity) + 1)
+    else:
+        if pos > 1:
+            neighbors.append(pos - 1)
+        if pos < capacity:
+            neighbors.append(pos + 1)
+    return neighbors
 
 
 def serialize_seating_plan(event):
