@@ -317,6 +317,24 @@ document.addEventListener("DOMContentLoaded", function () {
             delBtn.title = "Delete table";
             delBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
             delBtn.addEventListener("click", function () { deleteTable(table.id); });
+            // Rotate
+            if (table.shape !== "round") {
+                var rotBtn = document.createElement("button");
+                rotBtn.type = "button";
+                rotBtn.className = "seating-action-btn";
+                rotBtn.title = "Rotate table";
+                rotBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>';
+                rotBtn.addEventListener("click", function () {
+                    var cur = tableRotations[table.id] || 0;
+                    tableRotations[table.id] = (cur + 90) % 360;
+                    var wrap = card.querySelector(".seating-svg-wrap");
+                    if (wrap) {
+                        wrap.innerHTML = buildTableSVG(table, SEAT_R, SEAT_FONT, SEAT_SPACING);
+                        applyRotation(wrap, table.id);
+                    }
+                });
+                actions.appendChild(rotBtn);
+            }
             actions.appendChild(editBtn);
             actions.appendChild(clearBtn);
             actions.appendChild(delBtn);
@@ -328,21 +346,19 @@ document.addEventListener("DOMContentLoaded", function () {
         svgWrap.className = "seating-svg-wrap";
         svgWrap.style.position = "relative";
         svgWrap.innerHTML = buildTableSVG(table, SEAT_R, SEAT_FONT, SEAT_SPACING);
+        applyRotation(svgWrap, table.id);
         card.appendChild(svgWrap);
         return card;
     }
 
     // ── SVG Rendering ───────────────────────────────────────────────────────
-    var isMobile = window.innerWidth <= 600;
-    window.addEventListener("resize", function () { isMobile = window.innerWidth <= 600; });
+    var tableRotations = {}; // tableId -> degrees (0, 90, 180, 270)
 
     function buildTableSVG(table, seatR, fontSize, spacing) {
-        var isPreview = (seatR < 20); // preview uses small radius
-        var vertical = isMobile && !isPreview && table.shape !== "round";
         if (table.shape === "round") return buildRoundSVG(table, seatR, fontSize, spacing);
-        if (table.shape === "large_rect") return buildLargeRectSVG(table, seatR, fontSize, spacing, vertical);
-        if (table.shape === "long") return buildLongSVG(table, seatR, fontSize, spacing, vertical);
-        return buildRectSVG(table, seatR, fontSize, spacing, vertical);
+        if (table.shape === "large_rect") return buildLargeRectSVG(table, seatR, fontSize, spacing);
+        if (table.shape === "long") return buildLongSVG(table, seatR, fontSize, spacing);
+        return buildRectSVG(table, seatR, fontSize, spacing);
     }
 
     function seatEl(table, pos, cx, cy, r, fontSize) {
@@ -387,7 +403,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return svg;
     }
 
-    function buildRectSVG(table, seatR, fontSize, spacing, vertical) {
+    function buildRectSVG(table, seatR, fontSize, spacing) {
         var n = table.capacity, hasEnds = n >= 6;
         var sideSeats = hasEnds ? Math.floor((n - 2) / 2) : Math.floor(n / 2);
         var endSeats = hasEnds ? 2 : 0, topCount = sideSeats;
@@ -397,10 +413,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var pad = seatR + 20, endPad = hasEnds ? (seatR * 2 + 20) : 0;
         var svgW = tableW + pad * 2 + endPad, svgH = tableH + pad * 2 + seatR * 2 + 20;
         var offX = hasEnds ? (seatR + 10) : 0, tableX = pad + offX, tableY = pad + seatR + 10;
-        // For vertical: swap viewBox dimensions and rotate content
-        var vbW = vertical ? svgH : svgW, vbH = vertical ? svgW : svgH;
-        var svg = '<svg viewBox="0 0 ' + vbW + ' ' + vbH + '" class="seating-svg"' + (vertical ? '' : ' style="min-width:' + Math.min(svgW, 500) + 'px"') + '>';
-        if (vertical) svg += '<g transform="translate(' + svgH + ',0) rotate(90)">';
+        var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg" style="min-width:' + Math.min(svgW, 500) + 'px">';
         svg += '<rect x="' + tableX + '" y="' + tableY + '" width="' + tableW + '" height="' + tableH + '" rx="8" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
         var pos = 1, topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
         for (var i = 0; i < topCount; i++) svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 8), seatR, fontSize);
@@ -408,52 +421,43 @@ document.addEventListener("DOMContentLoaded", function () {
         var botStartX = tableX + (tableW - botCount * spacing) / 2 + spacing / 2;
         for (var i = botCount - 1; i >= 0; i--) svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 8), seatR, fontSize);
         if (hasEnds) svg += seatEl(table, pos++, Math.round(tableX - seatR - 12), Math.round(tableY + tableH / 2), seatR, fontSize);
-        if (vertical) svg += '</g>';
         svg += '</svg>';
         return svg;
     }
 
-    function buildLongSVG(table, seatR, fontSize, spacing, vertical) {
+    function buildLongSVG(table, seatR, fontSize, spacing) {
         var n = table.capacity, topCount = Math.ceil(n / 2), botCount = n - topCount;
         var maxSide = Math.max(topCount, botCount), tableW = maxSide * spacing + 30, tableH = 50;
         var pad = seatR + 20, svgW = tableW + pad * 2, svgH = tableH + pad * 2 + seatR * 2 + 20;
         var tableX = pad, tableY = pad + seatR + 10;
-        var vbW = vertical ? svgH : svgW, vbH = vertical ? svgW : svgH;
-        var svg = '<svg viewBox="0 0 ' + vbW + ' ' + vbH + '" class="seating-svg"' + (vertical ? '' : ' style="min-width:' + Math.min(svgW, 500) + 'px"') + '>';
-        if (vertical) svg += '<g transform="translate(' + svgH + ',0) rotate(90)">';
+        var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg" style="min-width:' + Math.min(svgW, 500) + 'px">';
         svg += '<rect x="' + tableX + '" y="' + tableY + '" width="' + tableW + '" height="' + tableH + '" rx="6" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
         var pos = 1, topStartX = tableX + (tableW - topCount * spacing) / 2 + spacing / 2;
         for (var i = 0; i < topCount; i++) svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 8), seatR, fontSize);
         var botStartX = tableX + (tableW - botCount * spacing) / 2 + spacing / 2;
         for (var i = botCount - 1; i >= 0; i--) svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 8), seatR, fontSize);
-        if (vertical) svg += '</g>';
         svg += '</svg>';
         return svg;
     }
 
-    function buildLargeRectSVG(table, seatR, fontSize, spacing, vertical) {
+    function buildLargeRectSVG(table, seatR, fontSize, spacing) {
         // Large rectangle: seats along top and bottom, 2x2 at each end
         var n = table.capacity;
-        // Reserve 4 for ends (2 per end), rest split top/bottom
         var endSeats = Math.min(4, n);
         var sideTotal = n - endSeats;
         var topCount = Math.ceil(sideTotal / 2);
         var botCount = sideTotal - topCount;
 
         var maxSide = Math.max(topCount, botCount, 1);
-        var tableW = maxSide * spacing + 40, tableH = 80;
+        var tableW = maxSide * spacing + 40, tableH = seatR * 2 + 30;
         var pad = seatR + 20;
-        var endBlockW = seatR * 2 + spacing * 0.4;
-        var svgW = tableW + pad * 2 + endBlockW * 2 + 20;
+        var endGap = seatR + 16; // horizontal gap from table edge to end seats
+        var svgW = tableW + pad * 2 + (endGap + seatR) * 2 + 8;
         var svgH = tableH + pad * 2 + seatR * 2 + 20;
-        var tableX = pad + endBlockW + 10;
+        var tableX = pad + endGap + seatR + 4;
         var tableY = pad + seatR + 10;
 
-        var vbW = vertical ? svgH : svgW, vbH = vertical ? svgW : svgH;
-        var svg = '<svg viewBox="0 0 ' + vbW + ' ' + vbH + '" class="seating-svg"' + (vertical ? '' : ' style="min-width:' + Math.min(svgW, 500) + 'px"') + '>';
-        if (vertical) svg += '<g transform="translate(' + svgH + ',0) rotate(90)">';
-
-        // Table rectangle
+        var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" class="seating-svg" style="min-width:' + Math.min(svgW, 500) + 'px">';
         svg += '<rect x="' + tableX + '" y="' + tableY + '" width="' + tableW + '" height="' + tableH + '" rx="8" fill="#f9f6f0" stroke="#d4c5a9" stroke-width="2"/>';
 
         var pos = 1;
@@ -463,27 +467,50 @@ document.addEventListener("DOMContentLoaded", function () {
             svg += seatEl(table, pos++, Math.round(topStartX + i * spacing), Math.round(tableY - seatR - 8), seatR, fontSize);
         }
         // Right end: 2 seats stacked vertically
-        var rightX = Math.round(tableX + tableW + seatR + 14);
-        var endVGap = tableH * 0.3;
-        if (endSeats >= 1) svg += seatEl(table, pos++, rightX, Math.round(tableY + tableH / 2 - endVGap), seatR, fontSize);
-        if (endSeats >= 2) svg += seatEl(table, pos++, rightX, Math.round(tableY + tableH / 2 + endVGap), seatR, fontSize);
+        var endVSpacing = seatR * 2 + 8;
+        var rightX = Math.round(tableX + tableW + endGap);
+        var endCenterY = tableY + tableH / 2;
+        if (endSeats >= 1) svg += seatEl(table, pos++, rightX, Math.round(endCenterY - endVSpacing / 2), seatR, fontSize);
+        if (endSeats >= 2) svg += seatEl(table, pos++, rightX, Math.round(endCenterY + endVSpacing / 2), seatR, fontSize);
         // Bottom row seats (right to left)
         var botStartX = tableX + (tableW - botCount * spacing) / 2 + spacing / 2;
         for (var i = botCount - 1; i >= 0; i--) {
             svg += seatEl(table, pos++, Math.round(botStartX + i * spacing), Math.round(tableY + tableH + seatR + 8), seatR, fontSize);
         }
         // Left end: 2 seats stacked vertically
-        var leftX = Math.round(tableX - seatR - 14);
-        if (endSeats >= 3) svg += seatEl(table, pos++, leftX, Math.round(tableY + tableH / 2 + endVGap), seatR, fontSize);
-        if (endSeats >= 4) svg += seatEl(table, pos++, leftX, Math.round(tableY + tableH / 2 - endVGap), seatR, fontSize);
+        var leftX = Math.round(tableX - endGap);
+        if (endSeats >= 3) svg += seatEl(table, pos++, leftX, Math.round(endCenterY + endVSpacing / 2), seatR, fontSize);
+        if (endSeats >= 4) svg += seatEl(table, pos++, leftX, Math.round(endCenterY - endVSpacing / 2), seatR, fontSize);
 
-        if (vertical) svg += '</g>';
         svg += '</svg>';
         return svg;
     }
 
     function buildPreviewSVG(shape, capacity) {
         return buildTableSVG({ capacity: capacity, seats: {}, shape: shape, id: 0 }, 16, 8, 40);
+    }
+
+    function applyRotation(svgWrap, tableId) {
+        var deg = tableRotations[tableId] || 0;
+        if (!deg) return;
+        var svgEl = svgWrap.querySelector("svg");
+        if (!svgEl) return;
+        svgEl.style.transform = "rotate(" + deg + "deg)";
+        // Counter-rotate all text elements so names stay horizontal
+        var texts = svgEl.querySelectorAll("text");
+        for (var i = 0; i < texts.length; i++) {
+            var t = texts[i];
+            var cx = t.getAttribute("x");
+            var cy = t.getAttribute("y");
+            t.setAttribute("transform", "rotate(" + (-deg) + "," + cx + "," + cy + ")");
+        }
+        // Also counter-rotate lock icons (the small <g> with scale)
+        var lockIcons = svgEl.querySelectorAll(".seating-seat-locked > g:last-child");
+        for (var i = 0; i < lockIcons.length; i++) {
+            var g = lockIcons[i];
+            var existingTransform = g.getAttribute("transform") || "";
+            g.setAttribute("transform", existingTransform + " rotate(" + (-deg) + ")");
+        }
     }
 
     function escapeXml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
