@@ -352,7 +352,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("picker-seat-pos").value = seatPos;
         document.getElementById("picker-search").value = "";
         renderPickerList("");
-        document.getElementById("seating-picker-overlay").style.display = "";
+        document.getElementById("seating-picker-overlay").style.display = "flex";
         document.getElementById("picker-search").focus();
     }
 
@@ -408,7 +408,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("seating-table-label").value = "";
             document.getElementById("seating-table-shape").value = "rectangular";
             document.getElementById("seating-table-capacity").value = "12";
-            document.getElementById("seating-table-overlay").style.display = "";
+            document.getElementById("seating-table-overlay").style.display = "flex";
         });
     }
 
@@ -418,7 +418,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("seating-table-label").value = table.label || "";
         document.getElementById("seating-table-shape").value = table.shape;
         document.getElementById("seating-table-capacity").value = String(table.capacity);
-        document.getElementById("seating-table-overlay").style.display = "";
+        document.getElementById("seating-table-overlay").style.display = "flex";
     }
 
     var tableClose = document.getElementById("seating-table-close");
