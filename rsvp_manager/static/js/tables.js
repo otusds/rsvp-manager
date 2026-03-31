@@ -69,11 +69,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     valB = getStatusRank(b.cells[colIndex]);
                     return dir === "asc" ? valA - valB : valB - valA;
                 } else {
-                    var cellA = a.cells[colIndex], cellB = b.cells[colIndex];
-                    var selA = cellA && cellA.querySelector("select");
-                    var selB = cellB && cellB.querySelector("select");
-                    valA = selA ? selA.value.toLowerCase() : (cellA ? cellA.textContent.trim().toLowerCase() : "");
-                    valB = selB ? selB.value.toLowerCase() : (cellB ? cellB.textContent.trim().toLowerCase() : "");
+                    valA = getSortableText(a.cells[colIndex]);
+                    valB = getSortableText(b.cells[colIndex]);
                 }
                 if (valA < valB) return dir === "asc" ? -1 : 1;
                 if (valA > valB) return dir === "asc" ? 1 : -1;
@@ -136,6 +133,19 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     };
 
+    // ── Helper: get sortable text from a cell, stripping gender tags and icons ──
+    function getSortableText(cell) {
+        if (!cell) return "";
+        var sel = cell.querySelector("select");
+        if (sel) return sel.value.toLowerCase();
+        var inp = cell.querySelector("input");
+        if (inp) return inp.value.toLowerCase();
+        // Clone cell and remove non-name elements before getting text
+        var clone = cell.cloneNode(true);
+        clone.querySelectorAll(".gender-tag, .share-icon-inline, svg").forEach(function (el) { el.remove(); });
+        return clone.textContent.trim().toLowerCase();
+    }
+
     // ── Table sort (header click) ────────────────────────────────────────────
     document.querySelectorAll("table.sortable th[data-sort]").forEach(function (th) {
         th.style.cursor = "pointer";
@@ -172,12 +182,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     valB = getStatusRank(cellB);
                     return dir === "asc" ? valA - valB : valB - valA;
                 } else {
-                    var selA = cellA.querySelector("select");
-                    var selB = cellB.querySelector("select");
-                    var inpA = cellA.querySelector("input");
-                    var inpB = cellB.querySelector("input");
-                    valA = selA ? selA.value.toLowerCase() : inpA ? inpA.value.toLowerCase() : cellA.textContent.trim().toLowerCase();
-                    valB = selB ? selB.value.toLowerCase() : inpB ? inpB.value.toLowerCase() : cellB.textContent.trim().toLowerCase();
+                    valA = getSortableText(cellA);
+                    valB = getSortableText(cellB);
                 }
                 if (valA < valB) return dir === "asc" ? -1 : 1;
                 if (valA > valB) return dir === "asc" ? 1 : -1;
