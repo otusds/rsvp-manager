@@ -194,7 +194,7 @@
 
         <div class="table-scroll">
         <table id="invitations-table" class="sortable" data-event-id="{{ event.id }}" data-role="{{ role }}">
-            <thead>
+            <thead{% if not event.invitations|rejectattr('guest.deleted_at')|list %} style="display:none"{% endif %}>
                 <tr>
                     <th class="center col-check col-multiselect" style="display:none"><input type="checkbox" id="select-all"></th>
                     <th data-sort="text" class="col-guest">Guest</th>
