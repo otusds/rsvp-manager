@@ -1,3 +1,41 @@
+// ── Pull-to-refresh (mobile) ──────────────────────────────────────────────
+(function () {
+    var startY = 0;
+    var pulling = false;
+    var indicator = null;
+
+    document.addEventListener("touchstart", function (e) {
+        if (window.scrollY === 0) {
+            startY = e.touches[0].pageY;
+            pulling = true;
+        }
+    }, { passive: true });
+
+    document.addEventListener("touchmove", function (e) {
+        if (!pulling) return;
+        var delta = e.touches[0].pageY - startY;
+        if (delta > 60 && window.scrollY === 0) {
+            if (!indicator) {
+                indicator = document.createElement("div");
+                indicator.className = "pull-refresh-indicator";
+                indicator.textContent = "Release to refresh";
+                document.body.prepend(indicator);
+            }
+        } else if (indicator && delta < 30) {
+            indicator.remove();
+            indicator = null;
+        }
+    }, { passive: true });
+
+    document.addEventListener("touchend", function () {
+        if (indicator) {
+            indicator.textContent = "Refreshing...";
+            setTimeout(function () { location.reload(); }, 200);
+        }
+        pulling = false;
+    });
+})();
+
 // ── Service Worker registration ───────────────────────────────────────────
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/static/sw.js');

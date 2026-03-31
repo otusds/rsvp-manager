@@ -319,6 +319,16 @@
             <div class="seating-tables" id="seating-tables">
                 <p class="empty seating-empty" id="seating-empty">No seating plan yet. Add a table to get started.</p>
             </div>
+
+            {% if role in ('owner', 'cohost') %}
+            <div class="seating-instructions">
+                <strong>Instructions:</strong>
+                Click a guest name then click an empty seat to place them.
+                Double-click a seated guest to remove them.
+                Click the lock icon on a seat to lock it in place during auto-planning.
+                Use Auto-Plan to fill empty seats automatically.
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

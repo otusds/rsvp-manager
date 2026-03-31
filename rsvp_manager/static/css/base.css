@@ -397,6 +397,17 @@ h2 {
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+/* ── Pull-to-refresh ─────────────────────────────────────────────────────── */
+.pull-refresh-indicator {
+    text-align: center;
+    padding: 0.6rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    background: var(--color-primary-pale);
+    animation: toast-in 0.15s ease;
+}
+
 /* ── Scroll loader ───────────────────────────────────────────────────────── */
 .scroll-loader {
     display: flex;
