@@ -18,7 +18,7 @@
             if (!indicator) {
                 indicator = document.createElement("div");
                 indicator.className = "pull-refresh-indicator";
-                indicator.textContent = "Release to refresh";
+                indicator.innerHTML = '<div class="pull-refresh-spinner"></div>';
                 document.body.prepend(indicator);
             }
         } else if (indicator && delta < 30) {
@@ -29,8 +29,7 @@
 
     document.addEventListener("touchend", function () {
         if (indicator) {
-            indicator.textContent = "Refreshing...";
-            setTimeout(function () { location.reload(); }, 200);
+            setTimeout(function () { location.reload(); }, 300);
         }
         pulling = false;
     });
