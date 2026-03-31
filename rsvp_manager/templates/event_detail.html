@@ -209,13 +209,18 @@
             <tbody>
                 {% if not event.invitations|rejectattr('guest.deleted_at')|list %}
                 <tr id="guest-empty-row">
-                    <td colspan="8">
+                    <td class="center col-check col-multiselect" style="display:none"></td>
+                    <td colspan="3">
                         <div class="empty-state empty-state-inline">
                             <svg class="empty-state-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg>
                             <p class="empty-state-title">No guests invited yet</p>
                             <p class="empty-state-sub">Add guests to start managing your event!</p>
                         </div>
                     </td>
+                    <td class="col-expand-mobile"></td>
+                    <td class="col-expand"></td>
+                    <td class="col-expand"></td>
+                    <td class="col-kebab"></td>
                 </tr>
                 {% endif %}
                 {% for inv in event.invitations if not inv.guest.deleted_at %}
