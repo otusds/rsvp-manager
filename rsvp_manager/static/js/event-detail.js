@@ -756,8 +756,18 @@ document.addEventListener("DOMContentLoaded", function () {
                             var displayName = lastName ? firstName + " " + lastName : firstName;
                             var nameCell = gdActiveRow.cells[1];
                             var genderTag = nameCell.querySelector(".gender-tag");
-                            if (genderTag) genderTag.textContent = genderTagText(gender);
-                            nameCell.childNodes[0].textContent = displayName + " ";
+                            if (genderTag) genderTag.textContent = gender === "Male" ? "M" : gender === "Female" ? "F" : "";
+                            // Find the text node after the gender tag and update it
+                            var textNode = null;
+                            for (var i = 0; i < nameCell.childNodes.length; i++) {
+                                if (nameCell.childNodes[i].nodeType === 3 && nameCell.childNodes[i].textContent.trim()) {
+                                    textNode = nameCell.childNodes[i];
+                                    break;
+                                }
+                            }
+                            if (textNode) {
+                                textNode.textContent = " " + displayName;
+                            }
                             gdActiveRow.setAttribute("data-gender", gender);
                             if (gdActiveRow.cells[5]) gdActiveRow.cells[5].textContent = notes;
                             if (gdActiveRow.cells[6] && resp.data.tags) {
