@@ -1,5 +1,5 @@
 from datetime import date
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session
 from flask_login import login_required, current_user
 from rsvp_manager.models import EVENT_TYPES
 from rsvp_manager.services import event_service
@@ -34,6 +34,7 @@ def home():
 @login_required
 def add_event():
     event = event_service.create_event(current_user.id, request.form)
+    session["_track"] = "event-created"
     return redirect(url_for("events.event_detail", event_id=event.id))
 
 

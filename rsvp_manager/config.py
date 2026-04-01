@@ -28,6 +28,10 @@ class Config:
     RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
     EMAIL_DEFAULT_SENDER = os.environ.get("EMAIL_DEFAULT_SENDER", "onboarding@resend.dev")
 
+    UMAMI_SCRIPT_URL = os.environ.get("UMAMI_SCRIPT_URL", "")
+    UMAMI_WEBSITE_ID = os.environ.get("UMAMI_WEBSITE_ID", "")
+    UMAMI_DOMAINS = os.environ.get("UMAMI_DOMAINS", "")
+
     if os.environ.get("DATABASE_URL"):
         _missing = [v for v in ("SECRET_KEY",) if not os.environ.get(v)]
         if _missing:

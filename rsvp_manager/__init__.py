@@ -67,8 +67,18 @@ def create_app(config_class=Config):
     ASSET_VERSION = "74"
 
     @app.context_processor
-    def inject_asset_version():
-        return {"v": ASSET_VERSION}
+    def inject_globals():
+        from flask import session, has_request_context
+        track_event = ""
+        if has_request_context():
+            track_event = session.pop("_track", "")
+        return {
+            "v": ASSET_VERSION,
+            "umami_script_url": app.config.get("UMAMI_SCRIPT_URL", ""),
+            "umami_website_id": app.config.get("UMAMI_WEBSITE_ID", ""),
+            "umami_domains": app.config.get("UMAMI_DOMAINS", ""),
+            "track_event": track_event,
+        }
 
     @app.route("/health")
     def health():
@@ -90,11 +100,19 @@ def create_app(config_class=Config):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        umami_src = app.config.get("UMAMI_SCRIPT_URL", "")
+        script_src = "'self'"
+        connect_src = "'self'"
+        if umami_src:
+            from urllib.parse import urlparse
+            umami_origin = urlparse(umami_src).scheme + "://" + urlparse(umami_src).netloc
+            script_src += " " + umami_origin
+            connect_src += " " + umami_origin
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; script-src 'self'; "
+            f"default-src 'self'; script-src {script_src}; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
-            "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
+            f"img-src 'self' data:; connect-src {connect_src}; frame-ancestors 'none'"
         )
         if response.content_type and ("css" in response.content_type or "javascript" in response.content_type):
             response.headers["Cache-Control"] = "public, max-age=3600"
