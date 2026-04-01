@@ -31,9 +31,11 @@ document.addEventListener("DOMContentLoaded", function () {
         var tableId = select.getAttribute("data-table");
         var table = document.getElementById(tableId);
         if (!table) return;
+        var storageKey = "sort_" + tableId + "_" + (select.id || "");
         var lastSortKey = "";
         var sortDir = "asc";
-        select.addEventListener("change", function () {
+
+        function doSort() {
             if (!select.value) return;
             var parts = select.value.split(":");
             var colIndex = parseInt(parts[0]);
@@ -46,7 +48,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 lastSortKey = sortKey;
             }
             var dir = sortDir;
-            setTimeout(function () { select.selectedIndex = 0; }, 0);
             var tbody = table.querySelector("tbody");
             var rows = Array.from(tbody.querySelectorAll("tr:not(.add-guest-row)"));
             rows.sort(function (a, b) {
@@ -88,7 +89,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 ths[thIndex].classList.add(dir === "asc" ? "sort-asc" : "sort-desc");
                 ths[thIndex].setAttribute("data-dir", dir);
             }
-        });
+            // Save sort preference
+            try { localStorage.setItem(storageKey, JSON.stringify({ value: select.value, dir: sortDir })); } catch (e) {}
+        }
+
+        select.addEventListener("change", doSort);
+
+        // Restore saved sort on page load
+        try {
+            var saved = JSON.parse(localStorage.getItem(storageKey));
+            if (saved && saved.value) {
+                select.value = saved.value;
+                sortDir = saved.dir || "asc";
+                lastSortKey = saved.value;
+                doSort();
+            }
+        } catch (e) {}
     });
 
     // ── filterTable (shared) ─────────────────────────────────────────────────
@@ -193,7 +209,27 @@ document.addEventListener("DOMContentLoaded", function () {
             var addRow = tbody.querySelector(".add-guest-row");
             rows.forEach(function (row) { tbody.appendChild(row); });
             if (addRow) tbody.appendChild(addRow);
+
+            // Save header sort preference
+            try { localStorage.setItem("hsort_" + table.id, JSON.stringify({ col: colIndex, type: sortType, dir: dir })); } catch (e) {}
         });
+    });
+
+    // Restore header-click sort on page load
+    document.querySelectorAll("table.sortable").forEach(function (table) {
+        try {
+            var saved = JSON.parse(localStorage.getItem("hsort_" + table.id));
+            if (saved) {
+                var ths = table.querySelectorAll("th[data-sort]");
+                ths.forEach(function (th) {
+                    var idx = Array.from(th.parentNode.children).indexOf(th);
+                    if (idx === saved.col) {
+                        th.setAttribute("data-dir", saved.dir === "asc" ? "desc" : "asc");
+                        th.click();
+                    }
+                });
+            }
+        } catch (e) {}
     });
 
     // ── Page 3-dot menu ─────────────────────────────────────────────────────

@@ -9,8 +9,8 @@
     data-tags="{{ guest.tags|rejectattr('deleted_at')|map(attribute='id')|join(',') }}"
     class="{{ 'archived-row' if guest.is_archived else '' }}">
     <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
-    <td><textarea class="inline-edit ge-first" rows="1" data-guest-id="{{ guest.id }}"{{ ' readonly' if guest.is_me }}>{{ guest.first_name }}</textarea></td>
-    <td><textarea class="inline-edit ge-last" rows="1" data-guest-id="{{ guest.id }}"{{ ' readonly' if guest.is_me }}>{{ guest.last_name or '' }}</textarea></td>
+    <td><textarea class="inline-edit ge-first" rows="1" data-guest-id="{{ guest.id }}"{{ ' readonly' if guest.is_me }} autocapitalize="words">{{ guest.first_name }}</textarea></td>
+    <td><textarea class="inline-edit ge-last" rows="1" data-guest-id="{{ guest.id }}"{{ ' readonly' if guest.is_me }} autocapitalize="words">{{ guest.last_name or '' }}</textarea></td>
     <td class="gender-cell">
         <select class="inline-select ge-gender gender-tag-select" data-guest-id="{{ guest.id }}"{{ ' disabled' if guest.is_me }}>
             <option value="Male"{{ ' selected' if guest.gender == 'Male' }}>Male</option>

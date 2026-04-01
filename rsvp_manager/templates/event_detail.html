@@ -194,7 +194,7 @@
 
         <div class="table-scroll">
         <table id="invitations-table" class="sortable" data-event-id="{{ event.id }}" data-role="{{ role }}">
-            <thead>
+            <thead{% if not event.invitations|rejectattr('guest.deleted_at')|list %} style="display:none"{% endif %}>
                 <tr>
                     <th class="center col-check col-multiselect" style="display:none"><input type="checkbox" id="select-all"></th>
                     <th data-sort="text" class="col-guest">Guest</th>
@@ -319,6 +319,18 @@
             <div class="seating-tables" id="seating-tables">
                 <p class="empty seating-empty" id="seating-empty">No seating plan yet. Add a table to get started.</p>
             </div>
+
+            {% if role in ('owner', 'cohost') %}
+            <div class="seating-instructions">
+                <strong>Instructions:</strong>
+                <ul>
+                    <li>Click a guest name, then click an empty seat to place them</li>
+                    <li>Double-click a seated guest to remove them</li>
+                    <li>Click the lock icon to lock a seat — locked seats are kept during Auto-Plan and Clear Unlocked</li>
+                    <li>Use Auto-Plan to fill empty seats automatically</li>
+                </ul>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -653,11 +665,11 @@
                 <div class="form-row">
                     <div class="form-field">
                         <label for="gd-first">First Name</label>
-                        <textarea id="gd-first" required rows="1"></textarea>
+                        <textarea id="gd-first" required rows="1" autocapitalize="words"></textarea>
                     </div>
                     <div class="form-field">
                         <label for="gd-last">Last Name</label>
-                        <textarea id="gd-last" rows="1"></textarea>
+                        <textarea id="gd-last" rows="1" autocapitalize="words"></textarea>
                     </div>
                 </div>
                 <div class="form-row">

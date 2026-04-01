@@ -348,7 +348,8 @@
     gap: 0.75rem;
     padding: 0.6rem 1rem 0.4rem;
     border-top: 1px solid rgba(0,0,0,0.08);
-    color: var(--color-text-muted);
+    color: inherit;
+    font-weight: 600;
     font-size: 1.05rem;
     letter-spacing: 0.02em;
 }
@@ -368,6 +369,11 @@
 .add-guest-alt-actions .btn {
     flex: 1;
     text-align: center;
+    background: rgba(16,185,129,0.15);
+    color: var(--color-primary);
+}
+.add-guest-alt-actions .btn:hover {
+    background: rgba(16,185,129,0.25);
 }
 /* Remove bottom border on last row inside add-guest table */
 .add-guest-table tr td { border-bottom: none; }

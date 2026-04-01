@@ -365,3 +365,24 @@
     .seating-shape-option { padding: 0.5rem 0.25rem; min-width: calc(50% - 0.5rem); }
     .seating-shape-icon { width: 52px; height: 40px; }
 }
+
+/* ── Seating instructions ────────────────────────────────────────────────── */
+.seating-instructions {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    background: var(--color-bg-secondary);
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    line-height: 1.5;
+}
+.seating-instructions strong {
+    color: var(--color-text);
+}
+.seating-instructions ul {
+    margin: 0.3rem 0 0;
+    padding-left: 1.2rem;
+}
+.seating-instructions li {
+    margin-bottom: 0.15rem;
+}

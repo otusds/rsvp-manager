@@ -1,3 +1,33 @@
+// ── Pull-to-refresh (mobile) ──────────────────────────────────────────────
+(function () {
+    var startY = 0;
+    var pulling = false;
+    var triggered = false;
+
+    document.addEventListener("touchstart", function (e) {
+        var overlay = document.querySelector(".detail-overlay[style*='flex']");
+        if (overlay) return;
+        if (window.scrollY === 0) {
+            startY = e.touches[0].pageY;
+            pulling = true;
+            triggered = false;
+        }
+    }, { passive: true });
+
+    document.addEventListener("touchmove", function (e) {
+        if (!pulling || triggered) return;
+        var delta = e.touches[0].pageY - startY;
+        if (delta > 80 && window.scrollY === 0) {
+            triggered = true;
+            location.reload();
+        }
+    }, { passive: true });
+
+    document.addEventListener("touchend", function () {
+        pulling = false;
+    });
+})();
+
 // ── Service Worker registration ───────────────────────────────────────────
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/static/sw.js');
@@ -313,8 +343,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function createBlankGuestRow() {
         var tr = document.createElement("tr");
         tr.innerHTML =
-            '<td><div class="ag-first-name-wrapper"><textarea class="ag-first-name" placeholder="First name" rows="1"></textarea><div class="ag-suggestions" style="display:none"></div></div></td>' +
-            '<td><textarea class="ag-last-name" placeholder="Last name" rows="1"></textarea></td>' +
+            '<td><div class="ag-first-name-wrapper"><textarea class="ag-first-name" placeholder="First name" rows="1" autocapitalize="words"></textarea><div class="ag-suggestions" style="display:none"></div></div></td>' +
+            '<td><textarea class="ag-last-name" placeholder="Last name" rows="1" autocapitalize="words"></textarea></td>' +
             '<td><select class="ag-gender"><option value="Male">Male</option><option value="Female">Female</option></select></td>' +
             '<td><button type="button" class="add-guest-remove-btn">&times;</button></td>';
 
