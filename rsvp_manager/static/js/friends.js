@@ -196,21 +196,28 @@ document.addEventListener("DOMContentLoaded", function () {
         if (kebabBtn) window.attachKebabListener(kebabBtn);
 
         // Name editing
-        row.querySelectorAll(".ge-first, .ge-last").forEach(function (input) {
-            input.addEventListener("blur", function () {
-                var guestId = input.getAttribute("data-guest-id");
-                var firstName = row.querySelector(".ge-first").value.trim();
-                var lastName = row.querySelector(".ge-last").value.trim();
-                if (!firstName) return;
-                row.setAttribute("data-first", firstName.toLowerCase());
-                row.setAttribute("data-last", lastName.toLowerCase());
-                window.fetchWithCsrf("/api/v1/friends/" + guestId, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ first_name: firstName, last_name: lastName })
-                }).catch(window.handleFetchError);
+        if (isMobile) {
+            row.querySelectorAll(".ge-first, .ge-last").forEach(function (input) {
+                input.setAttribute("readonly", "");
+                input.setAttribute("tabindex", "-1");
             });
-        });
+        } else {
+            row.querySelectorAll(".ge-first, .ge-last").forEach(function (input) {
+                input.addEventListener("blur", function () {
+                    var guestId = input.getAttribute("data-guest-id");
+                    var firstName = row.querySelector(".ge-first").value.trim();
+                    var lastName = row.querySelector(".ge-last").value.trim();
+                    if (!firstName) return;
+                    row.setAttribute("data-first", firstName.toLowerCase());
+                    row.setAttribute("data-last", lastName.toLowerCase());
+                    window.fetchWithCsrf("/api/v1/friends/" + guestId, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ first_name: firstName, last_name: lastName })
+                    }).catch(window.handleFetchError);
+                });
+            });
+        }
 
         // Gender editing
         var genderSelect = row.querySelector(".ge-gender");
@@ -221,39 +228,48 @@ document.addEventListener("DOMContentLoaded", function () {
                 expandGender(genderSelect);
             }
             updateGenderTagColor(genderSelect);
-            genderSelect.addEventListener("focus", function () { expandGender(genderSelect); });
-            genderSelect.addEventListener("blur", function () {
-                if (isMobile && guestsTable && guestsTable.classList.contains("table-collapsed")) {
-                    abbreviateGender(genderSelect);
-                }
-            });
-            genderSelect.addEventListener("change", function () {
-                updateGenderTagColor(genderSelect);
-                var guestId = genderSelect.getAttribute("data-guest-id");
-                row.setAttribute("data-gender", genderSelect.value);
-                window.fetchWithCsrf("/api/v1/friends/" + guestId, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ gender: genderSelect.value })
-                }).catch(window.handleFetchError);
-            });
+            if (isMobile) {
+                genderSelect.setAttribute("disabled", "");
+            } else {
+                genderSelect.addEventListener("focus", function () { expandGender(genderSelect); });
+                genderSelect.addEventListener("blur", function () {
+                    if (isMobile && guestsTable && guestsTable.classList.contains("table-collapsed")) {
+                        abbreviateGender(genderSelect);
+                    }
+                });
+                genderSelect.addEventListener("change", function () {
+                    updateGenderTagColor(genderSelect);
+                    var guestId = genderSelect.getAttribute("data-guest-id");
+                    row.setAttribute("data-gender", genderSelect.value);
+                    window.fetchWithCsrf("/api/v1/friends/" + guestId, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ gender: genderSelect.value })
+                    }).catch(window.handleFetchError);
+                });
+            }
         }
 
         // Notes editing
         var notesInput = row.querySelector(".ge-notes");
         if (notesInput) {
-            var timer;
-            notesInput.addEventListener("input", function () {
-                clearTimeout(timer);
-                timer = setTimeout(function () {
-                    var guestId = notesInput.getAttribute("data-guest-id");
-                    window.fetchWithCsrf("/api/v1/friends/" + guestId, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ notes: notesInput.value.trim() })
-                    }).catch(window.handleFetchError);
-                }, 500);
-            });
+            if (isMobile) {
+                notesInput.setAttribute("readonly", "");
+                notesInput.setAttribute("tabindex", "-1");
+            } else {
+                var timer;
+                notesInput.addEventListener("input", function () {
+                    clearTimeout(timer);
+                    timer = setTimeout(function () {
+                        var guestId = notesInput.getAttribute("data-guest-id");
+                        window.fetchWithCsrf("/api/v1/friends/" + guestId, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ notes: notesInput.value.trim() })
+                        }).catch(window.handleFetchError);
+                    }, 500);
+                });
+            }
         }
 
         // Guest detail button

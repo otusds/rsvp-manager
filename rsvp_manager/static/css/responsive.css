@@ -165,6 +165,22 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+    /* Disable inline editing appearance on mobile */
+    .inline-edit[readonly],
+    .inline-select:disabled {
+        pointer-events: none;
+        border-color: transparent;
+        background: transparent;
+        color: var(--color-text);
+        opacity: 1;
+        -webkit-appearance: none;
+    }
+    .inline-edit[readonly]:hover,
+    .inline-edit[readonly]:focus {
+        border-color: transparent;
+        box-shadow: none;
+        background: transparent;
+    }
     .table-collapsed .gender-tag-select {
         width: 24px;
         height: 24px;
