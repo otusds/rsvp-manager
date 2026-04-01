@@ -284,14 +284,11 @@ class TestStatusTransitions:
         assert data["status"] == "Attending"
 
     def test_update_not_sent_to_attending(self, logged_in_client, sample_invitation, test_app):
-        """Jumping from Not Sent to Attending directly."""
+        """Jumping from Not Sent to Attending directly is now blocked."""
         r = logged_in_client.post(f"/invitation/{sample_invitation}/update",
             data={"status": "Attending"},
             headers={"X-Requested-With": "XMLHttpRequest"})
-        assert r.status_code == 200
-        data = r.get_json()
-        assert data["status"] == "Attending"
-        assert data["date_responded"] != ""
+        assert r.status_code == 400
 
 
 # ── Event add edge cases ────────────────────────────────────────────────────
@@ -447,7 +444,9 @@ class TestEventDetailRendering:
 # ── Non-AJAX fallback redirects ─────────────────────────────────────────────
 
 class TestNonAjaxFallbacks:
-    def test_update_invitation_non_ajax(self, logged_in_client, sample_invitation):
+    def test_update_invitation_non_ajax(self, logged_in_client, sample_invitation, test_app):
+        # First send the invitation so status can be changed
+        logged_in_client.post(f"/invitation/{sample_invitation}/send")
         r = logged_in_client.post(f"/invitation/{sample_invitation}/update",
             data={"status": "Attending"})
         assert r.status_code == 302

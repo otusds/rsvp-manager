@@ -600,6 +600,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     rows.forEach(function (row) { row.remove(); });
                     updateGuestBatchCount();
                     if (guestBatchAction) guestBatchAction.value = "";
+                    window.showToast(ids.length + " guest" + (ids.length > 1 ? "s" : "") + " deleted");
                 })
                 .catch(window.handleFetchError);
             } else if (action === "add-tag") {
@@ -637,6 +638,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                     updateGuestBatchCount();
                     if (guestBatchAction) guestBatchAction.value = "";
+                    window.showToast("Tag added to " + ids.length + " guest" + (ids.length > 1 ? "s" : ""));
                     batchSelectedTagName = "";
                     if (guestBatchTagInput) guestBatchTagInput.value = "";
                     if (guestBatchTagWrapper) guestBatchTagWrapper.style.display = "none";
@@ -686,6 +688,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                     updateGuestBatchCount();
                     if (guestBatchAction) guestBatchAction.value = "";
+                    window.showToast("Tag removed from " + ids.length + " guest" + (ids.length > 1 ? "s" : ""));
                     batchSelectedTagName = "";
                     if (guestBatchTagInput) guestBatchTagInput.value = "";
                     if (guestBatchTagWrapper) guestBatchTagWrapper.style.display = "none";
@@ -715,6 +718,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                     updateGuestBatchCount();
                     if (guestBatchAction) guestBatchAction.value = "";
+                    window.showToast(ids.length + " guest" + (ids.length > 1 ? "s" : "") + " archived");
                 })
                 .catch(window.handleFetchError);
             }

@@ -14,7 +14,12 @@
         <h2>You've been invited!</h2>
         <p class="join-event-name">{{ event.name }}</p>
         <p class="join-meta">{{ event.event_type }} · {{ event.date.strftime('%d %B %Y') }}{% if event.location %} · {{ event.location }}{% endif %}</p>
-        <p class="join-role">You'll join as <strong>{{ link.role }}</strong></p>
+        <p class="join-role">You'll join as <strong>{{ link.role|replace('cohost', 'Co-Host')|replace('viewer', 'Viewer') }}</strong></p>
+        {% if link.role == 'cohost' %}
+        <p class="join-permissions">As a Co-Host you can add guests, change RSVP status, manage the seating plan, and edit event details. You cannot delete the event or manage share links.</p>
+        {% elif link.role == 'viewer' %}
+        <p class="join-permissions">As a Viewer you can see the guest list and seating plan, but you cannot make changes.</p>
+        {% endif %}
         <form method="POST" action="{{ url_for('join.accept_join', token=token) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-full">Accept & Join Event</button>

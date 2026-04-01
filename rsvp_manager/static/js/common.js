@@ -547,12 +547,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .then(function (r) { return r.json(); })
                 .then(function (resp) {
-                    if (resp.data.length > 0) location.reload();
-                    else addGuestOverlay.style.display = "none";
+                    var count = resp.data.length;
+                    if (count > 0) {
+                        // Store toast message for display after reload
+                        sessionStorage.setItem("toast", count + " guest" + (count > 1 ? "s" : "") + " added");
+                        location.reload();
+                    } else {
+                        addGuestOverlay.style.display = "none";
+                    }
                 })
                 .catch(window.handleFetchError);
             }
         });
+    }
+
+    // ── Show toast from sessionStorage (survives page reload) ──────────────
+    var pendingToast = sessionStorage.getItem("toast");
+    if (pendingToast) {
+        sessionStorage.removeItem("toast");
+        window.showToast(pendingToast);
     }
 
 });

@@ -18,11 +18,7 @@
             <button type="button" id="open-share-event-btn"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share to Co-Host</button>
             {% endif %}
             {% if role == 'owner' %}
-            <form method="POST" action="{{ url_for('events.delete_event', event_id=event.id) }}" class="inline"
-                  data-confirm="Delete this event and all its invitations?">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="kebab-danger"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Delete Event</button>
-            </form>
+            <button type="button" class="kebab-danger" id="open-delete-event-btn"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Delete Event</button>
             {% elif role in ('cohost', 'viewer') %}
             <button type="button" id="leave-event-btn" class="kebab-danger"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Leave Event</button>
             {% endif %}
@@ -839,6 +835,28 @@
                     <button type="button" class="btn btn-small" id="copy-viewer-link">Copy</button>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if role == 'owner' %}
+<!-- Delete Event Confirmation Modal -->
+<div class="detail-overlay" id="delete-event-overlay" style="display:none">
+    <div class="detail-card" style="max-width:400px">
+        <div class="detail-card-header">
+            <span class="modal-title">Delete Event</span>
+            <button type="button" class="detail-close" id="delete-event-close">&times;</button>
+        </div>
+        <div class="detail-card-body" style="text-align:center; padding:1.5rem">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:1rem"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <p style="font-weight:600; margin-bottom:0.5rem">Delete "{{ event.name }}"?</p>
+            <p style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:1.5rem">This will move the event and all its invitations to Recently Deleted. You can restore it within 30 days.</p>
+            <form method="POST" action="{{ url_for('events.delete_event', event_id=event.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn" style="background:#EF4444; width:100%">Delete Event</button>
+            </form>
+            <button type="button" class="btn btn-secondary" style="width:100%; margin-top:0.5rem" id="delete-event-cancel">Cancel</button>
         </div>
     </div>
 </div>

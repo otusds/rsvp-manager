@@ -163,6 +163,8 @@ class Invitation(db.Model):
     sent_by_user = db.relationship("User", foreign_keys=[sent_by], lazy="select")
     status_changed_by_user = db.relationship("User", foreign_keys=[status_changed_by], lazy="select")
 
+    __table_args__ = (db.UniqueConstraint('event_id', 'guest_id', name='uq_invitation_event_guest'),)
+
     def __repr__(self):
         return f"<Invitation {self.id} event={self.event_id} guest={self.guest_id} {self.status}>"
 

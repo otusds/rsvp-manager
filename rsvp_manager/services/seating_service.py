@@ -125,8 +125,8 @@ def assign_seat(event, invitation_id, table_id, seat_position, acting_user_id=No
 
 def swap_seats(event, assignment_id_a, assignment_id_b, acting_user_id=None):
     """Swap two seated guests."""
-    a = SeatAssignment.query.get(assignment_id_a)
-    b = SeatAssignment.query.get(assignment_id_b)
+    a = db.session.get(SeatAssignment, assignment_id_a)
+    b = db.session.get(SeatAssignment, assignment_id_b)
     if not a or not b:
         raise ValueError("Assignment not found")
     if a.table.event_id != event.id or b.table.event_id != event.id:
@@ -140,7 +140,7 @@ def swap_seats(event, assignment_id_a, assignment_id_b, acting_user_id=None):
 
 
 def unseat_guest(event, assignment_id, acting_user_id=None):
-    assignment = SeatAssignment.query.get(assignment_id)
+    assignment = db.session.get(SeatAssignment, assignment_id)
     if not assignment or assignment.table.event_id != event.id:
         raise ValueError("Assignment not found")
     log_action(event.user_id, "updated_seating", "event", event.id,
@@ -151,7 +151,7 @@ def unseat_guest(event, assignment_id, acting_user_id=None):
 
 def toggle_lock(event, assignment_id, acting_user_id=None):
     """Toggle lock on a seat assignment."""
-    assignment = SeatAssignment.query.get(assignment_id)
+    assignment = db.session.get(SeatAssignment, assignment_id)
     if not assignment or assignment.table.event_id != event.id:
         raise ValueError("Assignment not found")
     assignment.is_locked = not assignment.is_locked
@@ -503,70 +503,6 @@ def _compute_ideal_pattern(seat_map, capacity, is_round, n_males_avail, n_female
                 maj_placed += 1
 
     return result
-
-
-def _adjacency_score(seat_map, pos, gender, capacity, is_round):
-    """Score how bad it would be to place `gender` at `pos`.
-
-    Lower is better. Penalizes:
-    - Each same-gender neighbor: +2
-    - Creating a run of 3+ same gender: +5 per extra
-    - Having both neighbors same gender (sandwiched): +3
-    Rewards:
-    - Each opposite-gender neighbor: -1
-    - Being next to an empty seat (neutral): 0
-    """
-    neighbors = _get_neighbors(pos, capacity, is_round)
-    same = 0
-    opposite = 0
-    for n in neighbors:
-        ng = seat_map.get(n)
-        if ng == gender:
-            same += 1
-        elif ng is not None:
-            opposite += 1
-
-    score = same * 2 - opposite
-
-    # Extra penalty: check if this creates a run of 3+
-    # Look in each direction and count consecutive same-gender
-    for direction in [-1, 1]:
-        run = 0
-        p = pos + direction
-        while True:
-            if is_round:
-                p = ((p - 1) % capacity) + 1
-            if p < 1 or p > capacity:
-                break
-            if seat_map.get(p) == gender:
-                run += 1
-                p += direction
-            else:
-                break
-            if not is_round and (p < 1 or p > capacity):
-                break
-        if run >= 2:
-            score += 5 * (run - 1)  # Heavy penalty for runs of 3+
-
-    # Penalty for being sandwiched (both neighbors same gender)
-    if same == 2:
-        score += 3
-
-    return score
-
-
-def _get_neighbors(pos, capacity, is_round):
-    """Get adjacent seat positions."""
-    neighbors = []
-    if is_round:
-        neighbors.append(((pos - 2) % capacity) + 1)
-        neighbors.append((pos % capacity) + 1)
-    else:
-        if pos > 1:
-            neighbors.append(pos - 1)
-        if pos < capacity:
-            neighbors.append(pos + 1)
-    return neighbors
 
 
 def serialize_seating_plan(event):

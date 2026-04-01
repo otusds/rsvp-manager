@@ -42,6 +42,8 @@ def toggle_send(invitation, acting_user_id=None):
 def update_status(invitation, new_status, acting_user_id=None):
     if new_status not in VALID_STATUSES:
         abort(400, description="Invalid status")
+    if invitation.status == "Not Sent":
+        abort(400, description="Cannot change status of an unsent invitation")
     if new_status != invitation.status:
         invitation.status = new_status
         invitation.status_changed_by = acting_user_id
@@ -166,16 +168,20 @@ def get_event_guests_with_status(source_event, current_event, user_id):
 
 
 def bulk_create_and_invite(event, guests_data, user_id):
+    from rsvp_manager.utils import VALID_GENDERS
     added = []
     for g_data in guests_data:
-        first_name = g_data.get("first_name", "").strip()
+        first_name = g_data.get("first_name", "").strip()[:100]
         if not first_name:
             continue
+        gender = g_data.get("gender", "Male")
+        if gender not in VALID_GENDERS:
+            gender = "Male"
         guest = Guest(
             user_id=user_id,
             first_name=first_name,
-            last_name=g_data.get("last_name", "").strip(),
-            gender=g_data.get("gender", "Male"),
+            last_name=g_data.get("last_name", "").strip()[:100],
+            gender=gender,
             notes=g_data.get("notes", "").strip(),
             date_created=datetime.now(timezone.utc)
         )

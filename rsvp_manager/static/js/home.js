@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
             newEventOverlay.style.display = "flex";
             var nameInput = document.getElementById("ne-name");
             if (nameInput) nameInput.focus();
+            validateNewEventForm();
         });
         newEventClose.addEventListener("click", function () {
             newEventOverlay.style.display = "none";
@@ -16,6 +17,24 @@ document.addEventListener("DOMContentLoaded", function () {
         newEventOverlay.addEventListener("click", function (e) {
             if (e.target === newEventOverlay) newEventOverlay.style.display = "none";
         });
+
+        // Inline validation for new event form
+        var neForm = document.getElementById("new-event-form");
+        var neSubmitBtn = neForm ? neForm.querySelector("button[type='submit']") : null;
+        function validateNewEventForm() {
+            if (!neForm || !neSubmitBtn) return;
+            var name = document.getElementById("ne-name").value.trim();
+            var dateVal = document.getElementById("ne-date").value;
+            neSubmitBtn.disabled = !name || !dateVal;
+        }
+        if (neForm) {
+            ["ne-name", "ne-date", "ne-type"].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.addEventListener("input", validateNewEventForm);
+                if (el) el.addEventListener("change", validateNewEventForm);
+            });
+            validateNewEventForm();
+        }
     }
 
     // ── Edit Event modal ─────────────────────────────────────────────────────
