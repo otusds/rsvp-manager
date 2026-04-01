@@ -18,7 +18,7 @@ class ProtectedAdminIndex(AdminIndexView):
     def index(self):
         if not _is_admin():
             return redirect(url_for("events.home"))
-        return redirect(url_for("admin_dashboard.dashboard"))
+        return redirect(url_for("admin_users.index_view"))
 
 
 class ReadOnlyModelView(ModelView):
