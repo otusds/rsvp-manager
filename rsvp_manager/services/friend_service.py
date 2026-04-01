@@ -5,8 +5,7 @@ from sqlalchemy.orm import joinedload
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Guest, Invitation
 from rsvp_manager.services.history_service import log_action
-
-VALID_GENDERS = ("Male", "Female")
+from rsvp_manager.utils import VALID_GENDERS
 
 
 GUESTS_PER_PAGE = 50

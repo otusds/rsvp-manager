@@ -1,4 +1,6 @@
-"""Shared utility functions."""
+"""Shared utility functions and constants."""
+
+VALID_GENDERS = ("Male", "Female")
 
 
 def format_date(d, fmt="display"):

@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, current_
 from flask_login import login_required, current_user
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Event, Guest, Invitation, Tag, ActivityLog, guest_tags
+from rsvp_manager.utils import VALID_GENDERS
 from rsvp_manager.services.seed_service import seed
 
 bp = Blueprint("settings", __name__)
@@ -31,7 +32,7 @@ def update_profile():
     if not first_name:
         flash("First name is required.")
         return redirect(url_for("settings.settings"))
-    if gender not in ("Male", "Female"):
+    if gender not in VALID_GENDERS:
         flash("Please select a gender.")
         return redirect(url_for("settings.settings"))
     current_user.first_name = first_name

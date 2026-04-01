@@ -5,6 +5,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from rsvp_manager.extensions import db, limiter
 from rsvp_manager.models import User, Guest
+from rsvp_manager.utils import VALID_GENDERS
 from datetime import datetime, timezone
 from rsvp_manager.services.email_service import (
     send_verification_email, verify_email_token,
@@ -28,7 +29,7 @@ def signup():
         password = request.form.get("password", "")
         if not first_name:
             return render_template("signup.html", error="First name is required")
-        if gender not in ("Male", "Female"):
+        if gender not in VALID_GENDERS:
             return render_template("signup.html", error="Please select a gender")
         if not email or "@" not in email:
             return render_template("signup.html", error="Valid email is required")
