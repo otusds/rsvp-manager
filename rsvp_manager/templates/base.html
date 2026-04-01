@@ -70,7 +70,7 @@
     </nav>
     <main>
         {% for msg in get_flashed_messages() %}
-        <div class="flash-msg">{{ msg }}</div>
+        <div class="flash-msg"><span>{{ msg }}</span><button type="button" class="flash-dismiss" onclick="this.parentElement.remove()">&times;</button></div>
         {% endfor %}
         {% block content %}{% endblock %}
     </main>

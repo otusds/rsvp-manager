@@ -35,6 +35,11 @@ if ('serviceWorker' in navigator) {
 
 document.addEventListener("DOMContentLoaded", function () {
 
+    // ── Auto-dismiss flash messages after 8 seconds ─────────────────────────
+    document.querySelectorAll(".flash-msg").forEach(function (el) {
+        setTimeout(function () { if (el.parentNode) el.remove(); }, 8000);
+    });
+
     // ── CSRF helper ─────────────────────────────────────────────────────────
     var csrfToken = (document.querySelector('meta[name="csrf-token"]') || {}).getAttribute
         ? document.querySelector('meta[name="csrf-token"]').getAttribute("content") || ""

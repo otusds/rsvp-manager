@@ -12,7 +12,7 @@
     -webkit-tap-highlight-color: transparent; user-select: none;
 }
 
-.past-events-toggle .collapse-icon { transition: transform 0.2s; font-size: 0.7rem; }
+.past-events-toggle .collapse-icon { transition: transform 0.2s; }
 .past-events-toggle.open .collapse-icon { transform: rotate(90deg); }
 
 #past-event-grid { display: none; }
