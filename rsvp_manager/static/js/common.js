@@ -73,6 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     window.handleFetchError = function (err) {
         console.error("Request failed:", err);
+        window.showToast("Something went wrong. Please try again.");
     };
 
     window.normalizeText = function (str) {
