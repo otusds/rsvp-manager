@@ -115,7 +115,7 @@
 
 .login-panel {
     flex: 1;
-    background: var(--color-surface);
+    background: var(--color-bg);
     display: flex;
     align-items: center;
     justify-content: center;
