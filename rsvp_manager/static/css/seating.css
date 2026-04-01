@@ -17,8 +17,8 @@
     top: 100%;
     left: 0;
     z-index: 20;
-    background: #fff;
-    border: 1px solid #e0e0e0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.12);
     min-width: 170px;
@@ -34,11 +34,11 @@
     background: none;
     font-size: 0.85rem;
     cursor: pointer;
-    color: #333;
+    color: var(--color-text);
 }
 
 .seating-dropdown button:hover {
-    background: #f5f5f5;
+    background: var(--color-bg-disabled);
 }
 
 .seating-dropdown button:first-child { border-radius: 8px 8px 0 0; }
@@ -46,23 +46,23 @@
 
 .seating-dropdown-divider {
     height: 1px;
-    background: #e8e8e8;
+    background: var(--color-border);
     margin: 0.2rem 0;
 }
 
-.seating-dropdown-danger { color: #d32f2f !important; }
-.seating-dropdown-danger:hover { background: #fce8e8 !important; }
+.seating-dropdown-danger { color: var(--color-danger) !important; }
+.seating-dropdown-danger:hover { background: rgba(255, 59, 48, 0.08) !important; }
 
 /* ── Unseated guests bar ─────────────────────────────────────────────────── */
 
 .seating-unseated {
     padding: 0.5rem 1rem 0.75rem;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .seating-unseated-label {
     font-size: 0.8rem;
-    color: #888;
+    color: var(--color-text-muted);
     margin-bottom: 0.4rem;
     font-weight: 500;
 }
@@ -83,33 +83,33 @@
     border: 1.5px solid transparent;
     cursor: pointer;
     transition: all 0.15s;
-    background: #f0f0f0;
-    color: #444;
+    background: var(--color-border);
+    color: var(--color-text);
 }
 
 .seating-chip-male {
-    background: #e8f0fe;
-    color: #3b6cb5;
-    border-color: #c5d8f0;
+    background: var(--color-gender-male-bg);
+    color: var(--color-gender-male);
+    border-color: var(--color-gender-male-border);
 }
 
 .seating-chip-female {
-    background: #fce8f0;
-    color: #b53b6c;
-    border-color: #f0c5d8;
+    background: var(--color-gender-female-bg);
+    color: var(--color-gender-female);
+    border-color: var(--color-gender-female-border);
 }
 
 .seating-chip:hover { filter: brightness(0.95); }
 
 .seating-chip-selected {
-    outline: 2px solid #e6a817;
+    outline: 2px solid var(--color-accent);
     outline-offset: 1px;
     box-shadow: 0 0 0 4px rgba(230,168,23,0.2);
 }
 
 .seating-none {
     font-size: 0.82rem;
-    color: #aaa;
+    color: var(--color-placeholder);
     font-style: italic;
 }
 
@@ -124,14 +124,14 @@
 
 .seating-empty {
     text-align: center;
-    color: #aaa;
+    color: var(--color-placeholder);
     padding: 2rem 1rem !important;
 }
 
 .seating-table-card {
-    border: 1px solid #e8e8e8;
+    border: 1px solid var(--color-border);
     border-radius: 10px;
-    background: #fff;
+    background: var(--color-surface);
     overflow: hidden;
 }
 
@@ -140,14 +140,14 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.55rem 0.75rem;
-    background: #fafafa;
-    border-bottom: 1px solid #f0f0f0;
+    background: var(--color-bg-secondary);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .seating-table-title {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #444;
+    color: var(--color-text);
 }
 
 .seating-table-actions {
@@ -160,14 +160,14 @@
     border: none;
     padding: 0.25rem;
     cursor: pointer;
-    color: #888;
+    color: var(--color-text-muted);
     border-radius: 4px;
     transition: color 0.15s, background 0.15s;
 }
 
-.seating-action-btn:hover { background: #f0f0f0; color: #555; }
-.seating-action-active { color: #e6a817 !important; }
-.seating-action-danger:hover { color: #d32f2f; background: #fce8e8; }
+.seating-action-btn:hover { background: var(--color-border); color: var(--color-text-secondary); }
+.seating-action-active { color: var(--color-accent) !important; }
+.seating-action-danger:hover { color: var(--color-danger); background: rgba(255, 59, 48, 0.08); }
 
 /* ── SVG ─────────────────────────────────────────────────────────────────── */
 
@@ -187,20 +187,20 @@
 .seating-seat { transition: opacity 0.15s; }
 
 .seating-seat-empty:hover circle {
-    fill: #e8e8e8;
-    stroke: #999;
+    fill: var(--color-border);
+    stroke: var(--color-text-muted);
 }
 
 .seating-seat-highlight circle {
-    fill: #fef9e7 !important;
-    stroke: #e6a817 !important;
+    fill: var(--color-accent-pale) !important;
+    stroke: var(--color-accent) !important;
     stroke-dasharray: none !important;
 }
 
 .seating-seat-filled:hover circle { filter: brightness(0.92); }
 
 .seating-seat-swap-highlight circle {
-    stroke: #e6a817 !important;
+    stroke: var(--color-accent) !important;
     stroke-width: 3 !important;
 }
 
@@ -219,8 +219,8 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    border: 2px solid #ccc;
-    background: #fff;
+    border: 2px solid var(--color-placeholder);
+    background: var(--color-surface);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -233,21 +233,21 @@
 .seating-action-circle:hover { transform: scale(1.1); }
 
 .seating-action-circle-x {
-    border-color: #e57373;
-    color: #d32f2f;
+    border-color: var(--color-danger);
+    color: var(--color-danger);
 }
-.seating-action-circle-x:hover { background: #fce8e8; }
+.seating-action-circle-x:hover { background: rgba(255, 59, 48, 0.08); }
 
 .seating-action-circle-lock {
-    border-color: #bbb;
-    color: #888;
+    border-color: var(--color-placeholder);
+    color: var(--color-text-muted);
 }
-.seating-action-circle-lock:hover { background: #f5f5f5; }
+.seating-action-circle-lock:hover { background: var(--color-bg-disabled); }
 
 .seating-action-circle-locked {
-    border-color: #e6a817;
-    color: #e6a817;
-    background: #fef9e7;
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background: var(--color-accent-pale);
 }
 
 /* ── Shape picker (modal) ────────────────────────────────────────────────── */
@@ -265,22 +265,22 @@
     align-items: center;
     gap: 0.35rem;
     padding: 0.6rem 0.4rem;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--color-border);
     border-radius: 10px;
-    background: #fff;
+    background: var(--color-surface);
     cursor: pointer;
     transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
 .seating-shape-option:hover {
-    border-color: #bbb;
-    background: #fafafa;
+    border-color: var(--color-placeholder);
+    background: var(--color-bg-secondary);
 }
 
 .seating-shape-option.active {
-    border-color: var(--color-primary, #4caf50);
-    background: #f0faf0;
-    box-shadow: 0 0 0 3px rgba(76,175,80,0.15);
+    border-color: var(--color-primary);
+    background: var(--color-primary-bg);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
 }
 
 .seating-shape-icon {
@@ -291,18 +291,18 @@
 .seating-shape-option span {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #555;
+    color: var(--color-text-secondary);
 }
 
 .seating-shape-option.active span {
-    color: var(--color-primary, #4caf50);
+    color: var(--color-primary);
 }
 
 /* ── Modal preview ───────────────────────────────────────────────────────── */
 
 .seating-modal-preview {
-    background: #fafafa;
-    border: 1px solid #eee;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     padding: 0.5rem;
     min-height: 80px;
@@ -336,22 +336,22 @@
     cursor: pointer;
     transition: filter 0.15s;
     border: 1.5px solid transparent;
-    background: #f0f0f0;
-    color: #444;
+    background: var(--color-border);
+    color: var(--color-text);
 }
 
 .seating-picker-item:hover { filter: brightness(0.93); }
 
 .seating-picker-item.seating-chip-male {
-    background: #e8f0fe;
-    color: #3b6cb5;
-    border-color: #c5d8f0;
+    background: var(--color-gender-male-bg);
+    color: var(--color-gender-male);
+    border-color: var(--color-gender-male-border);
 }
 
 .seating-picker-item.seating-chip-female {
-    background: #fce8f0;
-    color: #b53b6c;
-    border-color: #f0c5d8;
+    background: var(--color-gender-female-bg);
+    color: var(--color-gender-female);
+    border-color: var(--color-gender-female-border);
 }
 
 

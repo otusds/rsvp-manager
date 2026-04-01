@@ -30,6 +30,14 @@
     --color-danger: #ff3b30;
     --color-danger-dark: #d70015;
 
+    /* ── Status (RSVP) ── */
+    --color-status-attending: #34c759;
+    --color-status-attending-bg: rgba(52,199,89,0.12);
+    --color-status-pending: #ff9500;
+    --color-status-pending-bg: rgba(255,149,0,0.12);
+    --color-status-declined: #ff3b30;
+    --color-status-declined-bg: rgba(255,59,48,0.12);
+
     /* ── Event type badges ── */
     --color-badge-dinner: #af52de;
     --color-badge-party: #ff9500;
@@ -40,6 +48,24 @@
     /* ── Gender ── */
     --color-gender-male: #0055cc;
     --color-gender-female: #cc0029;
+    --color-gender-male-bg: #e8f0fe;
+    --color-gender-male-border: #c5d8f0;
+    --color-gender-female-bg: #fce8f0;
+    --color-gender-female-border: #f0c5d8;
+
+    /* ── Accent (highlights) ── */
+    --color-accent: #e6a817;
+    --color-accent-pale: #fef9e7;
+
+    /* ── Accent (seating highlights) ── */
+    --color-accent: #e6a817;
+    --color-accent-pale: #fef9e7;
+
+    /* ── Gender chip variants ── */
+    --color-gender-male-bg: #e8f0fe;
+    --color-gender-male-border: #c5d8f0;
+    --color-gender-female-bg: #fce8f0;
+    --color-gender-female-border: #f0c5d8;
 }
 
 /* ── Reset & Base ──────────────────────────────────────────────────────────── */

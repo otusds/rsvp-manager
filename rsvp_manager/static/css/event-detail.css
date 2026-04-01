@@ -564,18 +564,18 @@
 }
 
 .event-guest-status.status-attending {
-    background: rgba(52,199,89,0.12);
-    color: var(--color-success-dark);
+    background: var(--color-status-attending-bg);
+    color: var(--color-status-attending);
 }
 
 .event-guest-status.status-pending {
-    background: rgba(255,149,0,0.12);
-    color: var(--color-warning-dark);
+    background: var(--color-status-pending-bg);
+    color: var(--color-status-pending);
 }
 
 .event-guest-status.status-declined {
-    background: rgba(255,59,48,0.12);
-    color: var(--color-danger-dark);
+    background: var(--color-status-declined-bg);
+    color: var(--color-status-declined);
 }
 
 .event-guest-status.status-not-sent {
@@ -715,9 +715,9 @@ tr[data-is-me="true"] td {
     border-radius: 10px;
     white-space: nowrap;
 }
-.status-tag-attending { background: #DCFCE7; color: #15803D; }
-.status-tag-pending { background: #FEF9C3; color: #A16207; }
-.status-tag-declined { background: #FFE4E6; color: #BE123C; }
+.status-tag-attending { background: var(--color-status-attending-bg); color: var(--color-status-attending); }
+.status-tag-pending { background: var(--color-status-pending-bg); color: var(--color-status-pending); }
+.status-tag-declined { background: var(--color-status-declined-bg); color: var(--color-status-declined); }
 .guest-detail-dates { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.5rem; }
 
 /* ── Invitation Detail layout ─────────────────────────────────────────────── */
