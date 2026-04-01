@@ -66,8 +66,6 @@
             {% if current_user.email.lower() in config.get('ADMIN_EMAILS', []) %}
             <div class="hamburger-divider"></div>
             <a href="{{ url_for('admin_dashboard.dashboard') }}">Admin Dashboard</a>
-            <a href="/admin/db/">Database Browser</a>
-            <a href="{{ url_for('admin_dashboard.public_stats') }}">Public Stats API</a>
             {% endif %}
             <div class="hamburger-divider"></div>
             <form method="POST" action="{{ url_for('auth.logout') }}" class="inline">
