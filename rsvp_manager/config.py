@@ -32,6 +32,8 @@ class Config:
     UMAMI_WEBSITE_ID = os.environ.get("UMAMI_WEBSITE_ID", "")
     UMAMI_DOMAINS = os.environ.get("UMAMI_DOMAINS", "")
 
+    ADMIN_EMAILS = [e.strip().lower() for e in os.environ.get("ADMIN_EMAILS", "").split(",") if e.strip()]
+
     if os.environ.get("DATABASE_URL"):
         _missing = [v for v in ("SECRET_KEY",) if not os.environ.get(v)]
         if _missing:
@@ -54,3 +56,4 @@ class TestConfig:
     EMAIL_DEFAULT_SENDER = "test@resend.dev"
     RATELIMIT_ENABLED = False
     APP_ENV = "staging"
+    ADMIN_EMAILS = []

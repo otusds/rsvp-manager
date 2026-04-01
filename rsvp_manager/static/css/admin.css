@@ -1,0 +1,93 @@
+/* ── Admin Dashboard ──────────────────────────────────────────────────────── */
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.admin-card {
+    background: var(--color-surface);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.admin-card h2 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 1rem;
+}
+
+.admin-stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+}
+
+.admin-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.admin-stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.2;
+}
+
+.admin-stat-label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+.admin-stat-green { color: var(--color-status-attending); }
+.admin-stat-amber { color: var(--color-status-pending); }
+.admin-stat-red { color: var(--color-status-declined); }
+.admin-stat-blue { color: #007aff; }
+.admin-stat-muted { color: var(--color-placeholder); }
+
+.admin-meta {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+}
+
+.admin-footer {
+    margin-top: 1rem;
+}
+
+.admin-footer h2 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.admin-hint {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+}
+
+.admin-hint code {
+    background: var(--color-bg-secondary);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+}
+
+@media (max-width: 600px) {
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+}
