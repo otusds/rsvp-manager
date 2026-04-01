@@ -5,6 +5,9 @@
     var indicator = null;
 
     document.addEventListener("touchstart", function (e) {
+        // Don't activate when a modal/overlay is open
+        var overlay = document.querySelector(".detail-overlay[style*='flex']");
+        if (overlay) return;
         if (window.scrollY === 0) {
             startY = e.touches[0].pageY;
             pulling = true;
