@@ -51,31 +51,34 @@ def export_guests_xlsx(guests):
     return _to_download(wb, "guests.xlsx")
 
 
-def _get_seating_label(inv):
-    """Get seating assignment label for an invitation, e.g. 'Head Table - Seat 3'."""
-    # seat_assignment is a list via backref (one-to-many, but unique constraint means max 1)
+def _get_seating_info(inv):
+    """Get table name and seat number separately for an invitation."""
     assignments = inv.seat_assignment
     if not assignments:
-        return ""
+        return "", ""
     sa = assignments[0] if isinstance(assignments, list) else assignments
     table = sa.table
     label = table.label or ("Table " + str(table.table_number))
-    return label + " - Seat " + str(sa.seat_position)
+    return label, str(sa.seat_position)
 
 
 def export_event_guests_xlsx(event):
     wb = Workbook()
     ws = _styled_sheet(wb, event.name[:31],
-                       ["Last Name", "First Name", "Gender", "Sent",
-                        "Invited On", "Status", "Responded On", "Seating", "Inv. Notes", "Guest Notes"])
+                       ["Last Name", "First Name", "Gender", "Tags", "Sent",
+                        "Invited On", "Status", "Responded On", "Table", "Seat", "Inv. Notes", "Guest Notes"])
     for inv in event.invitations:
         g = inv.guest
+        if g.deleted_at:
+            continue
         sent = "Yes" if inv.status != "Not Sent" else "No"
-        ws.append([g.last_name or "", g.first_name, g.gender, sent,
+        tags = ", ".join(t.name for t in g.tags if not t.deleted_at)
+        table_name, seat_num = _get_seating_info(inv)
+        ws.append([g.last_name or "", g.first_name, g.gender, tags, sent,
                    inv.date_invited.strftime("%Y-%m-%d") if inv.date_invited else "",
                    inv.status,
                    inv.date_responded.strftime("%Y-%m-%d") if inv.date_responded else "",
-                   _get_seating_label(inv),
+                   table_name, seat_num,
                    inv.notes or "", g.notes or ""])
     for col in ws.columns:
         ws.column_dimensions[col[0].column_letter].width = 18
