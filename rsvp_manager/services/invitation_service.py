@@ -42,6 +42,8 @@ def toggle_send(invitation, acting_user_id=None):
 def update_status(invitation, new_status, acting_user_id=None):
     if new_status not in VALID_STATUSES:
         abort(400, description="Invalid status")
+    if invitation.status == "Not Sent":
+        abort(400, description="Cannot change status of an unsent invitation")
     if new_status != invitation.status:
         invitation.status = new_status
         invitation.status_changed_by = acting_user_id

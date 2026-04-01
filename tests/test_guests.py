@@ -82,10 +82,10 @@ class TestGuestNameAPI:
             assert g.date_edited is not None
 
     def test_update_name_empty_first(self, logged_in_client, sample_guest, test_app):
-        # Empty first_name - the API accepts it (no validation)
+        # Empty first_name is now rejected with 400
         r = logged_in_client.post(f"/api/friend/{sample_guest}/name",
             json={"first_name": "", "last_name": "Jones"})
-        assert r.status_code == 200
+        assert r.status_code == 400
 
     def test_update_name_other_user(self, logged_in_client, test_app, user2):
         with test_app.app_context():
@@ -150,8 +150,8 @@ class TestGuestNotesAPI:
             json={"notes": long_notes})
         assert r.status_code == 200
         with test_app.app_context():
-            g = db.session.get(Guest,sample_guest)
-            assert len(g.notes) == 10000
+            g = db.session.get(Guest, sample_guest)
+            assert len(g.notes) == 5000  # capped at 5000 chars
 
 
 class TestGuestIsMeAPI:

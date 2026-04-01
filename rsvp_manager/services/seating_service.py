@@ -125,8 +125,8 @@ def assign_seat(event, invitation_id, table_id, seat_position, acting_user_id=No
 
 def swap_seats(event, assignment_id_a, assignment_id_b, acting_user_id=None):
     """Swap two seated guests."""
-    a = SeatAssignment.query.get(assignment_id_a)
-    b = SeatAssignment.query.get(assignment_id_b)
+    a = db.session.get(SeatAssignment, assignment_id_a)
+    b = db.session.get(SeatAssignment, assignment_id_b)
     if not a or not b:
         raise ValueError("Assignment not found")
     if a.table.event_id != event.id or b.table.event_id != event.id:
@@ -140,7 +140,7 @@ def swap_seats(event, assignment_id_a, assignment_id_b, acting_user_id=None):
 
 
 def unseat_guest(event, assignment_id, acting_user_id=None):
-    assignment = SeatAssignment.query.get(assignment_id)
+    assignment = db.session.get(SeatAssignment, assignment_id)
     if not assignment or assignment.table.event_id != event.id:
         raise ValueError("Assignment not found")
     log_action(event.user_id, "updated_seating", "event", event.id,
@@ -151,7 +151,7 @@ def unseat_guest(event, assignment_id, acting_user_id=None):
 
 def toggle_lock(event, assignment_id, acting_user_id=None):
     """Toggle lock on a seat assignment."""
-    assignment = SeatAssignment.query.get(assignment_id)
+    assignment = db.session.get(SeatAssignment, assignment_id)
     if not assignment or assignment.table.event_id != event.id:
         raise ValueError("Assignment not found")
     assignment.is_locked = not assignment.is_locked
