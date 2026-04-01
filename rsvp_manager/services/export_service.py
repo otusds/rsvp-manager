@@ -106,7 +106,7 @@ def export_event_guests_text(event):
     lines = []
     lines.append(f"{event.name} ({event.date.strftime('%d %B %Y')})")
     summary = f"✅ {len(attending)} attending"
-    if len(pending) > 0:
+    if pending:
         summary += f" · 🟠 {len(pending)} pending"
     lines.append(summary)
     lines.append("")
