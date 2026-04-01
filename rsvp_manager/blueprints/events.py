@@ -60,10 +60,9 @@ def edit_event(event_id):
 @login_required
 def duplicate_event(event_id):
     event, role = require_event_access(event_id, current_user.id, min_role="cohost")
-    from datetime import date as date_cls
     new_date_str = request.form.get("date", "")
     try:
-        new_date = date_cls.fromisoformat(new_date_str) if new_date_str else None
+        new_date = date.fromisoformat(new_date_str) if new_date_str else None
     except ValueError:
         new_date = None
     reset_status = request.form.get("reset_status", "reset") == "reset"

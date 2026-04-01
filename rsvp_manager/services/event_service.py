@@ -31,7 +31,6 @@ def get_authorized_event(event_id, user_id):
     return event, role
 
 
-# Keep backward compatibility — routes that haven't been updated yet
 def get_owned_event_or_404(event_id, user_id):
     event, role = get_authorized_event(event_id, user_id)
     return event
@@ -47,7 +46,6 @@ def get_user_locations(user_id):
 
 def check_me_exists(user_id):
     return Guest.query.filter_by(user_id=user_id, is_me=True).filter(Guest.deleted_at.is_(None)).first() is not None
-
 
 
 def _validate_event_fields(form_data):
