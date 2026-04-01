@@ -368,6 +368,11 @@
 .add-guest-alt-actions .btn {
     flex: 1;
     text-align: center;
+    background: rgba(16,185,129,0.15);
+    color: var(--color-primary);
+}
+.add-guest-alt-actions .btn:hover {
+    background: rgba(16,185,129,0.25);
 }
 /* Remove bottom border on last row inside add-guest table */
 .add-guest-table tr td { border-bottom: none; }
