@@ -166,6 +166,20 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // ── Inline save indicator ────────────────────────────────────────────
+    function showInlineSaved(row) {
+        var existing = row.querySelector(".inline-saved");
+        if (existing) existing.remove();
+        var el = document.createElement("span");
+        el.className = "inline-saved";
+        el.textContent = "Saved";
+        el.style.cssText = "position:absolute;right:0.5rem;top:50%;transform:translateY(-50%);font-size:0.7rem;color:var(--color-primary);font-weight:500;opacity:1;transition:opacity 0.3s;pointer-events:none";
+        row.style.position = "relative";
+        row.appendChild(el);
+        setTimeout(function () { el.style.opacity = "0"; }, 1200);
+        setTimeout(function () { if (el.parentNode) el.remove(); }, 1600);
+    }
+
     // ── Inline editing helpers ────────────────────────────────────────────
 
     function updateGenderTagColor(select) {
@@ -214,7 +228,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ first_name: firstName, last_name: lastName })
-                    }).catch(window.handleFetchError);
+                    }).then(function () { showInlineSaved(row); }).catch(window.handleFetchError);
                 });
             });
         }
@@ -245,7 +259,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ gender: genderSelect.value })
-                    }).catch(window.handleFetchError);
+                    }).then(function () { showInlineSaved(row); }).catch(window.handleFetchError);
                 });
             }
         }
@@ -266,7 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             method: "PUT",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ notes: notesInput.value.trim() })
-                        }).catch(window.handleFetchError);
+                        }).then(function () { showInlineSaved(row); }).catch(window.handleFetchError);
                     }, 500);
                 });
             }

@@ -30,8 +30,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/seating.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}?v={{ v }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {% if umami_script_url and umami_website_id %}
+    <script async defer src="{{ umami_script_url }}" data-website-id="{{ umami_website_id }}"{% if umami_domains %} data-domains="{{ umami_domains }}"{% endif %}></script>
+    {% endif %}
 </head>
-<body{% if current_user.is_authenticated %} data-user-id="{{ current_user.id }}" data-user-name="{{ current_user.full_name }}"{% endif %}>
+<body{% if current_user.is_authenticated %} data-user-id="{{ current_user.id }}" data-user-name="{{ current_user.full_name }}"{% endif %}{% if track_event %} data-track-event="{{ track_event }}"{% endif %}>
     <nav>
         {% block logo %}<a href="{{ url_for('events.home') }}" class="logo">
             <svg viewBox="0 0 240 48" width="170" height="34" xmlns="http://www.w3.org/2000/svg">
@@ -70,7 +73,7 @@
     </nav>
     <main>
         {% for msg in get_flashed_messages() %}
-        <div class="flash-msg">{{ msg }}</div>
+        <div class="flash-msg"><span>{{ msg }}</span><button type="button" class="flash-dismiss" onclick="this.parentElement.remove()">&times;</button></div>
         {% endfor %}
         {% block content %}{% endblock %}
     </main>

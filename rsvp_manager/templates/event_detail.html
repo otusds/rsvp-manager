@@ -43,7 +43,7 @@
 {% set female_inv = all_inv|selectattr('guest.gender', 'equalto', 'Female')|list %}
 <div class="collapsible section">
     <div class="collapsible-header">
-        <span class="collapse-icon">▼</span>
+        <svg class="collapse-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         <h2>Attendance Summary</h2>
     </div>
     <div class="collapsible-body">
@@ -106,7 +106,7 @@
 <!-- Guest List -->
 <div class="collapsible section">
     <div class="collapsible-header">
-        <span class="collapse-icon">▼</span>
+        <svg class="collapse-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         <h2 id="guest-list-heading">Guest List ({{ event.invitations|rejectattr('guest.deleted_at')|list|length }})</h2>
     </div>
     <div class="collapsible-body">
@@ -273,7 +273,7 @@
 <!-- Seating Plan -->
 <div class="collapsible section collapsed" id="seating-section">
     <div class="collapsible-header">
-        <span class="collapse-icon">▼</span>
+        <svg class="collapse-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         <h2>Seating Plan <span id="seating-header-count" style="font-size:0.55em;font-weight:500;color:#999;vertical-align:middle"></span></h2>
     </div>
     <div class="collapsible-body">
@@ -843,20 +843,20 @@
 {% if role == 'owner' %}
 <!-- Delete Event Confirmation Modal -->
 <div class="detail-overlay" id="delete-event-overlay" style="display:none">
-    <div class="detail-card" style="max-width:400px">
+    <div class="detail-card detail-card-narrow">
         <div class="detail-card-header">
             <span class="modal-title">Delete Event</span>
             <button type="button" class="detail-close" id="delete-event-close">&times;</button>
         </div>
-        <div class="detail-card-body" style="text-align:center; padding:1.5rem">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:1rem"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            <p style="font-weight:600; margin-bottom:0.5rem">Delete "{{ event.name }}"?</p>
-            <p style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:1.5rem">This will move the event and all its invitations to Recently Deleted. You can restore it within 30 days.</p>
+        <div class="detail-card-body confirm-body">
+            <svg class="empty-state-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <p class="confirm-name">Delete "{{ event.name }}"?</p>
+            <p class="confirm-sub">This will move the event and all its invitations to Recently Deleted. You can restore it within 30 days.</p>
             <form method="POST" action="{{ url_for('events.delete_event', event_id=event.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn" style="background:#EF4444; width:100%">Delete Event</button>
+                <button type="submit" class="btn btn-danger-full">Delete Event</button>
             </form>
-            <button type="button" class="btn btn-secondary" style="width:100%; margin-top:0.5rem" id="delete-event-cancel">Cancel</button>
+            <button type="button" class="btn btn-secondary btn-cancel-full" id="delete-event-cancel">Cancel</button>
         </div>
     </div>
 </div>

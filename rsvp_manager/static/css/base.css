@@ -30,6 +30,14 @@
     --color-danger: #ff3b30;
     --color-danger-dark: #d70015;
 
+    /* ── Status (RSVP) ── */
+    --color-status-attending: #34c759;
+    --color-status-attending-bg: rgba(52,199,89,0.12);
+    --color-status-pending: #ff9500;
+    --color-status-pending-bg: rgba(255,149,0,0.12);
+    --color-status-declined: #ff3b30;
+    --color-status-declined-bg: rgba(255,59,48,0.12);
+
     /* ── Event type badges ── */
     --color-badge-dinner: #af52de;
     --color-badge-party: #ff9500;
@@ -40,10 +48,28 @@
     /* ── Gender ── */
     --color-gender-male: #0055cc;
     --color-gender-female: #cc0029;
+    --color-gender-male-bg: #e8f0fe;
+    --color-gender-male-border: #c5d8f0;
+    --color-gender-female-bg: #fce8f0;
+    --color-gender-female-border: #f0c5d8;
+
+    /* ── Accent (highlights) ── */
+    --color-accent: #e6a817;
+    --color-accent-pale: #fef9e7;
+
+    /* ── Gender chip variants ── */
+    --color-gender-male-bg: #e8f0fe;
+    --color-gender-male-border: #c5d8f0;
+    --color-gender-female-bg: #fce8f0;
+    --color-gender-female-border: #f0c5d8;
 }
 
 /* ── Reset & Base ──────────────────────────────────────────────────────────── */
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── Global focus & accent ────────────────────────────────────────────────── */
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 4px; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--color-primary); }
 
 body {
     font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
@@ -260,12 +286,13 @@ h2 {
 
 .btn:hover { background: var(--color-primary-hover); }
 .btn:active { transform: scale(0.96); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; background: var(--color-bg-disabled); color: var(--color-text-muted); transform: none; }
 
 .btn-secondary {
     background: rgba(16,185,129,0.1);
     color: var(--color-primary);
 }
-.btn-secondary:hover { background: rgba(16,185,129,0.18); color: var(--color-primary-dark); }
+.btn-secondary:hover { background: rgba(16,185,129,0.18); color: var(--color-primary-hover); }
 
 .btn-danger { background: var(--color-danger); }
 .btn-danger:hover { background: var(--color-danger-dark); }
@@ -321,10 +348,26 @@ h2 {
     color: var(--color-primary-dark);
     padding: 0.6rem 1rem;
     border-radius: 8px;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     font-weight: 500;
     margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    animation: toast-in 0.2s ease;
 }
+.flash-dismiss {
+    background: none;
+    border: none;
+    color: var(--color-primary-dark);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    opacity: 0.6;
+    line-height: 1;
+}
+.flash-dismiss:hover { opacity: 1; }
 
 /* ── Empty state ───────────────────────────────────────────────────────────── */
 .empty {
@@ -344,7 +387,7 @@ h2 {
 .empty-state-icon {
     display: block;
     margin: 0 auto 16px;
-    color: #c7c7cc;
+    color: var(--color-placeholder);
 }
 .empty-state-title {
     font-size: 1.1rem;

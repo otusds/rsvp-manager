@@ -1,6 +1,6 @@
 import logging
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from rsvp_manager.extensions import db, limiter
@@ -52,6 +52,7 @@ def signup():
             logger.exception("Failed to send verification email to %s", email)
         login_user(user)
         logger.info("New user signed up: %s", email)
+        session["_track"] = "user-signed-up"
         flash("Account created! Check your email to verify your address.")
         return redirect(url_for("events.home"))
     return render_template("signup.html")
@@ -72,6 +73,7 @@ def login():
             return render_template("login.html", error="Invalid email or password")
         login_user(user, remember=remember)
         logger.info("User logged in: %s", email)
+        session["_track"] = "user-logged-in"
         next_page = request.args.get("next")
         if next_page and (not next_page.startswith("/") or next_page.startswith("//")):
             next_page = None

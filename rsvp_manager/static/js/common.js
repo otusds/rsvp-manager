@@ -35,6 +35,11 @@ if ('serviceWorker' in navigator) {
 
 document.addEventListener("DOMContentLoaded", function () {
 
+    // ── Auto-dismiss flash messages after 8 seconds ─────────────────────────
+    document.querySelectorAll(".flash-msg").forEach(function (el) {
+        setTimeout(function () { if (el.parentNode) el.remove(); }, 8000);
+    });
+
     // ── CSRF helper ─────────────────────────────────────────────────────────
     var csrfToken = (document.querySelector('meta[name="csrf-token"]') || {}).getAttribute
         ? document.querySelector('meta[name="csrf-token"]').getAttribute("content") || ""
@@ -64,10 +69,24 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // ── Analytics helper ──────────────────────────────────────────────────────
+    window.trackEvent = function (name, data) {
+        if (typeof umami !== "undefined" && umami.track) {
+            try { umami.track(name, data || {}); } catch (e) { /* ignore */ }
+        }
+    };
+
+    // Fire deferred analytics events (server-side redirect tracking via data attribute)
+    var bodyTrackEvent = document.body.getAttribute("data-track-event");
+    if (bodyTrackEvent) {
+        window.trackEvent(bodyTrackEvent);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     window.handleFetchError = function (err) {
         console.error("Request failed:", err);
+        window.showToast("Something went wrong. Please try again.");
     };
 
     window.normalizeText = function (str) {
@@ -524,12 +543,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 Promise.all(promises)
                     .then(function (results) {
                         var tbody = document.querySelector("#invitations-table tbody");
+                        var totalAdded = 0;
                         results.forEach(function (resp) {
                             resp.data.forEach(function (g) {
                                 var tr = window.buildInvitationRow(g);
                                 tbody.appendChild(tr);
+                                totalAdded++;
                             });
                         });
+                        if (newGuests.length > 0) window.trackEvent("guest-added-bulk", { count: newGuests.length });
+                        if (existingIds.length > 0) window.trackEvent("guest-added", { count: existingIds.length });
                         window.refreshSummary();
                         addGuestOverlay.style.display = "none";
                     })
@@ -549,7 +572,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(function (resp) {
                     var count = resp.data.length;
                     if (count > 0) {
-                        // Store toast message for display after reload
+                        window.trackEvent("guest-added-bulk", { count: count });
                         sessionStorage.setItem("toast", count + " guest" + (count > 1 ? "s" : "") + " added");
                         location.reload();
                     } else {

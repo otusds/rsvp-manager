@@ -205,6 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     row.setAttribute("data-sent", "true");
                     row.setAttribute("data-date-invited", data.date_invited);
                     row.setAttribute("data-date-invited-iso", data.date_invited_iso);
+                    window.trackEvent("invitation-sent");
                 }
                 statusCell.innerHTML = window.buildStatusHtml(invId, data.status);
                 var newSel = statusCell.querySelector(".status-select");
@@ -233,6 +234,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 var data = resp.data;
                 row.setAttribute("data-date-responded", data.date_responded || "");
                 row.setAttribute("data-date-responded-iso", data.date_responded_iso || "");
+                var statusMap = { "Attending": "accepted", "Declined": "declined", "Pending": "maybe" };
+                window.trackEvent("rsvp-received", { status: statusMap[select.value] || select.value.toLowerCase() });
                 window.refreshSummary();
             })
             .catch(window.handleFetchError);

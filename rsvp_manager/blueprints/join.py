@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, session
 from flask_login import login_required, current_user
 from rsvp_manager.extensions import limiter
 from rsvp_manager.models import EventShareLink, Event
@@ -35,4 +35,5 @@ def accept_join(token):
     event, role = cohost_service.join_event(token, current_user.id)
     if not event:
         return render_template("join.html", error="This share link is invalid or has been disabled.")
+    session["_track"] = "cohost-added"
     return redirect(url_for("events.event_detail", event_id=event.id))

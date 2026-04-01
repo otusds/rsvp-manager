@@ -268,26 +268,26 @@ textarea.inline-edit {
 /* ── Color-coded status selects ───────────────────────────────────────────── */
 .status-select[value="Attending"],
 select.status-attending {
-    background: rgba(52,199,89,0.12) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%23248a3d' d='M5 6L0 0h10z'/%3E%3C/svg%3E") no-repeat right 0.35rem center;
-    color: var(--color-success-dark);
+    background: var(--color-status-attending-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%23248a3d' d='M5 6L0 0h10z'/%3E%3C/svg%3E") no-repeat right 0.35rem center;
+    color: var(--color-status-attending);
     font-weight: 600;
-    border-color: rgba(52,199,89,0.2);
+    border-color: var(--color-status-attending);
 }
 
 .status-select[value="Pending"],
 select.status-pending {
-    background: rgba(255,149,0,0.12) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%23c77d00' d='M5 6L0 0h10z'/%3E%3C/svg%3E") no-repeat right 0.35rem center;
-    color: var(--color-warning-dark);
+    background: var(--color-status-pending-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%23c77d00' d='M5 6L0 0h10z'/%3E%3C/svg%3E") no-repeat right 0.35rem center;
+    color: var(--color-status-pending);
     font-weight: 600;
-    border-color: rgba(255,149,0,0.2);
+    border-color: var(--color-status-pending);
 }
 
 .status-select[value="Declined"],
 select.status-declined {
-    background: rgba(255,59,48,0.12) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%23d70015' d='M5 6L0 0h10z'/%3E%3C/svg%3E") no-repeat right 0.35rem center;
-    color: var(--color-danger-dark);
+    background: var(--color-status-declined-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath fill='%23d70015' d='M5 6L0 0h10z'/%3E%3C/svg%3E") no-repeat right 0.35rem center;
+    color: var(--color-status-declined);
     font-weight: 600;
-    border-color: rgba(255,59,48,0.2);
+    border-color: var(--color-status-declined);
 }
 
 /* ── Kebab (3-dot) menu ──────────────────────────────────────────────────── */
