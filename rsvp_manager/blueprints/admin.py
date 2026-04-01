@@ -168,8 +168,6 @@ def public_stats():
         "total_events": Event.query.filter(Event.deleted_at.is_(None)).count(),
         "total_friends": Guest.query.filter(Guest.deleted_at.is_(None)).count(),
         "total_invitations": Invitation.query.count(),
-        "total_attending": Invitation.query.filter_by(status="Attending").count(),
-        "events_with_seating": db.session.query(SeatingTable.event_id).distinct().count(),
     }
     _stats_cache["data"] = data
     _stats_cache["expires"] = now + timedelta(hours=1)
