@@ -56,12 +56,6 @@
     /* ── Accent (highlights) ── */
     --color-accent: #e6a817;
     --color-accent-pale: #fef9e7;
-
-    /* ── Gender chip variants ── */
-    --color-gender-male-bg: #e8f0fe;
-    --color-gender-male-border: #c5d8f0;
-    --color-gender-female-bg: #fce8f0;
-    --color-gender-female-border: #f0c5d8;
 }
 
 /* ── Reset & Base ──────────────────────────────────────────────────────────── */
