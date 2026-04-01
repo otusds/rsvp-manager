@@ -166,12 +166,15 @@
         text-overflow: ellipsis;
     }
     /* Disable inline editing appearance on mobile */
-    .inline-edit[readonly],
-    .inline-select:disabled {
+    .inline-edit[readonly] {
         pointer-events: none;
         border-color: transparent;
         background: transparent;
         color: var(--color-text);
+    }
+    .inline-select:disabled {
+        pointer-events: none;
+        border-color: transparent;
         opacity: 1;
         -webkit-appearance: none;
     }
