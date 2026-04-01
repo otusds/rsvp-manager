@@ -977,6 +977,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 return Promise.resolve();
             });
 
+            var actionLabel = action;
+            var rowCount = rows.length;
             Promise.all(promises).then(function () {
                 window.refreshSummary();
                 batchActionSelect.value = "";
@@ -985,6 +987,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (cb) cb.checked = false;
                 });
                 updateBatchCount();
+                var labels = { send: "marked as sent", unsend: "marked as unsent", attending: "marked as attending", pending: "marked as pending", declined: "marked as declined", remove: "removed" };
+                window.showToast(rowCount + " guest" + (rowCount > 1 ? "s" : "") + " " + (labels[actionLabel] || actionLabel));
             }).catch(window.handleFetchError);
         });
     }
@@ -1657,6 +1661,24 @@ document.addEventListener("DOMContentLoaded", function () {
                 eventGuestsOverlay.style.display = "none";
             })
             .catch(window.handleFetchError);
+        });
+    }
+
+    // ── Delete Event confirmation modal ─────────────────────────────────────
+    var openDeleteBtn = document.getElementById("open-delete-event-btn");
+    var deleteOverlay = document.getElementById("delete-event-overlay");
+    var deleteClose = document.getElementById("delete-event-close");
+    var deleteCancel = document.getElementById("delete-event-cancel");
+    if (openDeleteBtn && deleteOverlay) {
+        openDeleteBtn.addEventListener("click", function () {
+            var menu = openDeleteBtn.closest(".kebab-menu");
+            if (menu) menu.classList.remove("open");
+            deleteOverlay.style.display = "flex";
+        });
+        deleteClose.addEventListener("click", function () { deleteOverlay.style.display = "none"; });
+        deleteCancel.addEventListener("click", function () { deleteOverlay.style.display = "none"; });
+        deleteOverlay.addEventListener("click", function (e) {
+            if (e.target === deleteOverlay) deleteOverlay.style.display = "none";
         });
     }
 

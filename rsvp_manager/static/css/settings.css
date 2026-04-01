@@ -30,6 +30,7 @@
 .join-card h2 { font-size: 1.2rem; margin-bottom: 0.75rem; }
 .join-event-name { font-size: 1.1rem; font-weight: 600; color: var(--color-text); }
 .join-meta { font-size: 0.85rem; color: var(--color-text-muted); margin: 0.25rem 0 0.75rem; }
-.join-role { font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 1.5rem; }
+.join-role { font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+.join-permissions { font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 1.5rem; line-height: 1.5; background: var(--color-bg); border-radius: 8px; padding: 0.6rem 0.75rem; text-align: left; }
 .join-decline { display: block; margin-top: 1rem; font-size: 0.85rem; color: var(--color-text-muted); text-decoration: none; }
 .join-decline:hover { color: var(--color-text); }
