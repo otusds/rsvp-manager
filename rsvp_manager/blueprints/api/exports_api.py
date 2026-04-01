@@ -6,7 +6,9 @@ from rsvp_manager.services import export_service, event_service
 @api_bp.route("/events/export", methods=["GET"])
 @api_auth_required
 def export_events():
-    events = Event.query.filter_by(user_id=get_api_user().id).order_by(Event.date).all()
+    events = Event.query.filter_by(user_id=get_api_user().id).filter(
+        Event.deleted_at.is_(None)
+    ).order_by(Event.date).all()
     return export_service.export_events_xlsx(events)
 
 
@@ -20,7 +22,7 @@ def export_event_guests(event_id):
 @api_bp.route("/friends/export", methods=["GET"])
 @api_auth_required
 def export_friends():
-    guests = Guest.query.filter_by(user_id=get_api_user().id).order_by(
-        Guest.last_name, Guest.first_name
-    ).all()
+    guests = Guest.query.filter_by(user_id=get_api_user().id).filter(
+        Guest.deleted_at.is_(None)
+    ).order_by(Guest.last_name, Guest.first_name).all()
     return export_service.export_guests_xlsx(guests)

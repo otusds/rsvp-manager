@@ -3,6 +3,7 @@ from rsvp_manager.blueprints.api import (
     api_bp, api_success, api_error, api_auth_required, get_api_user,
     serialize_friend,
 )
+from rsvp_manager.extensions import limiter
 from rsvp_manager.services import friend_service
 
 
@@ -116,6 +117,7 @@ def delete_friend(guest_id):
 
 @api_bp.route("/friends/bulk", methods=["POST"])
 @api_auth_required
+@limiter.limit("20 per minute")
 def bulk_create_friends():
     data = request.get_json()
     if not data:
@@ -136,6 +138,7 @@ def bulk_archive_friends():
 
 @api_bp.route("/friends/bulk-delete", methods=["POST"])
 @api_auth_required
+@limiter.limit("10 per minute")
 def bulk_delete_friends():
     data = request.get_json()
     if not data or "guest_ids" not in data:

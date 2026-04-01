@@ -3,6 +3,7 @@ from rsvp_manager.blueprints.api import (
     api_bp, api_success, api_error, api_auth_required, get_api_user,
     serialize_invitation, serialize_invitation_brief,
 )
+from rsvp_manager.extensions import limiter
 from rsvp_manager.services import invitation_service, event_service
 
 
@@ -57,6 +58,7 @@ def delete_invitation(invitation_id):
 
 @api_bp.route("/events/<int:event_id>/invitations/bulk", methods=["POST"])
 @api_auth_required
+@limiter.limit("20 per minute")
 def bulk_add_invitations(event_id):
     event = event_service.get_owned_event_or_404(event_id, get_api_user().id)
     data = request.get_json()
@@ -86,6 +88,7 @@ def other_events_guests(event_id):
 
 @api_bp.route("/events/<int:event_id>/invitations/bulk-create", methods=["POST"])
 @api_auth_required
+@limiter.limit("20 per minute")
 def bulk_create_and_invite(event_id):
     event = event_service.get_owned_event_or_404(event_id, get_api_user().id)
     data = request.get_json()

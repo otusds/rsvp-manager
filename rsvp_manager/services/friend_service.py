@@ -92,8 +92,14 @@ def delete_guest(guest):
 
 
 def update_guest_name(guest, first_name, last_name):
+    first_name = (first_name or "").strip()
+    last_name = (last_name or "").strip()
+    if not first_name or len(first_name) > 100:
+        abort(400, description="First name is required (max 100 characters)")
+    if len(last_name) > 100:
+        abort(400, description="Last name max 100 characters")
     guest.first_name = first_name
-    guest.last_name = last_name or ""
+    guest.last_name = last_name
     guest.date_edited = datetime.now(timezone.utc)
     db.session.commit()
 
@@ -107,7 +113,7 @@ def update_guest_gender(guest, gender):
 
 
 def update_guest_notes(guest, notes):
-    guest.notes = notes
+    guest.notes = (notes or "")[:5000]
     guest.date_edited = datetime.now(timezone.utc)
     db.session.commit()
 
@@ -212,14 +218,17 @@ def bulk_remove_tag(user_id, guest_ids, tag_name):
 def bulk_create_guests(user_id, guests_data):
     added = []
     for g_data in guests_data:
-        first_name = g_data.get("first_name", "").strip()
+        first_name = g_data.get("first_name", "").strip()[:100]
         if not first_name:
             continue
+        gender = g_data.get("gender", "Male")
+        if gender not in VALID_GENDERS:
+            gender = "Male"
         guest = Guest(
             user_id=user_id,
             first_name=first_name,
-            last_name=g_data.get("last_name", "").strip(),
-            gender=g_data.get("gender", "Male"),
+            last_name=g_data.get("last_name", "").strip()[:100],
+            gender=gender,
             notes=g_data.get("notes", "").strip(),
             date_created=datetime.now(timezone.utc)
         )

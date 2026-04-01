@@ -167,15 +167,19 @@ def get_event_guests_with_status(source_event, current_event, user_id):
 
 def bulk_create_and_invite(event, guests_data, user_id):
     added = []
+    valid_genders = ("Male", "Female")
     for g_data in guests_data:
-        first_name = g_data.get("first_name", "").strip()
+        first_name = g_data.get("first_name", "").strip()[:100]
         if not first_name:
             continue
+        gender = g_data.get("gender", "Male")
+        if gender not in valid_genders:
+            gender = "Male"
         guest = Guest(
             user_id=user_id,
             first_name=first_name,
-            last_name=g_data.get("last_name", "").strip(),
-            gender=g_data.get("gender", "Male"),
+            last_name=g_data.get("last_name", "").strip()[:100],
+            gender=gender,
             notes=g_data.get("notes", "").strip(),
             date_created=datetime.now(timezone.utc)
         )
