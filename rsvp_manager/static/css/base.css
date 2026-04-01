@@ -397,21 +397,6 @@ h2 {
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-/* ── Pull-to-refresh ─────────────────────────────────────────────────────── */
-.pull-refresh-indicator {
-    display: flex;
-    justify-content: center;
-    padding: 0.5rem;
-}
-.pull-refresh-spinner {
-    width: 22px;
-    height: 22px;
-    border: 3px solid var(--color-border);
-    border-top-color: var(--color-primary);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-}
-
 /* ── Scroll loader ───────────────────────────────────────────────────────── */
 .scroll-loader {
     display: flex;

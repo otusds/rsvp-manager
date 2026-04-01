@@ -2,38 +2,28 @@
 (function () {
     var startY = 0;
     var pulling = false;
-    var indicator = null;
+    var triggered = false;
 
     document.addEventListener("touchstart", function (e) {
-        // Don't activate when a modal/overlay is open
         var overlay = document.querySelector(".detail-overlay[style*='flex']");
         if (overlay) return;
         if (window.scrollY === 0) {
             startY = e.touches[0].pageY;
             pulling = true;
+            triggered = false;
         }
     }, { passive: true });
 
     document.addEventListener("touchmove", function (e) {
-        if (!pulling) return;
+        if (!pulling || triggered) return;
         var delta = e.touches[0].pageY - startY;
-        if (delta > 60 && window.scrollY === 0) {
-            if (!indicator) {
-                indicator = document.createElement("div");
-                indicator.className = "pull-refresh-indicator";
-                indicator.innerHTML = '<div class="pull-refresh-spinner"></div>';
-                document.body.prepend(indicator);
-            }
-        } else if (indicator && delta < 30) {
-            indicator.remove();
-            indicator = null;
+        if (delta > 80 && window.scrollY === 0) {
+            triggered = true;
+            location.reload();
         }
     }, { passive: true });
 
     document.addEventListener("touchend", function () {
-        if (indicator) {
-            setTimeout(function () { location.reload(); }, 300);
-        }
         pulling = false;
     });
 })();
