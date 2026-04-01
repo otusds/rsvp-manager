@@ -83,7 +83,8 @@ def export_event_guests_xlsx(event):
     for col in ws.columns:
         ws.column_dimensions[col[0].column_letter].width = 18
     safe_name = re.sub(r"[^\w\-]", "_", event.name).strip("_").lower()
-    return _to_download(wb, f"{safe_name}_guests.xlsx")
+    date_str = event.date.strftime("%Y-%m-%d") if event.date else ""
+    return _to_download(wb, f"{safe_name}_{date_str}_guests.xlsx")
 
 
 def export_event_guests_text(event):
