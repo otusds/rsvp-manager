@@ -60,9 +60,32 @@ def create_app(config_class=Config):
     app.register_blueprint(join.bp)
     app.register_blueprint(errors.bp)
 
+    from rsvp_manager.blueprints import admin as admin_bp_module
+    app.register_blueprint(admin_bp_module.bp)
+
     from rsvp_manager.blueprints.api import api_bp
     app.register_blueprint(api_bp)
     csrf.exempt(api_bp)
+
+    # Flask-Admin (database browser)
+    from flask_admin import Admin
+    from rsvp_manager.admin_views import (
+        ProtectedAdminIndex, UserView, EventView, GuestView,
+        InvitationView, TagView, EventCohostView, ActivityLogView,
+    )
+    from rsvp_manager.models import (
+        User, Event, Guest, Invitation, Tag, EventCohost, ActivityLog,
+    )
+    flask_admin = Admin(
+        app, name="GuestCheck Admin", index_view=ProtectedAdminIndex(url="/admin/db"),
+    )
+    flask_admin.add_view(UserView(User, db.session, name="Users", endpoint="admin_users"))
+    flask_admin.add_view(EventView(Event, db.session, name="Events", endpoint="admin_events"))
+    flask_admin.add_view(GuestView(Guest, db.session, name="Guests", endpoint="admin_guests"))
+    flask_admin.add_view(InvitationView(Invitation, db.session, name="Invitations", endpoint="admin_invitations"))
+    flask_admin.add_view(TagView(Tag, db.session, name="Tags", endpoint="admin_tags"))
+    flask_admin.add_view(EventCohostView(EventCohost, db.session, name="Co-hosts", endpoint="admin_cohosts"))
+    flask_admin.add_view(ActivityLogView(ActivityLog, db.session, name="Activity Log", endpoint="admin_activity"))
 
     ASSET_VERSION = "74"
 

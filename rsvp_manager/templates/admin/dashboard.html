@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-row">
+    <h1>Admin Dashboard</h1>
+    <div class="btn-group">
+        <a href="/admin/db/" class="btn btn-small btn-secondary">Database Browser</a>
+    </div>
+</div>
+
+<div class="admin-grid">
+    <!-- Users -->
+    <div class="admin-card">
+        <h2>Users</h2>
+        <div class="admin-stat-row">
+            <div class="admin-stat">
+                <span class="admin-stat-value">{{ stats.users.total }}</span>
+                <span class="admin-stat-label">Total</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value admin-stat-green">{{ stats.users.verified }}</span>
+                <span class="admin-stat-label">Verified</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value admin-stat-amber">{{ stats.users.unverified }}</span>
+                <span class="admin-stat-label">Unverified</span>
+            </div>
+        </div>
+        <div class="admin-meta">
+            <span>Active (7d): <strong>{{ stats.users.active_7d }}</strong></span>
+            <span>Active (30d): <strong>{{ stats.users.active_30d }}</strong></span>
+        </div>
+    </div>
+
+    <!-- Events -->
+    <div class="admin-card">
+        <h2>Events</h2>
+        <div class="admin-stat-row">
+            <div class="admin-stat">
+                <span class="admin-stat-value">{{ stats.events.active }}</span>
+                <span class="admin-stat-label">Active</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value admin-stat-muted">{{ stats.events.deleted }}</span>
+                <span class="admin-stat-label">Deleted</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value admin-stat-blue">{{ stats.events.with_cohosts }}</span>
+                <span class="admin-stat-label">Shared</span>
+            </div>
+        </div>
+        <div class="admin-meta">
+            <span>Created (7d): <strong>{{ stats.events.created_7d }}</strong></span>
+            <span>Created (30d): <strong>{{ stats.events.created_30d }}</strong></span>
+        </div>
+    </div>
+
+    <!-- Guests -->
+    <div class="admin-card">
+        <h2>Friends (Guests)</h2>
+        <div class="admin-stat-row">
+            <div class="admin-stat">
+                <span class="admin-stat-value">{{ stats.guests.active }}</span>
+                <span class="admin-stat-label">Active</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value admin-stat-muted">{{ stats.guests.archived }}</span>
+                <span class="admin-stat-label">Archived</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invitations -->
+    <div class="admin-card">
+        <h2>Invitations</h2>
+        <div class="admin-stat-row">
+            <div class="admin-stat">
+                <span class="admin-stat-value">{{ stats.invitations.total }}</span>
+                <span class="admin-stat-label">Total</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value admin-stat-green">{{ stats.invitations.attending }}</span>
+                <span class="admin-stat-label">Attending</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value admin-stat-amber">{{ stats.invitations.pending }}</span>
+                <span class="admin-stat-label">Pending</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value admin-stat-red">{{ stats.invitations.declined }}</span>
+                <span class="admin-stat-label">Declined</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value admin-stat-muted">{{ stats.invitations.not_sent }}</span>
+                <span class="admin-stat-label">Not Sent</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Co-hosting -->
+    <div class="admin-card">
+        <h2>Co-hosting</h2>
+        <div class="admin-stat-row">
+            <div class="admin-stat">
+                <span class="admin-stat-value">{{ stats.cohosts.total_memberships }}</span>
+                <span class="admin-stat-label">Co-host memberships</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value">{{ stats.cohosts.active_share_links }}</span>
+                <span class="admin-stat-label">Active share links</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seating -->
+    <div class="admin-card">
+        <h2>Seating Plans</h2>
+        <div class="admin-stat-row">
+            <div class="admin-stat">
+                <span class="admin-stat-value">{{ stats.seating.tables }}</span>
+                <span class="admin-stat-label">Tables</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value">{{ stats.seating.events_with_seating }}</span>
+                <span class="admin-stat-label">Events with seating</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value">{{ stats.seating.seat_assignments }}</span>
+                <span class="admin-stat-label">Seated guests</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tags & Activity -->
+    <div class="admin-card">
+        <h2>Tags & Activity</h2>
+        <div class="admin-stat-row">
+            <div class="admin-stat">
+                <span class="admin-stat-value">{{ stats.tags.active }}</span>
+                <span class="admin-stat-label">Active tags</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value">{{ stats.activity.actions_7d }}</span>
+                <span class="admin-stat-label">Actions (7d)</span>
+            </div>
+            <div class="admin-stat">
+                <span class="admin-stat-value">{{ stats.activity.actions_30d }}</span>
+                <span class="admin-stat-label">Actions (30d)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-footer">
+    <h2>Public Stats API</h2>
+    <p class="admin-hint">Available at <code>GET /admin/api/stats</code> — unauthenticated, cached 1 hour. Use this on your marketing site for social proof numbers.</p>
+</div>
+{% endblock %}

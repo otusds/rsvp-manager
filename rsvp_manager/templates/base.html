@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/trash.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/seating.css') }}?v={{ v }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v={{ v }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}?v={{ v }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     {% if umami_script_url and umami_website_id %}
@@ -62,6 +63,12 @@
             <a href="{{ url_for('history.history') }}">History</a>
             <a href="{{ url_for('trash.trash') }}">Recently Deleted</a>
             <a href="{{ url_for('settings.settings') }}">Settings</a>
+            {% if current_user.email.lower() in config.get('ADMIN_EMAILS', []) %}
+            <div class="hamburger-divider"></div>
+            <a href="{{ url_for('admin_dashboard.dashboard') }}">Admin Dashboard</a>
+            <a href="/admin/db/">Database Browser</a>
+            <a href="{{ url_for('admin_dashboard.public_stats') }}">Public Stats API</a>
+            {% endif %}
             <div class="hamburger-divider"></div>
             <form method="POST" action="{{ url_for('auth.logout') }}" class="inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

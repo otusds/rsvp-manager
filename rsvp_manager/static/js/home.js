@@ -129,6 +129,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         shareBtn.addEventListener("click", function () {
+            window.trackEvent("event-shared");
             var menu = shareBtn.closest(".kebab-menu");
             if (menu) menu.classList.remove("open");
             loadShareLinks();
@@ -143,6 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
             navigator.clipboard.writeText(document.getElementById("share-cohost-link").value).then(function () {
                 copyCohost.textContent = "Copied!";
                 setTimeout(function () { copyCohost.textContent = "Copy"; }, 2000);
+                window.trackEvent("share-link-copied", { role: "cohost" });
             });
         });
         var copyViewer = document.getElementById("copy-viewer-link");
@@ -150,6 +152,7 @@ document.addEventListener("DOMContentLoaded", function () {
             navigator.clipboard.writeText(document.getElementById("share-viewer-link").value).then(function () {
                 copyViewer.textContent = "Copied!";
                 setTimeout(function () { copyViewer.textContent = "Copy"; }, 2000);
+                window.trackEvent("share-link-copied", { role: "viewer" });
             });
         });
     }

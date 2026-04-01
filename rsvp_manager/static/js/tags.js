@@ -195,6 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 body: JSON.stringify(body),
             }).then(function (r) {
                 if (r.ok) {
+                    window.trackEvent("tag-created");
                     location.reload();
                 } else {
                     r.json().then(function (d) { alert(d.message || "Error creating tag"); });

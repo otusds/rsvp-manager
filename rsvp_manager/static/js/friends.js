@@ -309,6 +309,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .then(function (res) { return res.json(); })
                 .then(function () {
+                    if (!isArchived) window.trackEvent("guest-archived");
                     if (!isArchived) {
                         // Archiving: remove row if not showing archived
                         if (!showArchived) {
@@ -614,6 +615,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     rows.forEach(function (row) { row.remove(); });
                     updateGuestBatchCount();
                     if (guestBatchAction) guestBatchAction.value = "";
+                    window.trackEvent("batch-action-used", { action: "delete", count: ids.length, page: "friends" });
                     window.showToast(ids.length + " guest" + (ids.length > 1 ? "s" : "") + " deleted");
                 })
                 .catch(window.handleFetchError);
@@ -652,6 +654,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                     updateGuestBatchCount();
                     if (guestBatchAction) guestBatchAction.value = "";
+                    window.trackEvent("batch-action-used", { action: "add-tag", count: ids.length, page: "friends" });
                     window.showToast("Tag added to " + ids.length + " guest" + (ids.length > 1 ? "s" : ""));
                     batchSelectedTagName = "";
                     if (guestBatchTagInput) guestBatchTagInput.value = "";
@@ -702,6 +705,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                     updateGuestBatchCount();
                     if (guestBatchAction) guestBatchAction.value = "";
+                    window.trackEvent("batch-action-used", { action: "remove-tag", count: ids.length, page: "friends" });
                     window.showToast("Tag removed from " + ids.length + " guest" + (ids.length > 1 ? "s" : ""));
                     batchSelectedTagName = "";
                     if (guestBatchTagInput) guestBatchTagInput.value = "";
@@ -732,6 +736,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                     updateGuestBatchCount();
                     if (guestBatchAction) guestBatchAction.value = "";
+                    window.trackEvent("batch-action-used", { action: "archive", count: ids.length, page: "friends" });
                     window.showToast(ids.length + " guest" + (ids.length > 1 ? "s" : "") + " archived");
                 })
                 .catch(window.handleFetchError);
@@ -886,6 +891,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function openGuestDetail(guestId, row) {
         gdActiveRow = row;
+        window.trackEvent("friend-detail-opened");
         window.fetchWithCsrf("/api/v1/friends/" + guestId)
             .then(function (res) { return res.json(); })
             .then(function (resp) {
