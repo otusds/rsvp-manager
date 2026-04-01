@@ -69,6 +69,7 @@ def duplicate_event(event_id):
     reset_status = request.form.get("reset_status", "reset") == "reset"
     name = request.form.get("name", "").strip() or None
     new_event = event_service.duplicate_event(event, current_user.id, new_date=new_date, reset_status=reset_status, name=name)
+    session["_track"] = "event-duplicated"
     return redirect(url_for("events.event_detail", event_id=new_event.id))
 
 
@@ -77,6 +78,7 @@ def duplicate_event(event_id):
 def delete_event(event_id):
     event, role = require_event_access(event_id, current_user.id, min_role="owner")
     event_service.delete_event(event)
+    session["_track"] = "event-deleted"
     return redirect(url_for("events.home"))
 
 

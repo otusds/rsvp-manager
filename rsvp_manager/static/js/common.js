@@ -551,7 +551,10 @@ document.addEventListener("DOMContentLoaded", function () {
                                 totalAdded++;
                             });
                         });
-                        if (newGuests.length > 0) window.trackEvent("guest-added-bulk", { count: newGuests.length });
+                        if (newGuests.length > 0) {
+                            window.trackEvent("friend-created", { count: newGuests.length });
+                            window.trackEvent("guest-added-bulk", { count: newGuests.length });
+                        }
                         if (existingIds.length > 0) window.trackEvent("guest-added", { count: existingIds.length });
                         window.refreshSummary();
                         addGuestOverlay.style.display = "none";
@@ -572,7 +575,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(function (resp) {
                     var count = resp.data.length;
                     if (count > 0) {
-                        window.trackEvent("guest-added-bulk", { count: count });
+                        window.trackEvent("friend-created", { count: count });
                         sessionStorage.setItem("toast", count + " guest" + (count > 1 ? "s" : "") + " added");
                         location.reload();
                     } else {

@@ -991,6 +991,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
                 updateBatchCount();
                 var labels = { send: "marked as sent", unsend: "marked as unsent", attending: "marked as attending", pending: "marked as pending", declined: "marked as declined", remove: "removed" };
+                window.trackEvent("batch-action-used", { action: actionLabel, count: rowCount, page: "event-detail" });
                 window.showToast(rowCount + " guest" + (rowCount > 1 ? "s" : "") + " " + (labels[actionLabel] || actionLabel));
             }).catch(window.handleFetchError);
         });
@@ -1135,6 +1136,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     exportTextContent.value = text;
                     exportTextOverlay.style.display = "flex";
                     exportTextContent.select();
+                    window.trackEvent("export-downloaded", { format: "text" });
                 });
         });
         exportTextClose.addEventListener("click", function () { exportTextOverlay.style.display = "none"; });

@@ -794,8 +794,9 @@ document.addEventListener("DOMContentLoaded", function () {
         tableSave.addEventListener("click", function () {
             var id = document.getElementById("seating-table-id").value;
             var data = { label: document.getElementById("seating-table-label").value, shape: getSelectedShape(), capacity: parseInt(capacitySelect.value) };
+            var isNew = !id;
             (id ? api("PUT", "/tables/" + id, data) : api("POST", "/tables", data))
-                .then(function () { document.getElementById("seating-table-overlay").style.display = "none"; load(); })
+                .then(function () { if (isNew) window.trackEvent("seating-table-created"); document.getElementById("seating-table-overlay").style.display = "none"; load(); })
                 .catch(function (err) { window.showToast(err.message || "Failed to save table"); });
         });
     }
@@ -816,6 +817,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 api("POST", "/smart-assign", { mode: mode }).then(function (data) {
                     state = data;
                     render();
+                    window.trackEvent("seating-auto-assigned", { mode: mode });
                     window.showToast("Seating updated (" + mode + ")", function () { undoLastAction(); });
                 }).catch(function (err) { window.showToast(err.message || "Auto-assign failed"); });
             });
