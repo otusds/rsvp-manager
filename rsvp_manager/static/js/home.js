@@ -4,13 +4,15 @@ document.addEventListener("DOMContentLoaded", function () {
     var newEventBtn = document.getElementById("open-new-event-btn");
     var newEventOverlay = document.getElementById("new-event-overlay");
     var newEventClose = document.getElementById("new-event-close");
+    function openNewEventModal() {
+        newEventOverlay.style.display = "flex";
+        var nameInput = document.getElementById("ne-name");
+        if (nameInput) nameInput.focus();
+        validateNewEventForm();
+    }
+
     if (newEventBtn && newEventOverlay) {
-        newEventBtn.addEventListener("click", function () {
-            newEventOverlay.style.display = "flex";
-            var nameInput = document.getElementById("ne-name");
-            if (nameInput) nameInput.focus();
-            validateNewEventForm();
-        });
+        newEventBtn.addEventListener("click", openNewEventModal);
         newEventClose.addEventListener("click", function () {
             newEventOverlay.style.display = "none";
         });
@@ -35,6 +37,11 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             validateNewEventForm();
         }
+    }
+
+    var emptyNewEventBtn = document.getElementById("empty-new-event-btn");
+    if (emptyNewEventBtn && newEventOverlay) {
+        emptyNewEventBtn.addEventListener("click", openNewEventModal);
     }
 
     // ── Edit Event modal ─────────────────────────────────────────────────────
