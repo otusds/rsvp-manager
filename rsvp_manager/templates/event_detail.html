@@ -318,7 +318,12 @@
 
             {% if role in ('owner', 'cohost') %}
             <div class="seating-instructions">
-                <strong>How to use:</strong> Click or drag guests onto seats. Click a seated guest to unseat or lock them. Use Auto-Plan to fill seats automatically.
+                <strong>How to use:</strong>
+                <ul>
+                    <li>Click or drag a guest onto an empty seat to place them</li>
+                    <li>Click or drag a seated guest to another seat to move or swap</li>
+                    <li>Click a seated guest to unseat or lock — locked seats are kept during Auto-Plan and Clear</li>
+                </ul>
             </div>
             {% endif %}
         </div>
