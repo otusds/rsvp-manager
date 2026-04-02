@@ -335,6 +335,12 @@ document.addEventListener("DOMContentLoaded", function () {
         setTimeout(function () { if (tip.parentNode) tip.remove(); }, 2000);
     }
 
+    // Blur then re-focus so iOS resets keyboard state (autocapitalize)
+    function focusNewRow(input) {
+        if (document.activeElement) document.activeElement.blur();
+        setTimeout(function () { input.focus(); }, 10);
+    }
+
     function selectGuestSuggestion(tr, guest) {
         var firstInput = tr.querySelector(".ag-first-name");
         var lastInput = tr.querySelector(".ag-last-name");
@@ -348,7 +354,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Auto-advance to next row
         var newRow = createBlankGuestRow();
         addGuestTbody.appendChild(newRow);
-        newRow.querySelector(".ag-first-name").focus();
+        focusNewRow(newRow.querySelector(".ag-first-name"));
     }
 
     function unlinkGuestRow(tr) {
@@ -415,7 +421,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (firstName) {
                     var newRow = createBlankGuestRow();
                     addGuestTbody.appendChild(newRow);
-                    newRow.querySelector(".ag-first-name").focus();
+                    focusNewRow(newRow.querySelector(".ag-first-name"));
                 }
             }
         });
@@ -427,7 +433,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (firstName) {
                     var newRow = createBlankGuestRow();
                     addGuestTbody.appendChild(newRow);
-                    newRow.querySelector(".ag-first-name").focus();
+                    focusNewRow(newRow.querySelector(".ag-first-name"));
                 }
             }
         });
@@ -437,7 +443,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (firstName && !tr.nextElementSibling) {
                 var newRow = createBlankGuestRow();
                 addGuestTbody.appendChild(newRow);
-                newRow.querySelector(".ag-first-name").focus();
+                focusNewRow(newRow.querySelector(".ag-first-name"));
             }
         });
 
