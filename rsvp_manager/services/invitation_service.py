@@ -3,6 +3,7 @@ from flask import abort
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Guest, Invitation
 from rsvp_manager.services.history_service import log_action
+from rsvp_manager.utils import get_last_name_sort_key
 
 VALID_STATUSES = ("Attending", "Pending", "Declined")
 
@@ -89,9 +90,8 @@ def get_available_guests(event, user_id):
         if not inv.guest.deleted_at:
             norm = _normalize_name(inv.guest.first_name) + "|" + _normalize_name(inv.guest.last_name)
             invited_names.add(norm)
-    all_guests = Guest.query.filter_by(user_id=user_id).filter(Guest.deleted_at.is_(None)).order_by(
-        Guest.first_name, Guest.last_name
-    ).all()
+    all_guests = Guest.query.filter_by(user_id=user_id).filter(Guest.deleted_at.is_(None)).all()
+    all_guests.sort(key=lambda g: (get_last_name_sort_key(g.last_name), g.first_name.lower()))
     result = []
     for g in all_guests:
         already_by_id = g.id in invited_ids

@@ -509,7 +509,7 @@ def serialize_seating_plan(event):
     """Serialize complete seating plan for API response."""
     tables = get_seating_plan(event)
     unseated = get_unseated_attending(event)
-    unseated.sort(key=lambda inv: (inv.guest.first_name.lower(), (inv.guest.last_name or "").lower()))
+    unseated.sort(key=lambda inv: (inv.guest.last_name_sort_key, inv.guest.first_name.lower()))
 
     return {
         "tables": [_serialize_table(t) for t in tables],
