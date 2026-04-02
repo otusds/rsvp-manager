@@ -35,6 +35,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     window.refreshSummary = function () {
+        // Show thead when the table has guest rows (it starts hidden on empty events)
+        var invTable = document.getElementById("invitations-table");
+        if (invTable) {
+            var thead = invTable.querySelector("thead");
+            var hasGuests = invTable.querySelectorAll("tbody tr:not(.add-guest-row)").length > 0;
+            if (thead && hasGuests) thead.style.display = "";
+        }
+
         var summaryTable = document.getElementById("summary-table");
         if (!summaryTable) return;
         var rows = document.querySelectorAll("#invitations-table tbody tr:not(.add-guest-row)");
