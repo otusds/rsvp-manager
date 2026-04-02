@@ -749,7 +749,7 @@ tr[data-is-me="true"] td {
 }
 .guest-detail-inv-item:last-child { border-bottom: none; }
 .guest-detail-inv-event { font-size: 0.85rem; color: var(--color-text); }
-.guest-detail-inv-link { text-decoration: none; color: var(--color-primary); }
+.guest-detail-inv-link { text-decoration: none; color: var(--color-text); }
 .guest-detail-inv-link:hover { text-decoration: underline; }
 .status-tag {
     font-size: 0.7rem;

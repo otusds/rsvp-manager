@@ -992,7 +992,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     g.invitations.forEach(function (inv) {
                         var eventLabel = window.escapeHtml(inv.event_name);
                         if (inv.event_date) eventLabel += ' (' + window.escapeHtml(inv.event_date) + ')';
-                        var eventLink = inv.event_id ? '/events/' + inv.event_id : '';
+                        var eventLink = inv.event_id ? '/event/' + inv.event_id : '';
                         html += '<div class="guest-detail-inv-item">' +
                             (eventLink ? '<a href="' + eventLink + '" class="guest-detail-inv-event guest-detail-inv-link">' + eventLabel + '</a>' :
                             '<span class="guest-detail-inv-event">' + eventLabel + '</span>') +
