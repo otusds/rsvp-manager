@@ -75,6 +75,7 @@ def serialize_friend(guest, viewer_user_id=None):
             declined += 1
         if inv.status != "Not Sent":
             invitations.append({
+                "event_id": inv.event_id,
                 "event_name": inv.event.name,
                 "event_date": inv.event.date.strftime("%d/%m/%Y") if inv.event.date else "",
                 "status": inv.status,

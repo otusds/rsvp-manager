@@ -170,8 +170,8 @@ document.addEventListener("DOMContentLoaded", function () {
             '<td><div class="kebab-wrapper">' +
             '<button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>' +
             '<div class="kebab-menu">' +
-            '<button type="button" class="inv-guest-detail-btn" data-guest-id="' + data.guest_id + '">Guest detail</button>' +
-            '<button type="button" class="kebab-danger remove-btn" data-inv-id="' + data.invitation_id + '">Remove</button>' +
+            '<button type="button" class="inv-guest-detail-btn" data-guest-id="' + data.guest_id + '">Guest Details</button>' +
+            '<button type="button" class="kebab-danger remove-btn" data-inv-id="' + data.invitation_id + '">Remove Guest</button>' +
             '</div></div></td>';
 
         attachCheckboxListener(tr.querySelector(".sent-checkbox"));
@@ -676,8 +676,10 @@ document.addEventListener("DOMContentLoaded", function () {
                         g.invitations.forEach(function (inv) {
                             var eventLabel = window.escapeHtml(inv.event_name);
                             if (inv.event_date) eventLabel += ' (' + window.escapeHtml(inv.event_date) + ')';
+                            var eventLink = inv.event_id ? '/events/' + inv.event_id : '';
                             html += '<div class="guest-detail-inv-item">' +
-                                '<span class="guest-detail-inv-event">' + eventLabel + '</span>' +
+                                (eventLink ? '<a href="' + eventLink + '" class="guest-detail-inv-event guest-detail-inv-link">' + eventLabel + '</a>' :
+                                '<span class="guest-detail-inv-event">' + eventLabel + '</span>') +
                                 '<span class="status-tag ' + statusClass(inv.status) + '">' + window.escapeHtml(inv.status) + '</span>' +
                                 '</div>';
                         });
@@ -767,7 +769,12 @@ document.addEventListener("DOMContentLoaded", function () {
                             var displayName = lastName ? firstName + " " + lastName : firstName;
                             var nameCell = gdActiveRow.cells[1];
                             var genderTag = nameCell.querySelector(".gender-tag");
-                            if (genderTag) genderTag.textContent = gender === "Male" ? "M" : gender === "Female" ? "F" : "";
+                            if (genderTag) {
+                                genderTag.textContent = gender === "Male" ? "M" : gender === "Female" ? "F" : "";
+                                genderTag.classList.remove("gender-m", "gender-f");
+                                if (gender === "Male") genderTag.classList.add("gender-m");
+                                else if (gender === "Female") genderTag.classList.add("gender-f");
+                            }
                             // Find the text node after the gender tag and update it
                             var textNode = null;
                             for (var i = 0; i < nameCell.childNodes.length; i++) {

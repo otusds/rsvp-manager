@@ -295,6 +295,7 @@ def get_shared_invitations(guest, user_id):
         g = inv.guest
         if _normalize_name(g.first_name) == norm_first and _normalize_name(g.last_name) == norm_last:
             results.append({
+                "event_id": inv.event_id,
                 "event_name": inv.event.name,
                 "event_date": inv.event.date.strftime("%d/%m/%Y") if inv.event.date else "",
                 "status": inv.status,

@@ -161,6 +161,7 @@
 .badge-weekend    { background: var(--color-badge-weekend); }
 .badge-hunt       { background: var(--color-badge-hunt); }
 .badge-corporate  { background: var(--color-badge-corporate); }
+.badge-holiday    { background: var(--color-badge-holiday); }
 .badge-other      { background: var(--color-text-muted); }
 
 .status-pending {

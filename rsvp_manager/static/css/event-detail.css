@@ -112,6 +112,20 @@
     color: var(--color-text);
 }
 
+.gender-tag-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+}
+.gender-tag-label.gender-m { background: rgba(0,122,255,0.15); color: var(--color-gender-male); }
+.gender-tag-label.gender-f { background: rgba(255,45,85,0.15); color: var(--color-gender-female); }
+
 .summary-table .total-row {
     background: rgba(0,0,0,0.02);
     font-weight: 600;
@@ -735,6 +749,8 @@ tr[data-is-me="true"] td {
 }
 .guest-detail-inv-item:last-child { border-bottom: none; }
 .guest-detail-inv-event { font-size: 0.85rem; color: var(--color-text); }
+.guest-detail-inv-link { text-decoration: none; color: var(--color-primary); }
+.guest-detail-inv-link:hover { text-decoration: underline; }
 .status-tag {
     font-size: 0.7rem;
     font-weight: 600;

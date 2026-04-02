@@ -177,12 +177,14 @@ td.center, th.center { text-align: center; }
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-width: 22px;
     padding: 0.05rem 0.35rem;
     border-radius: 5px;
     font-size: 0.65rem;
     font-weight: 700;
     vertical-align: middle;
     margin-left: 0.25rem;
+    text-align: center;
 }
 .gender-tag.gender-m { background: rgba(0,122,255,0.15); color: var(--color-gender-male); }
 .gender-tag.gender-f { background: rgba(255,45,85,0.15); color: var(--color-gender-female); }

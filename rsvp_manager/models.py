@@ -2,7 +2,7 @@ from flask_login import UserMixin
 from rsvp_manager.extensions import db, login_manager
 
 
-EVENT_TYPES = ["Dinner", "Party", "Weekend", "Hunt", "Corporate", "Other"]
+EVENT_TYPES = ["Dinner", "Party", "Weekend", "Hunt", "Corporate", "Holiday", "Other"]
 
 
 class User(UserMixin, db.Model):

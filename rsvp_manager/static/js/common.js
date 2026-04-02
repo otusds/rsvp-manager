@@ -177,11 +177,51 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // ── Collapsible sections ────────────────────────────────────────────────
+    // ── Collapsible sections (with persistent state) ──────────────────────
+    var eventId = (document.getElementById("invitations-table") || {}).getAttribute
+        ? (document.getElementById("invitations-table") || {}).getAttribute("data-event-id")
+        : null;
+
+    function getCollapsibleKey() {
+        if (eventId) return "collapsible-state-event-" + eventId;
+        return null;
+    }
+
+    function saveCollapsibleState() {
+        var key = getCollapsibleKey();
+        if (!key) return;
+        var state = {};
+        document.querySelectorAll(".collapsible").forEach(function (section, idx) {
+            var heading = section.querySelector(".collapsible-header h2");
+            var id = heading ? heading.textContent.replace(/\s*\(.*\)/, "").trim() : ("section-" + idx);
+            state[id] = section.classList.contains("collapsed");
+        });
+        try { localStorage.setItem(key, JSON.stringify(state)); } catch (e) { /* ignore */ }
+    }
+
+    function restoreCollapsibleState() {
+        var key = getCollapsibleKey();
+        if (!key) return;
+        var saved;
+        try { saved = JSON.parse(localStorage.getItem(key)); } catch (e) { return; }
+        if (!saved) return;
+        document.querySelectorAll(".collapsible").forEach(function (section, idx) {
+            var heading = section.querySelector(".collapsible-header h2");
+            var id = heading ? heading.textContent.replace(/\s*\(.*\)/, "").trim() : ("section-" + idx);
+            if (id in saved) {
+                if (saved[id]) section.classList.add("collapsed");
+                else section.classList.remove("collapsed");
+            }
+        });
+    }
+
+    restoreCollapsibleState();
+
     document.querySelectorAll(".collapsible-header").forEach(function (header) {
         header.addEventListener("click", function (e) {
             if (e.target.closest(".kebab-wrapper")) return;
             header.parentElement.classList.toggle("collapsed");
+            saveCollapsibleState();
         });
     });
 

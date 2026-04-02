@@ -346,6 +346,14 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
+        // Click on row to open detail panel (skip if clicking interactive elements)
+        row.addEventListener("click", function (e) {
+            if (e.target.closest(".kebab-wrapper, .row-select, .inline-edit, .ge-gender, .ge-notes, a, button, form")) return;
+            var guestId = row.getAttribute("data-guest-id");
+            if (guestId) openGuestDetail(guestId, row);
+        });
+        row.style.cursor = "pointer";
+
         // Archive/Unarchive button
         var archiveBtn = row.querySelector(".ge-archive-btn");
         if (archiveBtn) {
@@ -368,13 +376,13 @@ document.addEventListener("DOMContentLoaded", function () {
                         } else {
                             row.setAttribute("data-is-archived", "true");
                             row.classList.add("archived-row");
-                            archiveBtn.textContent = "Unarchive";
+                            archiveBtn.textContent = "Unarchive Friend";
                         }
                     } else {
                         // Unarchiving
                         row.setAttribute("data-is-archived", "false");
                         row.classList.remove("archived-row");
-                        archiveBtn.textContent = "Archive";
+                        archiveBtn.textContent = "Archive Friend";
                     }
                 })
                 .catch(window.handleFetchError);
@@ -780,7 +788,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             row.setAttribute("data-is-archived", "true");
                             row.classList.add("archived-row");
                             var archBtn = row.querySelector(".ge-archive-btn");
-                            if (archBtn) archBtn.textContent = "Unarchive";
+                            if (archBtn) archBtn.textContent = "Unarchive Friend";
                             var cb = row.querySelector(".row-select");
                             if (cb) cb.checked = false;
                         });
@@ -984,8 +992,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     g.invitations.forEach(function (inv) {
                         var eventLabel = window.escapeHtml(inv.event_name);
                         if (inv.event_date) eventLabel += ' (' + window.escapeHtml(inv.event_date) + ')';
+                        var eventLink = inv.event_id ? '/events/' + inv.event_id : '';
                         html += '<div class="guest-detail-inv-item">' +
-                            '<span class="guest-detail-inv-event">' + eventLabel + '</span>' +
+                            (eventLink ? '<a href="' + eventLink + '" class="guest-detail-inv-event guest-detail-inv-link">' + eventLabel + '</a>' :
+                            '<span class="guest-detail-inv-event">' + eventLabel + '</span>') +
                             '<span class="status-tag ' + statusClass(inv.status) + '">' + window.escapeHtml(inv.status) + '</span>' +
                             '</div>';
                     });
@@ -1039,7 +1049,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     var notesInput = gdActiveRow.querySelector(".ge-notes");
                     if (firstInput) firstInput.value = firstName;
                     if (lastInput) lastInput.value = lastName;
-                    if (genderSelect) { genderSelect.value = gender; abbreviateGender(genderSelect); updateGenderTagColor(genderSelect); }
+                    if (genderSelect) {
+                        genderSelect.value = gender;
+                        if (guestsTable.classList.contains("table-collapsed")) abbreviateGender(genderSelect);
+                        else expandGender(genderSelect);
+                        updateGenderTagColor(genderSelect);
+                    }
                     if (notesInput) notesInput.value = notes;
                     gdActiveRow.setAttribute("data-first", firstName.toLowerCase());
                     gdActiveRow.setAttribute("data-last", lastName.toLowerCase());

@@ -78,14 +78,14 @@
             </thead>
             <tbody>
                 <tr data-gender="male">
-                    <td class="row-label">Male</td>
+                    <td class="row-label"><span class="gender-tag-label gender-m">Male</span></td>
                     <td data-stat="attending">{{ male_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</td>
                     <td data-stat="pending">{{ male_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</td>
                     <td data-stat="declined">{{ male_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</td>
                     <td data-stat="invited">{{ male_inv|rejectattr('status', 'equalto', 'Not Sent')|list|length }}</td>
                 </tr>
                 <tr data-gender="female">
-                    <td class="row-label">Female</td>
+                    <td class="row-label"><span class="gender-tag-label gender-f">Female</span></td>
                     <td data-stat="attending">{{ female_inv|selectattr('status', 'equalto', 'Attending')|list|length }}</td>
                     <td data-stat="pending">{{ female_inv|selectattr('status', 'equalto', 'Pending')|list|length }}</td>
                     <td data-stat="declined">{{ female_inv|selectattr('status', 'equalto', 'Declined')|list|length }}</td>
@@ -255,9 +255,9 @@
                         <div class="kebab-wrapper">
                             <button type="button" class="kebab-btn" aria-label="Actions">&#x2026;</button>
                             <div class="kebab-menu">
-                                <button type="button" class="inv-guest-detail-btn" data-guest-id="{{ inv.guest.id }}"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Guest detail</button>
+                                <button type="button" class="inv-guest-detail-btn" data-guest-id="{{ inv.guest.id }}"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Guest Details</button>
                                 {% if role in ('owner', 'cohost') %}
-                                <button type="button" class="kebab-danger remove-btn" data-inv-id="{{ inv.id }}"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Remove</button>
+                                <button type="button" class="kebab-danger remove-btn" data-inv-id="{{ inv.id }}"><svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Remove Guest</button>
                                 {% endif %}
                             </div>
                         </div>
