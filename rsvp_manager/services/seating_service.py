@@ -361,45 +361,43 @@ def _auto_assign_alternating(unseated, table_empty_seats, tables):
     male_pool = list(males)
     female_pool = list(females)
 
-    # Step 1: For each table, compute the ideal gender for each empty seat.
-    # We do this by building the best possible gender pattern for the full
-    # table, respecting locked positions, then reading off the empty seats.
-    all_assignments = []  # (table_state, pos, gender_needed)
-
+    # Compute pattern and assign one table at a time so each table sees the
+    # actual remaining pool sizes, not stale global counts.
     for ts in table_states:
         if not ts["empty"]:
             continue
+
         pattern = _compute_ideal_pattern(
             ts["seat_map"], ts["capacity"], ts["is_round"],
             len(male_pool), len(female_pool)
         )
-        for pos in sorted(ts["empty"]):
-            all_assignments.append((ts, pos, pattern.get(pos)))
 
-    # Step 2: Assign guests to match the ideal pattern
-    # First pass: fill seats where we have the requested gender
-    unmatched = []
-    for ts, pos, ideal_gender in all_assignments:
-        pool = male_pool if ideal_gender == "Male" else female_pool
-        if pool:
-            inv = pool.pop()
+        # First pass: fill seats where we have the requested gender
+        unmatched = []
+        for pos in sorted(ts["empty"]):
+            ideal_gender = pattern.get(pos)
+            pool = male_pool if ideal_gender == "Male" else female_pool
+            if pool:
+                inv = pool.pop()
+                ts["seat_map"][pos] = inv.guest.gender
+                db.session.add(SeatAssignment(
+                    table_id=ts["table"].id, invitation_id=inv.id, seat_position=pos
+                ))
+            else:
+                unmatched.append(pos)
+
+        # Second pass: fill remaining seats with whatever gender is left
+        for pos in unmatched:
+            if male_pool:
+                inv = male_pool.pop()
+            elif female_pool:
+                inv = female_pool.pop()
+            else:
+                break
             ts["seat_map"][pos] = inv.guest.gender
-            ts["empty"].discard(pos)
             db.session.add(SeatAssignment(
                 table_id=ts["table"].id, invitation_id=inv.id, seat_position=pos
             ))
-        else:
-            unmatched.append((ts, pos))
-
-    # Second pass: fill remaining seats with whatever gender is left
-    remaining = male_pool + female_pool
-    random.shuffle(remaining)
-    for inv, (ts, pos) in zip(remaining, unmatched):
-        ts["seat_map"][pos] = inv.guest.gender
-        ts["empty"].discard(pos)
-        db.session.add(SeatAssignment(
-            table_id=ts["table"].id, invitation_id=inv.id, seat_position=pos
-        ))
 
 
 def _compute_ideal_pattern(seat_map, capacity, is_round, n_males_avail, n_females_avail):
