@@ -527,6 +527,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (eventId) {
                 // Event page: add existing guests + create new guests as invitations
+                var wasEmpty = document.querySelectorAll("#invitations-table tbody tr:not(.add-guest-row)").length === 0;
                 var promises = [];
                 if (existingIds.length > 0) {
                     promises.push(
@@ -548,6 +549,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 Promise.all(promises)
                     .then(function (results) {
+                        if (wasEmpty) {
+                            window.location.reload();
+                            return;
+                        }
                         var tbody = document.querySelector("#invitations-table tbody");
                         var totalAdded = 0;
                         results.forEach(function (resp) {

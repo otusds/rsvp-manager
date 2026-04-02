@@ -1375,6 +1375,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             if (ids.length === 0) { friendsOverlay.style.display = "none"; return; }
 
+            var wasEmpty = document.querySelectorAll("#invitations-table tbody tr:not(.add-guest-row)").length === 0;
             window.fetchWithCsrf("/api/v1/events/" + eventId + "/invitations/bulk", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1382,6 +1383,7 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .then(function (r) { return r.json(); })
             .then(function (resp) {
+                if (wasEmpty) { window.location.reload(); return; }
                 var tbody = document.querySelector("#invitations-table tbody");
                 resp.data.forEach(function (g) {
                     var tr = window.buildInvitationRow(g);
@@ -1658,6 +1660,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             if (ids.length === 0) { eventGuestsOverlay.style.display = "none"; return; }
 
+            var wasEmpty = document.querySelectorAll("#invitations-table tbody tr:not(.add-guest-row)").length === 0;
             window.fetchWithCsrf("/api/v1/events/" + evtEventId + "/invitations/bulk", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1665,6 +1668,7 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .then(function (r) { return r.json(); })
             .then(function (resp) {
+                if (wasEmpty) { window.location.reload(); return; }
                 var tbody = document.querySelector("#invitations-table tbody");
                 resp.data.forEach(function (g) {
                     var tr = window.buildInvitationRow(g);
