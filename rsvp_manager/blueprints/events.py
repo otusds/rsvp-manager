@@ -12,7 +12,8 @@ bp = Blueprint("events", __name__)
 @login_required
 def home():
     page = request.args.get("page", 1, type=int)
-    pagination = event_service.get_user_events(current_user.id, page=page)
+    search = request.args.get("q", "").strip()
+    pagination = event_service.get_user_events(current_user.id, page=page, search=search)
     event_ids = [e.id for e in pagination.items]
     event_roles = get_event_roles_for_user(current_user.id, event_ids)
     shared_ids = get_shared_event_ids(event_ids)

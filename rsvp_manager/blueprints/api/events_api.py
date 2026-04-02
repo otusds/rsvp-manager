@@ -10,7 +10,8 @@ from rsvp_manager.services import event_service
 @api_auth_required
 def list_events():
     page = request.args.get("page", 1, type=int)
-    pagination = event_service.get_user_events(get_api_user().id, page=page)
+    search = request.args.get("q", "").strip()
+    pagination = event_service.get_user_events(get_api_user().id, page=page, search=search)
     return api_success({
         "items": [serialize_event(e) for e in pagination.items],
         "page": pagination.page,

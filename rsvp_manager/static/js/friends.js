@@ -93,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function applyGuestTableControls() {
         sortGuestRows();
-        var query = guestSearchInput ? window.normalizeText(guestSearchInput.value) : "";
+        var query = isSearching ? "" : (guestSearchInput ? window.normalizeText(guestSearchInput.value) : "");
         var genderVal = guestGenderFilter ? guestGenderFilter.value : "";
         var rows = guestsTable.querySelectorAll("tbody tr");
         var visibleCount = 0;
@@ -126,9 +126,60 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // ── Server-side search ─────────────────────────────────────────────────
+    var searchTimer = null;
+    var isSearching = false;
+    var originalRows = null;
+    var showArchived = guestsTable.getAttribute("data-show-archived") || "0";
+
+    function serverSearch(query) {
+        if (!query) {
+            // Restore original rows
+            if (originalRows) {
+                var tbody = guestsTable.querySelector("tbody");
+                tbody.innerHTML = "";
+                originalRows.forEach(function (row) { tbody.appendChild(row); });
+                originalRows = null;
+            }
+            isSearching = false;
+            applyGuestTableControls();
+            return;
+        }
+        // Save original rows before first search
+        if (!originalRows) {
+            originalRows = Array.from(guestsTable.querySelectorAll("tbody tr"));
+        }
+        isSearching = true;
+        var url = "/friends?partial=1&q=" + encodeURIComponent(query);
+        if (showArchived !== "0") url += "&show_archived=" + showArchived;
+        window.fetchWithCsrf(url)
+            .then(function (res) { return res.text(); })
+            .then(function (html) {
+                var tbody = guestsTable.querySelector("tbody");
+                tbody.innerHTML = html;
+                var newRows = tbody.querySelectorAll("tr");
+                newRows.forEach(function (row) {
+                    initGuestRow(row);
+                    var cb = row.querySelector(".row-select");
+                    if (cb) attachRowSelectListener(cb);
+                });
+                // Apply client-side filters (gender, tags) on top of server results
+                applyGuestTableControls();
+            })
+            .catch(window.handleFetchError);
+    }
+
     if (guestSearchInput) {
-        guestSearchInput.addEventListener("input", applyGuestTableControls);
-        guestSearchInput.addEventListener("search", applyGuestTableControls);
+        guestSearchInput.addEventListener("input", function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () {
+                serverSearch(guestSearchInput.value.trim());
+            }, 300);
+        });
+        guestSearchInput.addEventListener("search", function () {
+            clearTimeout(searchTimer);
+            serverSearch(guestSearchInput.value.trim());
+        });
     }
     if (guestGenderFilter) guestGenderFilter.addEventListener("change", applyGuestTableControls);
     if (guestSortSelect) guestSortSelect.addEventListener("change", applyGuestTableControls);
@@ -145,7 +196,8 @@ document.addEventListener("DOMContentLoaded", function () {
             if (tagFilterDropdown) {
                 tagFilterDropdown.querySelectorAll("input[type='checkbox']").forEach(function (cb) { cb.checked = false; });
             }
-            applyGuestTableControls();
+            clearTimeout(searchTimer);
+            serverSearch("");
         });
     }
 
@@ -153,7 +205,6 @@ document.addEventListener("DOMContentLoaded", function () {
     applyGuestTableControls();
 
     // ── Archive filter (server-side reload) ───────────────────────────────
-    var showArchived = guestsTable.getAttribute("data-show-archived") || "0";
     var guestArchiveFilter = document.getElementById("guest-archive-filter");
     if (guestArchiveFilter) {
         guestArchiveFilter.addEventListener("change", function () {
@@ -346,7 +397,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var isLoading = false;
 
     function loadMoreGuests() {
-        if (isLoading || currentPage >= totalPages) return;
+        if (isLoading || currentPage >= totalPages || isSearching) return;
         isLoading = true;
         currentPage++;
         scrollLoader.style.display = "flex";

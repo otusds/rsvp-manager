@@ -10,7 +10,8 @@ bp = Blueprint("friends", __name__)
 def friends():
     page = request.args.get("page", 1, type=int)
     show_archived = request.args.get("show_archived", "0")
-    pagination = friend_service.get_user_guests(current_user.id, page=page, show_archived=show_archived)
+    search = request.args.get("q", "").strip()
+    pagination = friend_service.get_user_guests(current_user.id, page=page, show_archived=show_archived, search=search)
     if request.args.get("partial"):
         return render_template("partials/friend_rows.html", guests=pagination.items)
     has_any_friends = friend_service.get_user_guests(current_user.id, page=1, show_archived="1").total > 0 if not pagination.items else True

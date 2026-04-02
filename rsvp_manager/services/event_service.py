@@ -9,14 +9,23 @@ from rsvp_manager.services.history_service import log_action
 EVENTS_PER_PAGE = 20
 
 
-def get_user_events(user_id, page=1):
+def get_user_events(user_id, page=1, search=""):
     """Get events owned by user OR where user is a co-host/viewer."""
     owned = Event.query.filter_by(user_id=user_id).filter(Event.deleted_at.is_(None))
     cohosted_ids = db.session.query(EventCohost.event_id).filter_by(user_id=user_id)
     shared = Event.query.filter(Event.id.in_(cohosted_ids), Event.deleted_at.is_(None))
     combined = owned.union(shared).options(
         joinedload(Event.invitations)
-    ).order_by(Event.date.desc())
+    )
+    if search:
+        like_pattern = f"%{search}%"
+        combined = combined.filter(
+            db.or_(
+                Event.name.ilike(like_pattern),
+                Event.location.ilike(like_pattern),
+            )
+        )
+    combined = combined.order_by(Event.date.desc())
     return combined.paginate(page=page, per_page=EVENTS_PER_PAGE, error_out=False)
 
 

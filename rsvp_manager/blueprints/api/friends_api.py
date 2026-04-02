@@ -12,7 +12,8 @@ from rsvp_manager.services import friend_service
 def list_friends():
     page = request.args.get("page", 1, type=int)
     show_archived = request.args.get("show_archived", "0")
-    pagination = friend_service.get_user_guests(get_api_user().id, page=page, show_archived=show_archived)
+    search = request.args.get("q", "").strip()
+    pagination = friend_service.get_user_guests(get_api_user().id, page=page, show_archived=show_archived, search=search)
     return api_success({
         "items": [serialize_friend(g) for g in pagination.items],
         "page": pagination.page,

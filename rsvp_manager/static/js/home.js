@@ -207,7 +207,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function applyCardControls() {
-        var query = searchInput ? window.normalizeText(searchInput.value) : "";
+        var query = isEventSearching ? "" : (searchInput ? window.normalizeText(searchInput.value) : "");
         var typeVal = typeFilter ? typeFilter.value : "";
         var allCards = Array.from(document.querySelectorAll(".event-row-card"));
         var futureCards = [];
@@ -257,9 +257,54 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // ── Server-side search ─────────────────────────────────────────────────
+    var eventSearchTimer = null;
+    var isEventSearching = false;
+    var originalCards = null;
+
+    function serverEventSearch(query) {
+        if (!query) {
+            if (originalCards) {
+                // Remove all current cards
+                document.querySelectorAll(".event-row-card").forEach(function (c) { c.remove(); });
+                originalCards.forEach(function (card) { grid.appendChild(card); });
+                originalCards = null;
+            }
+            isEventSearching = false;
+            applyCardControls();
+            return;
+        }
+        if (!originalCards) {
+            originalCards = Array.from(document.querySelectorAll(".event-row-card"));
+        }
+        isEventSearching = true;
+        window.fetchWithCsrf("/?partial=1&q=" + encodeURIComponent(query))
+            .then(function (res) { return res.text(); })
+            .then(function (html) {
+                document.querySelectorAll(".event-row-card").forEach(function (c) { c.remove(); });
+                if (html.trim()) {
+                    var temp = document.createElement("div");
+                    temp.innerHTML = html;
+                    Array.from(temp.querySelectorAll(".event-row-card")).forEach(function (card) {
+                        grid.appendChild(card);
+                    });
+                }
+                applyCardControls();
+            })
+            .catch(window.handleFetchError);
+    }
+
     if (searchInput) {
-        searchInput.addEventListener("input", applyCardControls);
-        searchInput.addEventListener("search", applyCardControls);
+        searchInput.addEventListener("input", function () {
+            clearTimeout(eventSearchTimer);
+            eventSearchTimer = setTimeout(function () {
+                serverEventSearch(searchInput.value.trim());
+            }, 300);
+        });
+        searchInput.addEventListener("search", function () {
+            clearTimeout(eventSearchTimer);
+            serverEventSearch(searchInput.value.trim());
+        });
     }
     if (typeFilter) typeFilter.addEventListener("change", applyCardControls);
     if (locationFilter) locationFilter.addEventListener("change", applyCardControls);
@@ -273,7 +318,8 @@ document.addEventListener("DOMContentLoaded", function () {
             if (typeFilter) typeFilter.selectedIndex = 0;
             if (locationFilter) locationFilter.selectedIndex = 0;
             if (sortSelect) sortSelect.selectedIndex = 0;
-            applyCardControls();
+            clearTimeout(eventSearchTimer);
+            serverEventSearch("");
         });
     }
 
@@ -288,7 +334,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var isLoading = false;
 
     function loadMoreEvents() {
-        if (isLoading || currentPage >= totalPages) return;
+        if (isLoading || currentPage >= totalPages || isEventSearching) return;
         isLoading = true;
         currentPage++;
         scrollLoader.style.display = "flex";

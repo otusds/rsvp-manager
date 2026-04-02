@@ -11,7 +11,7 @@ from rsvp_manager.utils import VALID_GENDERS
 GUESTS_PER_PAGE = 50
 
 
-def get_user_guests(user_id, page=1, show_archived="0"):
+def get_user_guests(user_id, page=1, show_archived="0", search=""):
     query = Guest.query.filter_by(user_id=user_id).filter(Guest.deleted_at.is_(None)).options(
         joinedload(Guest.invitations).joinedload(Invitation.event),
         joinedload(Guest.tags),
@@ -20,6 +20,15 @@ def get_user_guests(user_id, page=1, show_archived="0"):
         query = query.filter_by(is_archived=True)
     elif show_archived != "1":
         query = query.filter_by(is_archived=False)
+    if search:
+        like_pattern = f"%{search}%"
+        query = query.filter(
+            db.or_(
+                Guest.first_name.ilike(like_pattern),
+                Guest.last_name.ilike(like_pattern),
+                (Guest.first_name + " " + Guest.last_name).ilike(like_pattern),
+            )
+        )
     return query.order_by(
         Guest.first_name, Guest.last_name
     ).paginate(page=page, per_page=GUESTS_PER_PAGE, error_out=False)
