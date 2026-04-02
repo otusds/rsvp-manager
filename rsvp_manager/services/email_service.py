@@ -88,6 +88,44 @@ def consume_reset_token(user):
     db.session.commit()
 
 
+def send_email_change_verification(user, new_email):
+    """Send a verification email to the new address to confirm an email change."""
+    user.pending_email = new_email
+    user.pending_email_token = secrets.token_urlsafe(32)
+    user.pending_email_sent_at = _utcnow()
+    db.session.commit()
+    verify_url = url_for("settings.verify_email_change", token=user.pending_email_token, _external=True)
+    html = render_template("emails/verify_email_change.html", user=user, new_email=new_email, verify_url=verify_url)
+    _send_email(new_email, "Confirm your new email — GuestCheck", html)
+    logger.info("Email change verification sent to %s for user %s", new_email, user.email)
+
+
+def verify_email_change_token(token):
+    """Verify the email change token and swap the email."""
+    if not token:
+        return None
+    user = User.query.filter_by(pending_email_token=token).first()
+    if not user:
+        return None
+    if user.pending_email_sent_at is None:
+        return None
+    if _utcnow() - user.pending_email_sent_at > timedelta(hours=TOKEN_EXPIRY_HOURS):
+        return None
+    # Check that the new email isn't taken by another user
+    existing = User.query.filter_by(email=user.pending_email).first()
+    if existing and existing.id != user.id:
+        return None
+    old_email = user.email
+    user.email = user.pending_email
+    user.email_verified = True
+    user.pending_email = None
+    user.pending_email_token = None
+    user.pending_email_sent_at = None
+    db.session.commit()
+    logger.info("Email changed from %s to %s", old_email, user.email)
+    return user
+
+
 def send_cohost_notification(event, joining_user, role):
     """Notify event owner that someone joined as co-host/viewer."""
     owner = db.session.get(User, event.user_id)

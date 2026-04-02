@@ -1,10 +1,15 @@
+import logging
 from datetime import datetime, timezone
 from flask import Blueprint, render_template, redirect, url_for, flash, current_app, abort, request
 from flask_login import login_required, current_user
-from rsvp_manager.extensions import db
-from rsvp_manager.models import Event, Guest, Invitation, Tag, ActivityLog, guest_tags
+from werkzeug.security import check_password_hash, generate_password_hash
+from rsvp_manager.extensions import db, limiter
+from rsvp_manager.models import User, Event, Guest, Invitation, Tag, ActivityLog, guest_tags
 from rsvp_manager.utils import VALID_GENDERS
 from rsvp_manager.services.seed_service import seed
+from rsvp_manager.services.email_service import send_email_change_verification, verify_email_change_token
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint("settings", __name__)
 
@@ -51,6 +56,64 @@ def update_profile():
         db.session.add(me_guest)
     db.session.commit()
     flash("Profile updated.")
+    return redirect(url_for("settings.settings"))
+
+
+@bp.route("/settings/email", methods=["POST"])
+@login_required
+@limiter.limit("5 per minute")
+def update_email():
+    new_email = request.form.get("email", "").strip().lower()
+    if not new_email or "@" not in new_email:
+        flash("Please enter a valid email address.")
+        return redirect(url_for("settings.settings"))
+    if new_email == current_user.email:
+        flash("That's already your current email.")
+        return redirect(url_for("settings.settings"))
+    existing = User.query.filter_by(email=new_email).first()
+    if existing:
+        flash("That email is already in use.")
+        return redirect(url_for("settings.settings"))
+    try:
+        send_email_change_verification(current_user, new_email)
+        flash("Verification email sent to " + new_email + ". Please check your inbox to confirm the change.")
+    except Exception:
+        logger.exception("Failed to send email change verification to %s", new_email)
+        flash("Could not send verification email. Please try again later.")
+    return redirect(url_for("settings.settings"))
+
+
+@bp.route("/settings/verify-email-change/<token>")
+@login_required
+def verify_email_change(token):
+    user = verify_email_change_token(token)
+    if user and user.id == current_user.id:
+        flash("Your email has been updated to " + user.email + ".")
+    else:
+        flash("Invalid or expired verification link.")
+    return redirect(url_for("settings.settings"))
+
+
+@bp.route("/settings/password", methods=["POST"])
+@login_required
+@limiter.limit("5 per minute")
+def update_password():
+    current_password = request.form.get("current_password", "")
+    new_password = request.form.get("new_password", "")
+    confirm_password = request.form.get("confirm_password", "")
+    if not check_password_hash(current_user.password_hash, current_password):
+        flash("Current password is incorrect.")
+        return redirect(url_for("settings.settings"))
+    if len(new_password) < 8:
+        flash("New password must be at least 8 characters.")
+        return redirect(url_for("settings.settings"))
+    if new_password != confirm_password:
+        flash("New passwords do not match.")
+        return redirect(url_for("settings.settings"))
+    current_user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+    logger.info("Password changed for user %s", current_user.email)
+    flash("Password updated successfully.")
     return redirect(url_for("settings.settings"))
 
 
