@@ -204,6 +204,51 @@
     stroke-width: 3 !important;
 }
 
+/* ── Drag-and-drop ──────────────────────────────────────────────────────── */
+.seating-drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1000;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.6rem;
+    border-radius: 14px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border: 1.5px solid transparent;
+    opacity: 0.9;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+}
+
+.seating-dragging {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.seating-dragging .seating-seat { pointer-events: all; }
+
+.seating-seat-drop-target circle {
+    fill: var(--color-accent-pale) !important;
+    stroke: var(--color-accent) !important;
+    stroke-dasharray: none !important;
+    animation: seating-drop-pulse 1s ease-in-out infinite;
+}
+
+@keyframes seating-drop-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.seating-chip[draggable="true"] {
+    cursor: grab;
+}
+
+.seating-chip[draggable="true"]:active {
+    cursor: grabbing;
+}
+
 .seating-seat-locked circle {
     stroke-width: 3 !important;
 }
