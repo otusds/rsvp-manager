@@ -117,6 +117,32 @@ class TestGetLastNameSortKey:
     def test_lowercase_al_space(self):
         assert get_last_name_sort_key("al Rashid") == "rashid"
 
+    # --- Smart/curly quotes (iOS and Mac auto-replace straight quotes) ---
+
+    def test_smart_quote_d(self):
+        assert get_last_name_sort_key("d\u2019Artagnan") == "artagnan"
+
+    def test_smart_quote_D_capitalized(self):
+        assert get_last_name_sort_key("D\u2019Angelo") == "d'angelo"
+
+    def test_smart_quote_l(self):
+        assert get_last_name_sort_key("l\u2019Hôpital") == "hôpital"
+
+    def test_smart_quote_t(self):
+        assert get_last_name_sort_key("\u2019t Hooft") == "hooft"
+
+    def test_left_quote_d(self):
+        assert get_last_name_sort_key("d\u2018Artagnan") == "artagnan"
+
+    # --- 't particle (Dutch) ---
+
+    def test_straight_t_particle(self):
+        assert get_last_name_sort_key("'t Hooft") == "hooft"
+
+    def test_smart_t_particle_in_compound(self):
+        """van 't with smart quote should still work."""
+        assert get_last_name_sort_key("van \u2019t Hooft") == "hooft"
+
     # --- Edge cases ---
 
     def test_empty_string(self):

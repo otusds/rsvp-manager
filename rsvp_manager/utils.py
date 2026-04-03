@@ -40,6 +40,26 @@ NOBILITY_PARTICLES = [
 ]
 
 
+def _normalize_apostrophes(s):
+    """Replace curly/smart quotes with straight apostrophe for particle matching."""
+    return s.replace("\u2019", "'").replace("\u2018", "'").replace("\u02BC", "'")
+
+
+def _is_lowercase_particle(name, particle_len):
+    """Check if the particle portion of a name is lowercase.
+
+    For particles starting with a letter, check if that letter is lowercase.
+    For particles starting with non-letter characters (e.g. 't), always treat
+    them as lowercase particles (skip for sorting).
+    """
+    # Find the first letter in the particle portion
+    for i in range(min(particle_len, len(name))):
+        if name[i].isalpha():
+            return name[i].islower()
+    # No letter found in particle (e.g. "'t") — treat as lowercase
+    return True
+
+
 def get_last_name_sort_key(last_name):
     """Return a sort key for a last name that respects nobility particle conventions.
 
@@ -53,30 +73,31 @@ def get_last_name_sort_key(last_name):
     if not last_name:
         return ""
 
+    # Normalize smart quotes for matching
+    normalized = _normalize_apostrophes(last_name)
+
     for particle in NOBILITY_PARTICLES:
         # Check for particles that end with an apostrophe (d', l') — no space after
         if particle.endswith("'"):
-            if last_name.startswith(particle) and len(last_name) > len(particle):
-                # Lowercase in actual name → skip; capitalized → keep
-                if last_name[0].islower():
-                    return last_name[len(particle):].lower()
+            if normalized.lower().startswith(particle) and len(normalized) > len(particle):
+                if _is_lowercase_particle(normalized, len(particle)):
+                    return normalized[len(particle):].lower()
                 else:
-                    return last_name.lower()
+                    return normalized.lower()
         # Check for particles ending with hyphen (al-, el-) — no space after
         elif particle.endswith("-"):
-            if last_name.lower().startswith(particle) and len(last_name) > len(particle):
-                if last_name[0].islower():
-                    return last_name[len(particle):].lower()
+            if normalized.lower().startswith(particle) and len(normalized) > len(particle):
+                if _is_lowercase_particle(normalized, len(particle)):
+                    return normalized[len(particle):].lower()
                 else:
-                    return last_name.lower()
+                    return normalized.lower()
         else:
             prefix = particle + " "
-            if last_name.lower().startswith(prefix) and len(last_name) > len(prefix):
-                # The particle matches — now check the case in the actual name
-                if last_name[0].islower():
-                    return last_name[len(prefix):].lower()
+            if normalized.lower().startswith(prefix) and len(normalized) > len(prefix):
+                if _is_lowercase_particle(normalized, len(prefix)):
+                    return normalized[len(prefix):].lower()
                 else:
-                    return last_name.lower()
+                    return normalized.lower()
 
     return last_name.lower()
 
