@@ -56,18 +56,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     valA = (a.getAttribute("data-gender") || "").toLowerCase();
                     valB = (b.getAttribute("data-gender") || "").toLowerCase();
                 } else if (sortType === "last") {
-                    // Use pre-computed sort key that respects nobility particles
-                    valA = (a.getAttribute("data-last-sort") || "").toLowerCase();
-                    valB = (b.getAttribute("data-last-sort") || "").toLowerCase();
-                    // Fallback: extract last name from cell text
-                    if (!valA) {
-                        var nameA = (a.cells[colIndex] ? a.cells[colIndex].textContent.trim() : "").replace(/\s*\([MF]\)\s*$/, "");
-                        valA = nameA.split(" ").slice(1).join(" ").toLowerCase() || nameA.toLowerCase();
-                    }
-                    if (!valB) {
-                        var nameB = (b.cells[colIndex] ? b.cells[colIndex].textContent.trim() : "").replace(/\s*\([MF]\)\s*$/, "");
-                        valB = nameB.split(" ").slice(1).join(" ").toLowerCase() || nameB.toLowerCase();
-                    }
+                    // Use pre-computed sort key that respects nobility particles.
+                    // getAttribute returns null if missing, "" if empty (no last name).
+                    valA = a.getAttribute("data-last-sort");
+                    valB = b.getAttribute("data-last-sort");
+                    if (valA === null) valA = getSortableText(a.cells[colIndex]);
+                    if (valB === null) valB = getSortableText(b.cells[colIndex]);
                 } else if (sortType === "check") {
                     var cbA = a.cells[colIndex] && a.cells[colIndex].querySelector("input[type=checkbox]");
                     var cbB = b.cells[colIndex] && b.cells[colIndex].querySelector("input[type=checkbox]");
