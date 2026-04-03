@@ -1,5 +1,6 @@
 from flask_login import UserMixin
 from rsvp_manager.extensions import db, login_manager
+from rsvp_manager.utils import get_last_name_sort_key
 
 
 EVENT_TYPES = ["Dinner", "Party", "Weekend", "Hunt", "Corporate", "Holiday", "Other"]
@@ -110,6 +111,10 @@ class Guest(db.Model):
         if self.last_name:
             return f"{self.first_name} {self.last_name}"
         return self.first_name
+
+    @property
+    def last_name_sort_key(self):
+        return get_last_name_sort_key(self.last_name)
 
     def __repr__(self):
         return f"<Guest {self.id} {self.full_name!r}>"

@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", function () {
     var role = app.dataset.role;
     var canEdit = (role === "owner" || role === "cohost");
 
+    var isTouchDevice = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+
     var state = { tables: [], unseated: [] };
     var movingGuest = null; // { assignmentId, invitationId } when in move mode
     var lastAction = null;  // for undo
@@ -87,16 +89,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     e.stopPropagation();
                     onUnseatedChipClick(g, chip);
                 });
-                // Drag-and-drop support
-                chip.draggable = true;
-                chip.addEventListener("dragstart", function (e) {
-                    onDragStart(e, { assignmentId: null, invitationId: g.invitation_id, name: chip.textContent, gender: g.gender });
-                });
-                chip.addEventListener("dragend", onDragEnd);
-                // Touch drag support
-                chip.addEventListener("touchstart", function (e) {
-                    onTouchDragStart(e, chip, { assignmentId: null, invitationId: g.invitation_id, name: chip.textContent, gender: g.gender });
-                }, { passive: false });
+                // Drag-and-drop support (desktop only — no touch drag)
+                if (!isTouchDevice) {
+                    chip.draggable = true;
+                    chip.addEventListener("dragstart", function (e) {
+                        onDragStart(e, { assignmentId: null, invitationId: g.invitation_id, name: chip.textContent, gender: g.gender });
+                    });
+                    chip.addEventListener("dragend", onDragEnd);
+                }
             }
             list.appendChild(chip);
         });
@@ -133,7 +133,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         // Highlight other filled seats for swap (not the one being moved)
         document.querySelectorAll(".seating-seat-filled").forEach(function (s) {
-            if (movingGuest && s.dataset.assignmentId !== String(movingGuest.assignmentId)) {
+            if (movingGuest && seatAttr(s, "assignment-id") !== String(movingGuest.assignmentId)) {
                 s.classList.add("seating-seat-swap-highlight");
             }
         });
@@ -556,6 +556,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function escapeXml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
+    // Helper: read data attributes from SVG elements (dataset is unreliable on SVG in some mobile browsers)
+    function seatAttr(el, name) { return el.getAttribute("data-" + name); }
+
     // ── Seat click handling ─────────────────────────────────────────────────
     document.addEventListener("click", function (e) {
         if (!canEdit) return;
@@ -566,9 +569,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // ── Filled seat ─────────────────────────────────────────────────
         if (seat.classList.contains("seating-seat-filled")) {
-            var aId = seat.dataset.assignmentId;
-            var invId = seat.dataset.invitationId;
-            var tId = seat.dataset.tableId;
+            var aId = seatAttr(seat, "assignment-id");
+            var invId = seatAttr(seat, "invitation-id");
+            var tId = seatAttr(seat, "table-id");
 
             // In move mode with a SEATED guest: swap
             if (movingGuest && movingGuest.assignmentId && movingGuest.assignmentId !== aId) {
@@ -630,8 +633,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // ── Empty seat ──────────────────────────────────────────────────
-        var tableId = parseInt(seat.dataset.tableId);
-        var seatPos = parseInt(seat.dataset.seatPos);
+        var tableId = parseInt(seatAttr(seat, "table-id"));
+        var seatPos = parseInt(seatAttr(seat, "seat-pos"));
 
         if (movingGuest) {
             saveStateForUndo();
@@ -670,7 +673,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!canEdit) return;
         var seat = e.target.closest(".seating-seat-filled");
         if (!seat || seat.closest("#seating-table-overlay")) return;
-        var aId = seat.dataset.assignmentId;
+        var aId = seatAttr(seat, "assignment-id");
         exitMoveMode();
         saveStateForUndo();
         api("DELETE", "/assign/" + aId).then(function () {
@@ -688,7 +691,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var seat = e.target.closest(".seating-seat-filled");
         if (!seat || seat.closest("#seating-table-overlay")) return;
         e.preventDefault();
-        var aId = seat.dataset.assignmentId;
+        var aId = seatAttr(seat, "assignment-id");
         api("POST", "/assign/" + aId + "/lock").then(function () { load(); }).catch(window.handleFetchError);
     });
 
@@ -884,9 +887,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var dragData = null;   // { assignmentId, invitationId, name, gender }
     var dragGhost = null;
-    var touchDragActive = false;
-    var touchStartTimer = null;
-    var TOUCH_HOLD_MS = 200;
 
     function createDragGhost(name, gender) {
         var el = document.createElement("div");
@@ -906,7 +906,7 @@ document.addEventListener("DOMContentLoaded", function () {
             s.classList.add("seating-seat-drop-target");
         });
         document.querySelectorAll(".seating-seat-filled").forEach(function (s) {
-            if (!dragData || !dragData.assignmentId || s.dataset.assignmentId !== String(dragData.assignmentId)) {
+            if (!dragData || !dragData.assignmentId || seatAttr(s, "assignment-id") !== String(dragData.assignmentId)) {
                 s.classList.add("seating-seat-swap-highlight");
             }
         });
@@ -932,17 +932,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function handleDrop(seat) {
         if (!seat || !dragData) return;
+        // Capture dragData locally — callers null out the outer variable synchronously
+        // after this function returns, but async callbacks below still need the values.
+        var data = { assignmentId: dragData.assignmentId, invitationId: dragData.invitationId };
         exitMoveMode();
         saveStateForUndo();
 
         if (seat.classList.contains("seating-seat-empty")) {
-            var tableId = parseInt(seat.dataset.tableId);
-            var seatPos = parseInt(seat.dataset.seatPos);
-            if (dragData.assignmentId) {
+            var tableId = parseInt(seatAttr(seat, "table-id"));
+            var seatPos = parseInt(seatAttr(seat, "seat-pos"));
+            if (data.assignmentId) {
                 // Move filled seat to empty seat
-                api("DELETE", "/assign/" + dragData.assignmentId).then(function () {
+                api("DELETE", "/assign/" + data.assignmentId).then(function () {
                     return api("POST", "/assign", {
-                        invitation_id: parseInt(dragData.invitationId),
+                        invitation_id: parseInt(data.invitationId),
                         table_id: tableId,
                         seat_position: seatPos
                     });
@@ -952,7 +955,7 @@ document.addEventListener("DOMContentLoaded", function () {
             } else {
                 // Assign unseated chip to empty seat
                 api("POST", "/assign", {
-                    invitation_id: parseInt(dragData.invitationId),
+                    invitation_id: parseInt(data.invitationId),
                     table_id: tableId,
                     seat_position: seatPos
                 }).then(function () { load(); }).catch(function (err) {
@@ -960,16 +963,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             }
         } else if (seat.classList.contains("seating-seat-filled")) {
-            var targetAId = seat.dataset.assignmentId;
-            if (dragData.assignmentId && dragData.assignmentId !== targetAId) {
+            var targetAId = seatAttr(seat, "assignment-id");
+            if (data.assignmentId && data.assignmentId !== targetAId) {
                 // Swap two filled seats
                 api("POST", "/swap", {
-                    assignment_id_a: parseInt(dragData.assignmentId),
+                    assignment_id_a: parseInt(data.assignmentId),
                     assignment_id_b: parseInt(targetAId)
                 }).then(function () { load(); }).catch(function (err) {
                     window.showToast(err.message || "Failed to swap");
                 });
-            } else if (!dragData.assignmentId) {
+            } else if (!data.assignmentId) {
                 // Drop unseated chip onto filled seat → replace
                 var seatPos = null, tId = null;
                 for (var ti = 0; ti < state.tables.length; ti++) {
@@ -985,7 +988,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 api("DELETE", "/assign/" + targetAId).then(function () {
                     return api("POST", "/assign", {
-                        invitation_id: parseInt(dragData.invitationId),
+                        invitation_id: parseInt(data.invitationId),
                         table_id: tId,
                         seat_position: seatPos
                     });
@@ -996,12 +999,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ── HTML5 Drag API (for unseated chips on desktop) ──────────────────
+    // ── Drag-and-drop (desktop only — disabled on touch devices) ─────────
+
+    if (!isTouchDevice) {
 
     function onDragStart(e, data) {
         dragData = data;
         e.dataTransfer.effectAllowed = "move";
-        // Use a transparent 1x1 image so we show our own ghost
         var img = new Image();
         img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
         e.dataTransfer.setDragImage(img, 0, 0);
@@ -1009,7 +1013,6 @@ document.addEventListener("DOMContentLoaded", function () {
         dragGhost.style.left = e.clientX + "px";
         dragGhost.style.top = e.clientY + "px";
         document.body.classList.add("seating-dragging");
-        // Delay highlight so it doesn't flash on the source
         setTimeout(addDropHighlights, 0);
     }
 
@@ -1020,7 +1023,6 @@ document.addEventListener("DOMContentLoaded", function () {
         dragData = null;
     }
 
-    // Global drag events on the seating area for drop targets
     app.addEventListener("dragover", function (e) {
         if (!dragData) return;
         e.preventDefault();
@@ -1042,21 +1044,18 @@ document.addEventListener("DOMContentLoaded", function () {
         dragData = null;
     });
 
-    // ── Mouse drag for filled SVG seats ─────────────────────────────────
-
+    // Mouse drag for filled SVG seats
     var mouseDragActive = false;
 
     app.addEventListener("mousedown", function (e) {
         if (!canEdit || e.button !== 0) return;
         var seat = e.target.closest(".seating-seat-filled");
         if (!seat || seat.closest("#seating-table-overlay")) return;
-        // Don't interfere with action circle buttons
         if (e.target.closest(".seating-action-circle")) return;
 
-        var aId = seat.dataset.assignmentId;
-        var invId = seat.dataset.invitationId;
+        var aId = seat.getAttribute("data-assignment-id");
+        var invId = seat.getAttribute("data-invitation-id");
 
-        // Find guest name from state
         var name = "", gender = "";
         for (var ti = 0; ti < state.tables.length; ti++) {
             var seats = state.tables[ti].seats;
@@ -1100,7 +1099,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 removeDropHighlights();
                 document.body.classList.remove("seating-dragging");
                 dragData = null;
-                // Prevent the click event from firing after drag
                 setTimeout(function () { mouseDragActive = false; }, 0);
             }
         }
@@ -1109,8 +1107,6 @@ document.addEventListener("DOMContentLoaded", function () {
         document.addEventListener("mouseup", onMouseUp);
     });
 
-    // Prevent click handlers from firing after a mouse drag
-    var origClickHandler = app.addEventListener;
     document.addEventListener("click", function (e) {
         if (mouseDragActive) {
             e.stopPropagation();
@@ -1118,97 +1114,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }, true);
 
-    // ── Touch drag (mobile) ─────────────────────────────────────────────
+    } // end if (!isTouchDevice)
 
-    function onTouchDragStart(e, sourceEl, data) {
-        var touch = e.touches[0];
-        var startX = touch.clientX, startY = touch.clientY;
-        var started = false;
-        var threshold = 10;
 
-        clearTimeout(touchStartTimer);
-        touchStartTimer = setTimeout(function () {
-            // Long press activates drag immediately at current position
-            started = true;
-            touchDragActive = true;
-            dragData = data;
-            exitMoveMode();
-            dragGhost = createDragGhost(data.name, data.gender);
-            dragGhost.style.left = startX + "px";
-            dragGhost.style.top = startY + "px";
-            document.body.classList.add("seating-dragging");
-            addDropHighlights();
-            // Haptic feedback if available
-            if (navigator.vibrate) navigator.vibrate(30);
-        }, TOUCH_HOLD_MS);
-
-        function onTouchMove(ev) {
-            var t = ev.touches[0];
-            var dx = t.clientX - startX, dy = t.clientY - startY;
-            if (!started && Math.abs(dx) + Math.abs(dy) > threshold) {
-                // Moved before hold timer — cancel drag, allow scroll
-                clearTimeout(touchStartTimer);
-                cleanup();
-                return;
-            }
-            if (started) {
-                ev.preventDefault();
-                dragGhost.style.left = t.clientX + "px";
-                dragGhost.style.top = t.clientY + "px";
-            }
-        }
-
-        function onTouchEnd(ev) {
-            clearTimeout(touchStartTimer);
-            if (started) {
-                var t = ev.changedTouches[0];
-                var seat = findSeatUnderPoint(t.clientX, t.clientY);
-                handleDrop(seat);
-                removeDragGhost();
-                removeDropHighlights();
-                document.body.classList.remove("seating-dragging");
-                dragData = null;
-                touchDragActive = false;
-                ev.preventDefault();
-            }
-            cleanup();
-        }
-
-        function cleanup() {
-            document.removeEventListener("touchmove", onTouchMove);
-            document.removeEventListener("touchend", onTouchEnd);
-            document.removeEventListener("touchcancel", onTouchEnd);
-        }
-
-        document.addEventListener("touchmove", onTouchMove, { passive: false });
-        document.addEventListener("touchend", onTouchEnd);
-        document.addEventListener("touchcancel", onTouchEnd);
-    }
-
-    // Touch drag for filled seats
-    app.addEventListener("touchstart", function (e) {
-        if (!canEdit) return;
-        var seat = e.target.closest(".seating-seat-filled");
-        if (!seat || seat.closest("#seating-table-overlay")) return;
-        if (e.target.closest(".seating-action-circle")) return;
-
-        var aId = seat.dataset.assignmentId;
-        var invId = seat.dataset.invitationId;
-        var name = "", gender = "";
-        for (var ti = 0; ti < state.tables.length; ti++) {
-            var seats = state.tables[ti].seats;
-            for (var p in seats) {
-                if (String(seats[p].assignment_id) === aId) {
-                    name = seats[p].first_name;
-                    gender = seats[p].gender;
-                    break;
-                }
-            }
-            if (name) break;
-        }
-
-        onTouchDragStart(e, seat, { assignmentId: aId, invitationId: invId, name: name, gender: gender });
-    }, { passive: false });
 
     // ── Initial load ────────────────────────────────────────────────────
     var section = document.getElementById("seating-section");

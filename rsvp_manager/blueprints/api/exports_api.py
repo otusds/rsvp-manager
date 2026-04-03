@@ -1,6 +1,7 @@
 from rsvp_manager.blueprints.api import api_bp, api_auth_required, get_api_user
 from rsvp_manager.models import Event, Guest
 from rsvp_manager.services import export_service, event_service
+from rsvp_manager.utils import get_last_name_sort_key
 
 
 @api_bp.route("/events/export", methods=["GET"])
@@ -24,5 +25,6 @@ def export_event_guests(event_id):
 def export_friends():
     guests = Guest.query.filter_by(user_id=get_api_user().id).filter(
         Guest.deleted_at.is_(None)
-    ).order_by(Guest.last_name, Guest.first_name).all()
+    ).all()
+    guests.sort(key=lambda g: (get_last_name_sort_key(g.last_name), g.first_name.lower()))
     return export_service.export_guests_xlsx(guests)

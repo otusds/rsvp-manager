@@ -3,6 +3,7 @@ from io import BytesIO
 from flask import send_file, make_response
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
+from rsvp_manager.utils import get_last_name_sort_key
 
 HEADER_FONT = Font(bold=True, color="FFFFFF")
 HEADER_FILL = PatternFill(start_color="2C3E50", end_color="2C3E50", fill_type="solid")
@@ -94,14 +95,17 @@ def export_event_guests_text(event):
     for inv in event.invitations:
         if inv.guest.deleted_at:
             continue
-        name = inv.guest.full_name
+        g = inv.guest
+        entry = (get_last_name_sort_key(g.last_name), g.first_name.lower(), g.full_name)
         if inv.status == "Attending":
-            attending.append(name)
+            attending.append(entry)
         elif inv.status == "Pending":
-            pending.append(name)
+            pending.append(entry)
 
-    attending.sort(key=str.lower)
-    pending.sort(key=str.lower)
+    attending.sort()
+    pending.sort()
+    attending = [name for _, _, name in attending]
+    pending = [name for _, _, name in pending]
 
     lines = []
     lines.append(f"{event.name} ({event.date.strftime('%d %B %Y')})")

@@ -5,10 +5,40 @@ from sqlalchemy.orm import joinedload
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Guest, Invitation
 from rsvp_manager.services.history_service import log_action
-from rsvp_manager.utils import VALID_GENDERS
+from rsvp_manager.utils import VALID_GENDERS, get_last_name_sort_key
 
 
 GUESTS_PER_PAGE = 50
+
+
+class _Pagination:
+    """Lightweight pagination wrapper compatible with Flask-SQLAlchemy's Pagination."""
+
+    def __init__(self, items, total, page, per_page):
+        self.items = items
+        self.total = total
+        self.page = page
+        self.per_page = per_page
+        self.pages = max(1, (total + per_page - 1) // per_page)
+        self.has_prev = page > 1
+        self.has_next = page < self.pages
+        self.prev_num = page - 1 if self.has_prev else None
+        self.next_num = page + 1 if self.has_next else None
+
+    def iter_pages(self, left_edge=2, left_current=2, right_current=5, right_edge=2):
+        last = 0
+        for num in range(1, self.pages + 1):
+            if (num <= left_edge or
+                (self.page - left_current - 1 < num < self.page + right_current) or
+                num > self.pages - right_edge):
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num
+
+
+def _guest_sort_key(guest):
+    return (guest.last_name_sort_key, guest.first_name.lower())
 
 
 def get_user_guests(user_id, page=1, show_archived="0", search=""):
@@ -29,9 +59,12 @@ def get_user_guests(user_id, page=1, show_archived="0", search=""):
                 (Guest.first_name + " " + Guest.last_name).ilike(like_pattern),
             )
         )
-    return query.order_by(
-        Guest.first_name, Guest.last_name
-    ).paginate(page=page, per_page=GUESTS_PER_PAGE, error_out=False)
+    all_guests = query.all()
+    all_guests.sort(key=_guest_sort_key)
+    total = len(all_guests)
+    start = (page - 1) * GUESTS_PER_PAGE
+    end = start + GUESTS_PER_PAGE
+    return _Pagination(all_guests[start:end], total, page, GUESTS_PER_PAGE)
 
 
 def get_owned_guest_or_404(guest_id, user_id):

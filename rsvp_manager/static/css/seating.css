@@ -431,3 +431,16 @@
 .seating-instructions li {
     margin-bottom: 0.15rem;
 }
+
+/* Show desktop instructions by default, hide mobile */
+.seating-instructions-mobile { display: none; }
+
+/* On touch/small screens: show mobile, hide desktop */
+@media (pointer: coarse) {
+    .seating-instructions-desktop { display: none; }
+    .seating-instructions-mobile { display: block; }
+}
+@media (max-width: 768px) {
+    .seating-instructions-desktop { display: none; }
+    .seating-instructions-mobile { display: block; }
+}
