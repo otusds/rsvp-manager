@@ -218,6 +218,7 @@
                 <tr data-inv-id="{{ inv.id }}" data-guest-id="{{ inv.guest.id }}"
                     data-guest-owner-id="{{ inv.guest.user_id }}"
                     data-gender="{{ inv.guest.gender }}"
+                    data-last-sort="{{ inv.guest.last_name_sort_key }}"
                     data-tags="{{ inv.guest.tags|rejectattr('deleted_at')|map(attribute='id')|join(',') }}"
                     data-sent="{{ 'true' if inv.status != 'Not Sent' else 'false' }}"
                     data-date-invited="{{ inv.date_invited.strftime('%d %b %Y') if inv.date_invited else '' }}"

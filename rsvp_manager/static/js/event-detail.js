@@ -1311,7 +1311,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         var div = document.createElement("div");
                         div.className = "friends-item" + (g.already_invited ? " disabled" : "") + (g.name_match_in_event ? " name-match" : "") + (g.is_archived ? " archived-item" : "");
                         div.setAttribute("data-first", g.first_name.toLowerCase());
-                        div.setAttribute("data-last", (g.last_name || "").toLowerCase());
+                        div.setAttribute("data-last", g.last_name_sort_key || (g.last_name || "").toLowerCase());
                         div.setAttribute("data-gender", g.gender);
                         div.setAttribute("data-is-archived", g.is_archived ? "true" : "false");
                         var tagIds = (g.tags || []).map(function (t) { return t.id; });
@@ -1561,7 +1561,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 var div = document.createElement("div");
                 div.className = "friends-item" + (g.already_invited ? " disabled" : "");
                 div.setAttribute("data-first", g.first_name.toLowerCase());
-                div.setAttribute("data-last", (g.last_name || "").toLowerCase());
+                div.setAttribute("data-last", g.last_name_sort_key || (g.last_name || "").toLowerCase());
                 div.setAttribute("data-gender", g.gender);
                 div.setAttribute("data-status", g.status);
                 var tagIds = (g.tags || []).map(function (t) { return t.id; });
