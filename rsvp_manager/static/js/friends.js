@@ -78,8 +78,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 valA = a.getAttribute("data-first") || "";
                 valB = b.getAttribute("data-first") || "";
             } else if (key === "last") {
-                valA = a.getAttribute("data-last") || "";
-                valB = b.getAttribute("data-last") || "";
+                valA = a.getAttribute("data-last-sort") || a.getAttribute("data-last") || "";
+                valB = b.getAttribute("data-last-sort") || b.getAttribute("data-last") || "";
             } else if (key === "gender") {
                 valA = a.getAttribute("data-gender") || "";
                 valB = b.getAttribute("data-gender") || "";
@@ -279,7 +279,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ first_name: firstName, last_name: lastName })
-                    }).then(function () { showInlineSaved(row); }).catch(window.handleFetchError);
+                    }).then(function (r) { return r.json(); }).then(function (resp) {
+                        if (resp.data && resp.data.last_name_sort_key !== undefined) {
+                            row.setAttribute("data-last-sort", resp.data.last_name_sort_key);
+                        }
+                        showInlineSaved(row);
+                    }).catch(window.handleFetchError);
                 });
             });
         }
@@ -1043,6 +1048,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (notesInput) notesInput.value = notes;
                     gdActiveRow.setAttribute("data-first", firstName.toLowerCase());
                     gdActiveRow.setAttribute("data-last", lastName.toLowerCase());
+                    if (data.last_name_sort_key !== undefined) {
+                        gdActiveRow.setAttribute("data-last-sort", data.last_name_sort_key);
+                    }
                     gdActiveRow.setAttribute("data-gender", gender);
                     // Update tags on row
                     var tagIds = (data.tags || []).map(function (t) { return t.id; });
