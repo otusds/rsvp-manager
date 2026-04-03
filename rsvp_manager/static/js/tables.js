@@ -205,6 +205,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     valA = getStatusRank(cellA);
                     valB = getStatusRank(cellB);
                     return dir === "asc" ? valA - valB : valB - valA;
+                } else if (sortType === "last") {
+                    valA = a.getAttribute("data-last-sort") || getSortableText(cellA);
+                    valB = b.getAttribute("data-last-sort") || getSortableText(cellB);
                 } else {
                     valA = getSortableText(cellA);
                     valB = getSortableText(cellB);

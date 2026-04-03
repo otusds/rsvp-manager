@@ -3,6 +3,7 @@
     data-gender="{{ guest.gender }}"
     data-first="{{ guest.first_name|lower }}"
     data-last="{{ (guest.last_name or '')|lower }}"
+    data-last-sort="{{ guest.last_name_sort_key }}"
     data-created="{{ guest.date_created.isoformat() if guest.date_created else '' }}"
     data-is-me="{{ 'true' if guest.is_me else 'false' }}"
     data-is-archived="{{ 'true' if guest.is_archived else 'false' }}"

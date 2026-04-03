@@ -102,6 +102,7 @@ def serialize_friend(guest, viewer_user_id=None):
         "owner_name": owner_name,
         "first_name": guest.first_name,
         "last_name": guest.last_name or "",
+        "last_name_sort_key": guest.last_name_sort_key,
         "gender": guest.gender,
         "is_me": guest.is_me,
         "is_archived": guest.is_archived,
