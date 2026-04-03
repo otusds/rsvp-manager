@@ -99,6 +99,7 @@ def get_available_guests(event, user_id):
         name_match = name_key in invited_names and not already_by_id
         result.append({
             "id": g.id, "first_name": g.first_name, "last_name": g.last_name or "",
+            "last_name_sort_key": g.last_name_sort_key,
             "gender": g.gender,
             "already_invited": already_by_id,
             "name_match_in_event": name_match,
@@ -158,6 +159,7 @@ def get_event_guests_with_status(source_event, current_event, user_id):
             "id": guest.id,
             "first_name": guest.first_name,
             "last_name": guest.last_name or "",
+            "last_name_sort_key": guest.last_name_sort_key,
             "gender": guest.gender,
             "status": inv.status,
             "already_invited": guest.id in current_invited_ids,
