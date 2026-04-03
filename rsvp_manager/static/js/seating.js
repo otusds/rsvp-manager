@@ -8,7 +8,10 @@ document.addEventListener("DOMContentLoaded", function () {
     var role = app.dataset.role;
     var canEdit = (role === "owner" || role === "cohost");
 
-    var isTouchDevice = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+    // Enable drag on devices with a fine pointer (mouse/trackpad) — this covers
+    // touchscreen laptops (primary pointer is the trackpad, so pointer:fine is true)
+    // while excluding phones/tablets (primary pointer is touch, so pointer:coarse).
+    var hasFinePointer = window.matchMedia("(pointer: fine)").matches;
 
     var state = { tables: [], unseated: [] };
     var movingGuest = null; // { assignmentId, invitationId } when in move mode
@@ -89,8 +92,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     e.stopPropagation();
                     onUnseatedChipClick(g, chip);
                 });
-                // Drag-and-drop support (desktop only — no touch drag)
-                if (!isTouchDevice) {
+                // Drag-and-drop support (only when a fine pointer like mouse/trackpad is available)
+                if (hasFinePointer) {
                     chip.draggable = true;
                     chip.addEventListener("dragstart", function (e) {
                         onDragStart(e, { assignmentId: null, invitationId: g.invitation_id, name: chip.textContent, gender: g.gender });
@@ -1001,7 +1004,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Drag-and-drop (desktop only — disabled on touch devices) ─────────
 
-    if (!isTouchDevice) {
+    if (hasFinePointer) {
 
     function onDragStart(e, data) {
         dragData = data;
@@ -1114,7 +1117,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }, true);
 
-    } // end if (!isTouchDevice)
+    } // end if (hasFinePointer)
 
 
 
