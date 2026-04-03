@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", function () {
     var role = app.dataset.role;
     var canEdit = (role === "owner" || role === "cohost");
 
+    var isTouchDevice = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+
     var state = { tables: [], unseated: [] };
     var movingGuest = null; // { assignmentId, invitationId } when in move mode
     var lastAction = null;  // for undo
@@ -50,7 +52,6 @@ document.addEventListener("DOMContentLoaded", function () {
         renderUnseated();
         renderTables();
         updateHeaderCount();
-        attachSeatTouchHandlers();
     }
 
     function updateHeaderCount() {
@@ -88,16 +89,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     e.stopPropagation();
                     onUnseatedChipClick(g, chip);
                 });
-                // Drag-and-drop support
-                chip.draggable = true;
-                chip.addEventListener("dragstart", function (e) {
-                    onDragStart(e, { assignmentId: null, invitationId: g.invitation_id, name: chip.textContent, gender: g.gender });
-                });
-                chip.addEventListener("dragend", onDragEnd);
-                // Touch drag support
-                chip.addEventListener("touchstart", function (e) {
-                    onTouchDragStart(e, chip, { assignmentId: null, invitationId: g.invitation_id, name: chip.textContent, gender: g.gender });
-                }, { passive: false });
+                // Drag-and-drop support (desktop only — no touch drag)
+                if (!isTouchDevice) {
+                    chip.draggable = true;
+                    chip.addEventListener("dragstart", function (e) {
+                        onDragStart(e, { assignmentId: null, invitationId: g.invitation_id, name: chip.textContent, gender: g.gender });
+                    });
+                    chip.addEventListener("dragend", onDragEnd);
+                }
             }
             list.appendChild(chip);
         });
@@ -888,9 +887,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var dragData = null;   // { assignmentId, invitationId, name, gender }
     var dragGhost = null;
-    var touchDragActive = false;
-    var touchStartTimer = null;
-    var TOUCH_HOLD_MS = 200;
 
     function createDragGhost(name, gender) {
         var el = document.createElement("div");
@@ -1003,12 +999,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ── HTML5 Drag API (for unseated chips on desktop) ──────────────────
+    // ── Drag-and-drop (desktop only — disabled on touch devices) ─────────
+
+    if (!isTouchDevice) {
 
     function onDragStart(e, data) {
         dragData = data;
         e.dataTransfer.effectAllowed = "move";
-        // Use a transparent 1x1 image so we show our own ghost
         var img = new Image();
         img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
         e.dataTransfer.setDragImage(img, 0, 0);
@@ -1016,7 +1013,6 @@ document.addEventListener("DOMContentLoaded", function () {
         dragGhost.style.left = e.clientX + "px";
         dragGhost.style.top = e.clientY + "px";
         document.body.classList.add("seating-dragging");
-        // Delay highlight so it doesn't flash on the source
         setTimeout(addDropHighlights, 0);
     }
 
@@ -1027,7 +1023,6 @@ document.addEventListener("DOMContentLoaded", function () {
         dragData = null;
     }
 
-    // Global drag events on the seating area for drop targets
     app.addEventListener("dragover", function (e) {
         if (!dragData) return;
         e.preventDefault();
@@ -1049,22 +1044,18 @@ document.addEventListener("DOMContentLoaded", function () {
         dragData = null;
     });
 
-    // ── Mouse drag for filled SVG seats ─────────────────────────────────
-
+    // Mouse drag for filled SVG seats
     var mouseDragActive = false;
 
     app.addEventListener("mousedown", function (e) {
         if (!canEdit || e.button !== 0) return;
         var seat = e.target.closest(".seating-seat-filled");
         if (!seat || seat.closest("#seating-table-overlay")) return;
-        // Don't interfere with action circle buttons
         if (e.target.closest(".seating-action-circle")) return;
 
-        // Use getAttribute for SVG element compatibility
         var aId = seat.getAttribute("data-assignment-id");
         var invId = seat.getAttribute("data-invitation-id");
 
-        // Find guest name from state
         var name = "", gender = "";
         for (var ti = 0; ti < state.tables.length; ti++) {
             var seats = state.tables[ti].seats;
@@ -1108,7 +1099,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 removeDropHighlights();
                 document.body.classList.remove("seating-dragging");
                 dragData = null;
-                // Prevent the click event from firing after drag
                 setTimeout(function () { mouseDragActive = false; }, 0);
             }
         }
@@ -1117,8 +1107,6 @@ document.addEventListener("DOMContentLoaded", function () {
         document.addEventListener("mouseup", onMouseUp);
     });
 
-    // Prevent click handlers from firing after a mouse drag
-    var origClickHandler = app.addEventListener;
     document.addEventListener("click", function (e) {
         if (mouseDragActive) {
             e.stopPropagation();
@@ -1126,105 +1114,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }, true);
 
-    // ── Touch drag (mobile) ─────────────────────────────────────────────
+    } // end if (!isTouchDevice)
 
-    function onTouchDragStart(e, sourceEl, data) {
-        var touch = e.touches[0];
-        var startX = touch.clientX, startY = touch.clientY;
-        var started = false;
-        var threshold = 10;
 
-        clearTimeout(touchStartTimer);
-        touchStartTimer = setTimeout(function () {
-            // Long press activates drag immediately at current position
-            started = true;
-            touchDragActive = true;
-            dragData = data;
-            exitMoveMode();
-            dragGhost = createDragGhost(data.name, data.gender);
-            dragGhost.style.left = startX + "px";
-            dragGhost.style.top = startY + "px";
-            document.body.classList.add("seating-dragging");
-            addDropHighlights();
-            // Haptic feedback if available
-            if (navigator.vibrate) navigator.vibrate(30);
-        }, TOUCH_HOLD_MS);
-
-        function onTouchMove(ev) {
-            var t = ev.touches[0];
-            var dx = t.clientX - startX, dy = t.clientY - startY;
-            if (!started && Math.abs(dx) + Math.abs(dy) > threshold) {
-                // Moved before hold timer — cancel drag, allow scroll
-                clearTimeout(touchStartTimer);
-                cleanup();
-                return;
-            }
-            if (started) {
-                ev.preventDefault();
-                dragGhost.style.left = t.clientX + "px";
-                dragGhost.style.top = t.clientY + "px";
-            }
-        }
-
-        function onTouchEnd(ev) {
-            clearTimeout(touchStartTimer);
-            if (started) {
-                var t = ev.changedTouches[0];
-                var seat = findSeatUnderPoint(t.clientX, t.clientY);
-                handleDrop(seat);
-                removeDragGhost();
-                removeDropHighlights();
-                document.body.classList.remove("seating-dragging");
-                dragData = null;
-                touchDragActive = false;
-                ev.preventDefault();
-            }
-            cleanup();
-        }
-
-        function cleanup() {
-            document.removeEventListener("touchmove", onTouchMove);
-            document.removeEventListener("touchend", onTouchEnd);
-            document.removeEventListener("touchcancel", onTouchEnd);
-        }
-
-        document.addEventListener("touchmove", onTouchMove, { passive: false });
-        document.addEventListener("touchend", onTouchEnd);
-        document.addEventListener("touchcancel", onTouchEnd);
-    }
-
-    // Touch drag for filled seats — attach directly on each <g> element after render
-    // (event delegation from app is unreliable for SVG elements on iOS/mobile WebKit)
-    function attachSeatTouchHandlers() {
-        if (!canEdit) return;
-        var filledSeats = app.querySelectorAll(".seating-seat-filled");
-        for (var i = 0; i < filledSeats.length; i++) {
-            (function (seat) {
-                // Skip if handler already attached
-                if (seat._touchBound) return;
-                seat._touchBound = true;
-                seat.addEventListener("touchstart", function (e) {
-                    if (e.target.closest && e.target.closest(".seating-action-circle")) return;
-                    // Use getAttribute for SVG compatibility (dataset not reliable on SVG in all mobile browsers)
-                    var aId = seat.getAttribute("data-assignment-id");
-                    var invId = seat.getAttribute("data-invitation-id");
-                    var name = "", gender = "";
-                    for (var ti = 0; ti < state.tables.length; ti++) {
-                        var seats = state.tables[ti].seats;
-                        for (var p in seats) {
-                            if (String(seats[p].assignment_id) === aId) {
-                                name = seats[p].first_name;
-                                gender = seats[p].gender;
-                                break;
-                            }
-                        }
-                        if (name) break;
-                    }
-                    onTouchDragStart(e, seat, { assignmentId: aId, invitationId: invId, name: name, gender: gender });
-                }, { passive: false });
-            })(filledSeats[i]);
-        }
-    }
 
     // ── Initial load ────────────────────────────────────────────────────
     var section = document.getElementById("seating-section");

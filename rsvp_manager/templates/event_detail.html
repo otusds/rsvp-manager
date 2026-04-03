@@ -317,12 +317,21 @@
             </div>
 
             {% if role in ('owner', 'cohost') %}
-            <div class="seating-instructions">
+            <div class="seating-instructions seating-instructions-desktop">
                 <strong>Instructions:</strong>
                 <ul>
-                    <li>Click a guest name, then click an empty seat to place them</li>
-                    <li>Double-click a seated guest to remove them</li>
+                    <li>Drag a guest name onto a seat, or click then click a seat to place them</li>
+                    <li>Drag a seated guest to swap or move — double-click to remove</li>
                     <li>Click the lock icon to lock a seat — locked seats are kept during Auto-Plan and Clear Unlocked</li>
+                    <li>Use Auto-Plan to fill empty seats automatically</li>
+                </ul>
+            </div>
+            <div class="seating-instructions seating-instructions-mobile">
+                <strong>Instructions:</strong>
+                <ul>
+                    <li>Tap a guest name, then tap an empty seat to place them</li>
+                    <li>Double-tap a seated guest to remove them</li>
+                    <li>Tap the lock icon to lock a seat — locked seats are kept during Auto-Plan and Clear Unlocked</li>
                     <li>Use Auto-Plan to fill empty seats automatically</li>
                 </ul>
             </div>
