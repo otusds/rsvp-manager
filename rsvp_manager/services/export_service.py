@@ -43,12 +43,23 @@ def export_events_xlsx(events):
 
 def export_guests_xlsx(guests):
     wb = Workbook()
-    ws = _styled_sheet(wb, "Guests", ["Last Name", "First Name", "Gender", "Notes"])
+    ws = _styled_sheet(wb, "Guests", ["Last Name", "First Name", "Gender", "Tags",
+                                       "Total Invited", "Total Attending", "Total Pending",
+                                       "Total Declined", "Date Created", "Notes"])
     for g in guests:
-        ws.append([g.last_name or "", g.first_name, g.gender, g.notes or ""])
+        tags = ", ".join(t.name for t in g.tags if not t.deleted_at)
+        invitations = [inv for inv in g.invitations if not inv.event.deleted_at] if g.invitations else []
+        total_invited = len(invitations)
+        total_attending = sum(1 for inv in invitations if inv.status == "Attending")
+        total_pending = sum(1 for inv in invitations if inv.status == "Pending")
+        total_declined = sum(1 for inv in invitations if inv.status == "Declined")
+        date_created = g.date_created.strftime("%Y-%m-%d") if g.date_created else ""
+        ws.append([g.last_name or "", g.first_name, g.gender, tags,
+                   total_invited, total_attending, total_pending, total_declined,
+                   date_created, g.notes or ""])
     for col in ws.columns:
         ws.column_dimensions[col[0].column_letter].width = 20
-    return _to_download(wb, "guests.xlsx")
+    return _to_download(wb, "GuestCheck_Friends.xlsx")
 
 
 def _get_seating_info(inv):
@@ -84,7 +95,7 @@ def export_event_guests_xlsx(event):
         ws.column_dimensions[col[0].column_letter].width = 18
     safe_name = re.sub(r"[^\w\-]", "_", event.name).strip("_").lower()
     date_str = event.date.strftime("%Y-%m-%d") if event.date else ""
-    return _to_download(wb, f"{safe_name}_{date_str}_guests.xlsx")
+    return _to_download(wb, f"GuestCheck_{safe_name}_{date_str}_guests.xlsx")
 
 
 def export_event_guests_text(event):
