@@ -133,8 +133,18 @@ def bulk_archive_friends():
     data = request.get_json()
     if not data or "guest_ids" not in data:
         return api_error("guest_ids required", "INVALID_FORMAT", 400)
-    archived = friend_service.bulk_archive_guests(get_api_user().id, data["guest_ids"])
-    return api_success({"archived": archived})
+    changed_ids = friend_service.bulk_archive_guests(get_api_user().id, data["guest_ids"])
+    return api_success({"archived": len(changed_ids), "archived_ids": changed_ids})
+
+
+@api_bp.route("/friends/bulk-unarchive", methods=["POST"])
+@api_auth_required
+def bulk_unarchive_friends():
+    data = request.get_json()
+    if not data or "guest_ids" not in data:
+        return api_error("guest_ids required", "INVALID_FORMAT", 400)
+    changed_ids = friend_service.bulk_unarchive_guests(get_api_user().id, data["guest_ids"])
+    return api_success({"unarchived": len(changed_ids), "unarchived_ids": changed_ids})
 
 
 @api_bp.route("/friends/bulk-delete", methods=["POST"])
