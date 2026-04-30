@@ -442,6 +442,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (multiVisible) cb.closest("td").style.display = "table-cell";
                     }
                 });
+                applyGuestTableControls();
                 scrollLoader.style.display = "none";
                 isLoading = false;
             })
