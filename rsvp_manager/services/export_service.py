@@ -4,7 +4,7 @@ from flask import send_file, make_response
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from sqlalchemy.orm import joinedload, selectinload
-from rsvp_manager.models import Guest, Invitation, SeatAssignment
+from rsvp_manager.models import Guest, Invitation, InvitationAttributeValue, SeatAssignment
 from rsvp_manager.utils import get_last_name_sort_key, format_date
 
 HEADER_FONT = Font(bold=True, color="FFFFFF")
@@ -77,6 +77,7 @@ def _event_invitations_for_export(event):
     return Invitation.query.options(
         joinedload(Invitation.guest).selectinload(Guest.tags),
         selectinload(Invitation.seat_assignment).joinedload(SeatAssignment.table),
+        selectinload(Invitation.attribute_values).joinedload(InvitationAttributeValue.option),
     ).filter(Invitation.event_id == event.id).all()
 
 
@@ -92,10 +93,13 @@ def _get_seating_info(inv):
 
 
 def export_event_guests_xlsx(event):
+    # One extra column per attribute this event defines, after the fixed ones.
+    attributes = sorted(event.attributes, key=lambda a: (a.position, a.id))
     wb = Workbook()
     ws = _styled_sheet(wb, event.name[:31],
                        ["Last Name", "First Name", "Gender", "Tags", "Sent",
-                        "Invited On", "Status", "Responded On", "Table", "Seat", "Inv. Notes", "Guest Notes"])
+                        "Invited On", "Status", "Responded On", "Table", "Seat", "Inv. Notes", "Guest Notes"]
+                       + [a.name for a in attributes])
     for inv in _event_invitations_for_export(event):
         g = inv.guest
         if g.deleted_at:
@@ -103,12 +107,14 @@ def export_event_guests_xlsx(event):
         sent = "Yes" if inv.status != "Not Sent" else "No"
         tags = ", ".join(t.name for t in g.tags if not t.deleted_at)
         table_name, seat_num = _get_seating_info(inv)
+        chosen = {v.attribute_id: v.option.label for v in inv.attribute_values}
         ws.append([g.last_name or "", g.first_name, g.gender, tags, sent,
                    format_date(inv.date_invited, "iso"),
                    inv.status,
                    format_date(inv.date_responded, "iso"),
                    table_name, seat_num,
-                   inv.notes or "", g.notes or ""])
+                   inv.notes or "", g.notes or ""]
+                  + [chosen.get(a.id, "") for a in attributes])
     for col in ws.columns:
         ws.column_dimensions[col[0].column_letter].width = 18
     safe_name = re.sub(r"[^\w\-]", "_", event.name).strip("_").lower()

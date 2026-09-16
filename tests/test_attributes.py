@@ -394,3 +394,64 @@ class TestHuntEventsStartWithTheHuntingAttribute:
             "name": "Summer Party", "event_type": "Party", "date": "2026-06-01",
         })
         assert attribute_service.get_attributes(event) == []
+
+
+class TestExportIncludesAttributes:
+    def test_one_column_per_attribute_with_the_guest_answer(self, logged_in_client, test_app, user):
+        import io
+        import openpyxl
+
+        event = Event(user_id=user, name="Hunt Export", event_type="Hunt",
+                      date=date(2026, 12, 26), date_created=date.today())
+        db.session.add(event)
+        db.session.commit()
+        hunting = attribute_service.create_attribute(event, "Hunting", ["Hunter", "Follower"])
+        meal = attribute_service.create_attribute(event, "Meal", ["Lunch", "Dinner"])
+
+        set_guest = _invite(event, _guest(user, "Set"))
+        _invite(event, _guest(user, "Unset"))
+        attribute_service.set_value(set_guest, hunting, hunting.options[0].id)
+
+        resp = logged_in_client.get(f"/export/event/{event.id}")
+        assert resp.status_code == 200
+        ws = openpyxl.load_workbook(io.BytesIO(resp.data)).active
+        header = [c.value for c in ws[1]]
+        assert header[-2:] == ["Hunting", "Meal"], header
+
+        rows = {r[1]: r for r in ws.iter_rows(min_row=2, values_only=True)}
+        assert rows["Set"][-2] == "Hunter"
+        # openpyxl reads an empty cell back as None
+        assert rows["Set"][-1] in (None, ""), "an unanswered attribute exports as blank"
+        assert rows["Unset"][-2] in (None, "")
+
+    def test_export_query_count_stays_flat(self, logged_in_client, test_app, user):
+        from sqlalchemy import event as sa_event
+        from sqlalchemy.engine import Engine
+
+        event = Event(user_id=user, name="Counted", event_type="Hunt",
+                      date=date(2026, 12, 26), date_created=date.today())
+        db.session.add(event)
+        db.session.commit()
+        attr = attribute_service.create_attribute(event, "Hunting", ["Hunter"])
+
+        def count(n_guests):
+            for i in range(n_guests):
+                inv = _invite(event, _guest(user, f"X{i}{n_guests}"))
+                attribute_service.set_value(inv, attr, attr.options[0].id)
+            seen = []
+
+            def before(conn, cursor, statement, params, context, executemany):
+                seen.append(statement)
+
+            sa_event.listen(Engine, "before_cursor_execute", before)
+            try:
+                assert logged_in_client.get(f"/export/event/{event.id}").status_code == 200
+            finally:
+                sa_event.remove(Engine, "before_cursor_execute", before)
+            return len(seen)
+
+        few, many = count(2), count(20)
+        assert many <= few + 2, (
+            f"export queries grew with guest count ({few} -> {many}); the attribute "
+            f"answers are not being eager-loaded"
+        )

@@ -930,3 +930,29 @@ tr[data-is-me="true"] td {
     padding-top: 0.9rem;
     margin-top: 0.5rem;
 }
+
+/* Attribute column in the guest list: the select stays compact so the row does
+   not grow, and shows a dash when the guest has no answer yet. */
+.col-attr { min-width: 104px; }
+
+.attr-select {
+    width: 100%;
+    min-width: 92px;
+    font-size: 0.82rem;
+}
+
+.attr-select:invalid,
+.attr-select option[value=""] {
+    color: var(--color-text-muted);
+}
+
+/* Attribute summary tables sit under the gender one and share its styling. */
+.attr-summary-table { margin-top: 1rem; }
+
+.attr-summary-row { cursor: pointer; }
+.attr-summary-row:hover { background: rgba(0,0,0,0.03); }
+
+.attr-summary-row-active {
+    background: rgba(16,185,129,0.12);
+    font-weight: 600;
+}

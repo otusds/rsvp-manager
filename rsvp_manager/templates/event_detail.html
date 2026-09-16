@@ -103,6 +103,39 @@
                 </tr>
             </tbody>
         </table>
+        {% for summary in attribute_summaries %}
+        <table class="summary-table attr-summary-table" data-attr-id="{{ summary.attribute.id }}">
+            <thead>
+                <tr>
+                    <th>{{ summary.attribute.name }}</th>
+                    <th>Attending</th>
+                    <th>Pending</th>
+                    <th>Declined</th>
+                    <th>Total Invited</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in summary.rows %}
+                <tr class="attr-summary-row" data-attr-id="{{ summary.attribute.id }}"
+                    data-option-id="{{ row.option_id if row.option_id else 'none' }}"
+                    title="Show only these guests">
+                    <td class="row-label">{{ row.label }}</td>
+                    <td>{{ row.attending }}</td>
+                    <td>{{ row.pending }}</td>
+                    <td>{{ row.declined }}</td>
+                    <td>{{ row.invited }}</td>
+                </tr>
+                {% endfor %}
+                <tr class="total-row">
+                    <td class="row-label">Total</td>
+                    <td><strong>{{ summary.totals.attending }}</strong></td>
+                    <td><strong>{{ summary.totals.pending }}</strong></td>
+                    <td><strong>{{ summary.totals.declined }}</strong></td>
+                    <td><strong>{{ summary.totals.invited }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        {% endfor %}
     </div>
 </div>
 
@@ -160,6 +193,16 @@
                     <button type="button" class="filter-select tag-filter-toggle" id="gl-tag-filter-toggle">All Tags</button>
                     <div class="tag-filter-dropdown" id="gl-tag-filter-dropdown" style="display:none"></div>
                 </div>
+                {% for attr in attributes %}
+                <select class="filter-select attr-filter" id="gl-attr-filter-{{ attr.id }}"
+                        data-table="invitations-table" data-attr="data-attr-{{ attr.id }}">
+                    <option value="">All {{ attr.name }}</option>
+                    {% for opt in attr.options %}
+                    <option value="{{ opt.id }}">{{ opt.label }}</option>
+                    {% endfor %}
+                    <option value="none">Not set</option>
+                </select>
+                {% endfor %}
                 <button type="button" class="filter-clear-btn" id="gl-clear-filters">Clear</button>
             </div>
             <div class="filter-row">
@@ -185,6 +228,14 @@
                 <option value="pending">Set Pending</option>
                 <option value="declined">Set Declined</option>
                 <option value="remove">Remove from Event</option>
+                {% for attr in attributes %}
+                <optgroup label="{{ attr.name }}">
+                    {% for opt in attr.options %}
+                    <option value="attr:{{ attr.id }}:{{ opt.id }}">Set {{ attr.name }} &rarr; {{ opt.label }}</option>
+                    {% endfor %}
+                    <option value="attr:{{ attr.id }}:">Clear {{ attr.name }}</option>
+                </optgroup>
+                {% endfor %}
             </select>
             <button type="button" class="btn btn-small" id="batch-apply">Apply</button>
             <button type="button" class="btn btn-small btn-secondary" id="batch-clear">Clear</button>
@@ -199,6 +250,9 @@
                     <th data-sort="text" class="col-guest">Guest</th>
                     <th data-sort="check" class="center col-sent">Sent</th>
                     <th data-sort="status" class="col-status"><span class="col-status-full">RSVP Status</span><span class="col-status-short">RSVP</span></th>
+                    {% for attr in attributes %}
+                    <th data-sort="text" class="col-attr{{ ' col-expand' if attributes|length > 1 }}" data-attr-id="{{ attr.id }}">{{ attr.name }}</th>
+                    {% endfor %}
                     <th class="col-expand-mobile">Invite Notes</th>
                     <th class="col-expand">Guest Notes</th>
                     <th class="col-expand">Guest Tags</th>
@@ -208,7 +262,7 @@
             <tbody>
                 {% if not event.invitations|rejectattr('guest.deleted_at')|list %}
                 <tr id="guest-empty-row">
-                    <td colspan="8">
+                    <td colspan="{{ 8 + attributes|length }}">
                         <div class="empty-state empty-state-inline">
                             <svg class="empty-state-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg>
                             <p class="empty-state-title">No guests invited yet</p>
@@ -230,7 +284,8 @@
                     data-date-responded="{{ inv.date_responded.strftime('%d %b %Y') if inv.date_responded else '' }}"
                     data-date-responded-iso="{{ inv.date_responded.isoformat() if inv.date_responded else '' }}"
                     data-status-changed-by="{{ inv.status_changed_by_user.full_name if inv.status_changed_by and inv.status_changed_by_user else '' }}"
-                    data-added-by-name="{{ inv.added_by_user.full_name if inv.added_by and inv.added_by_user else '' }}">
+                    data-added-by-name="{{ inv.added_by_user.full_name if inv.added_by and inv.added_by_user else '' }}"
+                    {% for attr in attributes %}data-attr-{{ attr.id }}="{{ inv.value_for(attr.id).id if inv.value_for(attr.id) else 'none' }}" {% endfor %}>
                     <td class="center col-multiselect" style="display:none"><input type="checkbox" class="row-select"></td>
                     <td class="guest-name-cell">{% if inv.guest.gender == 'Male' %}<span class="gender-tag gender-m">M</span> {% elif inv.guest.gender == 'Female' %}<span class="gender-tag gender-f">F</span> {% endif %}{{ inv.guest.full_name }}{% if inv.guest.user_id != current_user.id %}<svg class="share-icon-inline" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Added by {{ inv.added_by_user.full_name if inv.added_by and inv.added_by_user else 'co-host' }}"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>{% endif %}</td>
                     <td class="center">
@@ -249,6 +304,18 @@
                         </select>
                         {% endif %}
                     </td>
+                    {% for attr in attributes %}
+                    {% set chosen = inv.value_for(attr.id) %}
+                    <td class="col-attr{{ ' col-expand' if attributes|length > 1 }}" data-attr-cell="{{ attr.id }}">
+                        <select class="inline-select attr-select" data-inv-id="{{ inv.id }}"
+                                data-attr-id="{{ attr.id }}"{{ ' disabled' if role == 'viewer' }}>
+                            <option value="">&mdash;</option>
+                            {% for opt in attr.options %}
+                            <option value="{{ opt.id }}"{{ ' selected' if chosen and chosen.id == opt.id }}>{{ opt.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    {% endfor %}
                     <td class="col-expand-mobile">
                         <input type="text" class="inv-notes-input" data-inv-id="{{ inv.id }}"
                                value="{{ inv.notes or '' }}" placeholder="Invite note..." autocomplete="off"{{ ' readonly' if role == 'viewer' }}>

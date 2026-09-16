@@ -2,7 +2,7 @@ from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session
 from flask_login import login_required, current_user
 from rsvp_manager.models import EVENT_TYPES
-from rsvp_manager.services import event_service
+from rsvp_manager.services import event_service, attribute_service
 from rsvp_manager.services.cohost_service import require_event_access, get_event_roles_for_user, get_shared_event_ids
 
 bp = Blueprint("events", __name__)
@@ -44,9 +44,12 @@ def add_event():
 def event_detail(event_id):
     event, role = event_service.get_authorized_event(event_id, current_user.id)
     locations = event_service.get_user_locations(current_user.id)
+    attributes = attribute_service.get_attributes(event)
     return render_template(
         "event_detail.html", event=event, event_types=EVENT_TYPES,
-        locations=locations, role=role
+        locations=locations, role=role,
+        attributes=attributes,
+        attribute_summaries=attribute_service.summarize(event),
     )
 
 
