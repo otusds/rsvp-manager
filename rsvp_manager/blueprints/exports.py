@@ -1,6 +1,7 @@
 from flask import Blueprint
 from flask_login import login_required, current_user
-from rsvp_manager.models import Event, Guest
+from sqlalchemy.orm import joinedload, selectinload
+from rsvp_manager.models import Event, Guest, Invitation
 from rsvp_manager.services import export_service, event_service
 from rsvp_manager.utils import get_last_name_sort_key
 
@@ -17,7 +18,12 @@ def export_events():
 @bp.route("/export/friends")
 @login_required
 def export_friends():
-    guests = Guest.query.filter_by(user_id=current_user.id).filter(
+    # Eager-load what the sheet reads per row: without this the export ran two
+    # extra queries per friend (60 queries for 25 friends).
+    guests = Guest.query.options(
+        selectinload(Guest.tags),
+        selectinload(Guest.invitations).joinedload(Invitation.event),
+    ).filter_by(user_id=current_user.id).filter(
         Guest.deleted_at.is_(None)
     ).all()
     guests.sort(key=lambda g: (get_last_name_sort_key(g.last_name), g.first_name.lower()))

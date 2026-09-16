@@ -3,6 +3,8 @@ from io import BytesIO
 from flask import send_file, make_response
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
+from sqlalchemy.orm import joinedload, selectinload
+from rsvp_manager.models import Guest, Invitation, SeatAssignment
 from rsvp_manager.utils import get_last_name_sort_key
 
 HEADER_FONT = Font(bold=True, color="FFFFFF")
@@ -66,6 +68,18 @@ def export_guests_xlsx(guests):
     return _to_download(wb, "GuestCheck_Friends.xlsx")
 
 
+def _event_invitations_for_export(event):
+    """Invitations for an event with everything the export rows read preloaded.
+
+    Walking event.invitations lazily cost one query per invitation for the seat
+    assignment and another for the guest's tags.
+    """
+    return Invitation.query.options(
+        joinedload(Invitation.guest).selectinload(Guest.tags),
+        selectinload(Invitation.seat_assignment).joinedload(SeatAssignment.table),
+    ).filter(Invitation.event_id == event.id).all()
+
+
 def _get_seating_info(inv):
     """Get table name and seat number separately for an invitation."""
     assignments = inv.seat_assignment
@@ -82,7 +96,7 @@ def export_event_guests_xlsx(event):
     ws = _styled_sheet(wb, event.name[:31],
                        ["Last Name", "First Name", "Gender", "Tags", "Sent",
                         "Invited On", "Status", "Responded On", "Table", "Seat", "Inv. Notes", "Guest Notes"])
-    for inv in event.invitations:
+    for inv in _event_invitations_for_export(event):
         g = inv.guest
         if g.deleted_at:
             continue
@@ -106,7 +120,7 @@ def export_event_guests_text(event):
     """Export attending/pending guests as formatted text for sharing."""
     attending = []
     pending = []
-    for inv in event.invitations:
+    for inv in _event_invitations_for_export(event):
         if inv.guest.deleted_at:
             continue
         g = inv.guest

@@ -109,3 +109,41 @@ class TestPublicStatsAreAdminOnly:
 
     def test_non_admin_is_refused(self, logged_in_client):
         assert logged_in_client.get("/admin/api/stats").status_code in (302, 401, 403, 404)
+
+
+class TestExportsDoNotScaleQueriesWithRowCount:
+    """The exports used to run ~2 extra queries per friend (60 for 25 friends)."""
+
+    def test_friends_export_query_count_is_flat(self, logged_in_client, test_app, user):
+        from sqlalchemy import event as sa_event
+        from sqlalchemy.engine import Engine
+
+        def count_queries():
+            seen = []
+
+            def before(conn, cursor, statement, params, context, executemany):
+                seen.append(statement)
+
+            sa_event.listen(Engine, "before_cursor_execute", before)
+            try:
+                assert logged_in_client.get("/export/friends").status_code == 200
+            finally:
+                sa_event.remove(Engine, "before_cursor_execute", before)
+            return len(seen)
+
+        for i in range(3):
+            db.session.add(Guest(user_id=user, first_name=f"G{i}", last_name="Small",
+                                 gender="Female", date_created=datetime.now(timezone.utc)))
+        db.session.commit()
+        few = count_queries()
+
+        for i in range(25):
+            db.session.add(Guest(user_id=user, first_name=f"H{i}", last_name="Many",
+                                 gender="Male", date_created=datetime.now(timezone.utc)))
+        db.session.commit()
+        many = count_queries()
+
+        assert many <= few + 2, (
+            f"export query count grew with row count ({few} -> {many}); the "
+            f"eager-loading in exports.py has regressed into an N+1"
+        )
