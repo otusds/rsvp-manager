@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else {
                     r.json().then(function (d) { alert(d.message || "Error"); });
                 }
-            });
+            }).catch(window.handleFetchError);
         });
 
         item.querySelector(".trash-purge-btn").addEventListener("click", function () {
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     item.remove();
                     checkEmpty();
                 }
-            });
+            }).catch(window.handleFetchError);
         });
     });
 
