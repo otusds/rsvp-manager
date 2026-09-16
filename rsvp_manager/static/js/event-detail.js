@@ -881,13 +881,32 @@ document.addEventListener("DOMContentLoaded", function () {
     var batchBar = document.getElementById("batch-bar");
     var batchCountEl = document.getElementById("batch-count");
 
+    function isRowVisible(row) {
+        return row && row.style.display !== "none";
+    }
+
+    // Only ever act on rows the user can actually see. A filtered-away row that
+    // is still ticked must not be swept into a bulk action - that silently hit
+    // the whole guest list, "Remove from Event" included.
     function getSelectedRows() {
         var rows = [];
         document.querySelectorAll("#invitations-table tbody tr:not(.add-guest-row) .row-select:checked").forEach(function (cb) {
-            rows.push(cb.closest("tr"));
+            var row = cb.closest("tr");
+            if (isRowVisible(row)) rows.push(row);
         });
         return rows;
     }
+
+    // Filtering hides rows; any hidden row must also lose its tick so the count
+    // beside "selected" keeps matching what a bulk action would touch.
+    window.deselectHiddenInvitationRows = function () {
+        var changed = false;
+        document.querySelectorAll("#invitations-table tbody tr:not(.add-guest-row) .row-select:checked").forEach(function (cb) {
+            if (!isRowVisible(cb.closest("tr"))) { cb.checked = false; changed = true; }
+        });
+        if (selectAllCheckbox && changed) selectAllCheckbox.checked = false;
+        if (changed) updateBatchCount();
+    };
 
     function updateBatchCount() {
         if (!batchBar) return;
@@ -908,7 +927,9 @@ document.addEventListener("DOMContentLoaded", function () {
         selectAllCheckbox.addEventListener("change", function () {
             var checked = selectAllCheckbox.checked;
             document.querySelectorAll("#invitations-table tbody tr:not(.add-guest-row) .row-select").forEach(function (cb) {
-                cb.checked = checked;
+                // Select all means all of what is on screen, not everything behind
+                // the current filter.
+                if (isRowVisible(cb.closest("tr"))) cb.checked = checked;
             });
             updateBatchCount();
         });
