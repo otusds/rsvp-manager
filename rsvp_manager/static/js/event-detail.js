@@ -917,6 +917,16 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!action) return;
             var rows = getSelectedRows();
             if (rows.length === 0) return;
+
+            // Event attribute actions are handled by attributes.js.
+            if (action.indexOf("attr:") === 0) {
+                if (window.applyAttributeBatchAction) {
+                    window.applyAttributeBatchAction(action, rows);
+                    batchActionSelect.value = "";
+                }
+                return;
+            }
+
             if (action === "remove" && !confirm("Remove " + rows.length + " guest(s) from this event?")) return;
 
             var promises = rows.map(function (row) {

@@ -878,3 +878,81 @@ tr[data-is-me="true"] td {
     color: var(--color-text-muted);
     background: var(--color-bg-secondary);
 }
+
+/* ── Event attributes ─────────────────────────────────────────────────────── */
+.attr-empty {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin: 0.5rem 0 1rem;
+}
+
+.attr-card {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.attr-card-head {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.6rem;
+}
+
+.attr-name-input {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+}
+
+.attr-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.attr-option-input {
+    width: auto;
+    min-width: 96px;
+    flex: 0 1 auto;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.55rem;
+}
+
+.attr-option-new {
+    border-style: dashed;
+}
+
+.attr-add {
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+/* Attribute column in the guest list: the select stays compact so the row does
+   not grow, and shows a dash when the guest has no answer yet. */
+.col-attr { min-width: 104px; }
+
+.attr-select {
+    width: 100%;
+    min-width: 92px;
+    font-size: 0.82rem;
+}
+
+.attr-select:invalid,
+.attr-select option[value=""] {
+    color: var(--color-text-muted);
+}
+
+/* Attribute summary tables sit under the gender one and share its styling. */
+.attr-summary-table { margin-top: 1rem; }
+
+.attr-summary-row { cursor: pointer; }
+.attr-summary-row:hover { background: rgba(0,0,0,0.03); }
+
+.attr-summary-row-active {
+    background: rgba(16,185,129,0.12);
+    font-weight: 600;
+}
