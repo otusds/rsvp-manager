@@ -32,7 +32,7 @@ def get_user_history(user_id, page=1):
             ActivityLog.user_id == user_id,
             # Logs by event owners of events I co-host (shows their actions on shared events)
             db.and_(
-                ActivityLog.user_id.in_(cohosted_owner_ids),
+                ActivityLog.user_id.in_(cohosted_owner_ids.select()),
                 ActivityLog.entity_type.in_(["event", "invitation"])
             )
         )

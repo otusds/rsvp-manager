@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 window.fetchWithCsrf("/api/v1/tags/" + tagId, {
                     method: "PUT",
                     body: JSON.stringify({ color: color }),
-                });
+                }).catch(window.handleFetchError);
                 activeColorDot = null;
             });
         });
@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (countLabel) countLabel.textContent = "(" + remaining + ")";
                     if (remaining === 0) location.reload();
                 }
-            });
+            }).catch(window.handleFetchError);
             var menu = btn.closest(".kebab-menu");
             if (menu) menu.classList.remove("open");
         });
@@ -135,7 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         }).then(function (r) {
                             if (r.ok) location.reload();
                             else r.json().then(function (d) { alert(d.message || "Error"); });
-                        });
+                        }).catch(window.handleFetchError);
                     });
                     mergeList.appendChild(item);
                 });
@@ -200,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else {
                     r.json().then(function (d) { alert(d.message || "Error creating tag"); });
                 }
-            });
+            }).catch(window.handleFetchError);
         });
     }
 });
