@@ -277,18 +277,48 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Remove button (AJAX) ─────────────────────────────────────────────────
 
+    // Removing a guest from an event is a hard delete that the trash does not
+    // cover, so the delete hands back a snapshot and this puts it to use.
+    function undoRemoval(snapshots) {
+        var invTable = document.getElementById("invitations-table");
+        var eventId = invTable ? invTable.getAttribute("data-event-id") : null;
+        if (!eventId || !snapshots.length) return;
+
+        window.fetchWithCsrf("/api/v1/events/" + eventId + "/invitations/restore", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ snapshots: snapshots })
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (resp) {
+            var invitations = (resp.data && resp.data.invitations) || [];
+            var tbody = invTable.querySelector("tbody");
+            invitations.forEach(function (data) {
+                tbody.appendChild(window.buildInvitationRow(data));
+            });
+            window.refreshSummary();
+            window.showToast(invitations.length + " guest" +
+                (invitations.length === 1 ? "" : "s") + " put back");
+        })
+        .catch(window.handleFetchError);
+    }
+
     function attachRemoveListener(btn) {
         btn.addEventListener("click", function () {
             if (!confirm("Remove this guest from the event?")) return;
             var invId = btn.getAttribute("data-inv-id");
             window.fetchWithCsrf("/api/v1/invitations/" + invId, { method: "DELETE" })
-            .then(function (res) {
-                if (res.ok) {
-                    var row = btn.closest("tr");
-                    row.remove();
-                    window.refreshSummary();
-                    updateBatchCount();
-                }
+            .then(function (res) { return res.ok ? res.json() : null; })
+            .then(function (resp) {
+                if (!resp) return;
+                var row = btn.closest("tr");
+                row.remove();
+                window.refreshSummary();
+                updateBatchCount();
+                var snapshot = resp.data && resp.data.snapshot;
+                window.showToast("Guest removed", snapshot ? function () {
+                    undoRemoval([snapshot]);
+                } : null);
             })
             .catch(window.handleFetchError);
         });
@@ -967,6 +997,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (action === "remove" && !confirm("Remove " + rows.length + " guest(s) from this event?")) return;
 
+            var removalSnapshots = [];
             var promises = rows.map(function (row) {
                 var invId = row.getAttribute("data-inv-id");
                 var checkbox = row.cells[2].querySelector(".sent-checkbox");
@@ -1034,9 +1065,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                 } else if (action === "remove") {
                     return window.fetchWithCsrf("/api/v1/invitations/" + invId, { method: "DELETE" })
-                    .then(function (res) {
-                        if (res.ok) {
-                            row.remove();
+                    .then(function (res) { return res.ok ? res.json() : null; })
+                    .then(function (resp) {
+                        if (!resp) return;
+                        row.remove();
+                        if (resp.data && resp.data.snapshot) {
+                            removalSnapshots.push(resp.data.snapshot);
                         }
                     });
                 }
@@ -1055,7 +1089,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 updateBatchCount();
                 var labels = { send: "marked as sent", unsend: "marked as unsent", attending: "marked as attending", pending: "marked as pending", declined: "marked as declined", remove: "removed" };
                 window.trackEvent("batch-action-used", { action: actionLabel, count: rowCount, page: "event-detail" });
-                window.showToast(rowCount + " guest" + (rowCount > 1 ? "s" : "") + " " + (labels[actionLabel] || actionLabel));
+                window.showToast(
+                    rowCount + " guest" + (rowCount > 1 ? "s" : "") + " " + (labels[actionLabel] || actionLabel),
+                    removalSnapshots.length ? function () { undoRemoval(removalSnapshots); } : null);
             }).catch(window.handleFetchError);
         });
     }
