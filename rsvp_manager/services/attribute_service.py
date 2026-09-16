@@ -173,6 +173,37 @@ def apply_defaults_for_type(event, acting_user_id=None):
     return created
 
 
+def create_from_form(event, form_data, acting_user_id=None):
+    """Create the attributes a submitted event form describes.
+
+    The form sends parallel attribute_name / attribute_options fields, one pair
+    per block. A form that carries no attribute fields at all (an older client,
+    or an API caller) falls back to the event type's defaults, so nothing that
+    used to get them silently stops.
+    """
+    getlist = getattr(form_data, "getlist", None)
+    if getlist is None:
+        return apply_defaults_for_type(event, acting_user_id)
+
+    names = form_data.getlist("attribute_name")
+    option_blocks = form_data.getlist("attribute_options")
+    if not names and not option_blocks:
+        return apply_defaults_for_type(event, acting_user_id)
+
+    created = []
+    for i, raw_name in enumerate(names):
+        name = (raw_name or "").strip()
+        labels = _clean_labels((option_blocks[i] if i < len(option_blocks) else "").splitlines())
+        # A block the user left blank, or named without answers, is simply skipped
+        # rather than failing the whole event creation.
+        if not name or not labels:
+            continue
+        if EventAttribute.query.filter_by(event_id=event.id, name=name).first():
+            continue
+        created.append(create_attribute(event, name, labels, acting_user_id))
+    return created
+
+
 def _clean_labels(labels):
     """Strip, drop blanks, and de-duplicate while keeping the given order."""
     seen, out = set(), []

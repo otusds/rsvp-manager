@@ -455,3 +455,58 @@ class TestExportIncludesAttributes:
             f"export queries grew with guest count ({few} -> {many}); the attribute "
             f"answers are not being eager-loaded"
         )
+
+
+class TestAttributesFromTheCreateEventForm:
+    """The new-event form sends parallel attribute_name / attribute_options fields."""
+
+    def _form(self, pairs, event_type="Hunt"):
+        from werkzeug.datastructures import MultiDict
+
+        md = MultiDict([("name", "Formed"), ("event_type", event_type), ("date", "2026-12-26")])
+        for name, options in pairs:
+            md.add("attribute_name", name)
+            md.add("attribute_options", options)
+        return md
+
+    def test_creates_what_the_form_describes(self, test_app, user):
+        from rsvp_manager.services import event_service
+
+        event = event_service.create_event(user, self._form([
+            ("Hunting", "Hunter\nFollower"),
+            ("Participating to", "Lunch\nDinner\nBoth"),
+        ]))
+        attrs = attribute_service.get_attributes(event)
+        assert [a.name for a in attrs] == ["Hunting", "Participating to"]
+        assert [o.label for o in attrs[1].options] == ["Lunch", "Dinner", "Both"]
+
+    def test_user_can_remove_the_prefilled_default(self, test_app, user):
+        """Submitting a Hunt with no attribute blocks means they wanted none."""
+        from werkzeug.datastructures import MultiDict
+        from rsvp_manager.services import event_service
+
+        md = MultiDict([("name", "Bare"), ("event_type", "Hunt"), ("date", "2026-12-26"),
+                        ("attribute_name", ""), ("attribute_options", "")])
+        event = event_service.create_event(user, md)
+        assert attribute_service.get_attributes(event) == [], (
+            "clearing the blocks must not be overridden by the type default"
+        )
+
+    def test_blank_and_incomplete_blocks_are_skipped(self, test_app, user):
+        from rsvp_manager.services import event_service
+
+        event = event_service.create_event(user, self._form([
+            ("Hunting", "Hunter\nFollower"),
+            ("", "orphan answers"),
+            ("Named but empty", "   \n  "),
+        ]))
+        assert [a.name for a in attribute_service.get_attributes(event)] == ["Hunting"]
+
+    def test_a_form_without_attribute_fields_still_gets_the_defaults(self, test_app, user):
+        """Older clients and API callers must not silently lose the Hunt default."""
+        from rsvp_manager.services import event_service
+
+        event = event_service.create_event(user, {
+            "name": "Plain", "event_type": "Hunt", "date": "2026-12-26",
+        })
+        assert [a.name for a in attribute_service.get_attributes(event)] == ["Hunting"]

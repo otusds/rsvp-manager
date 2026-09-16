@@ -1,7 +1,7 @@
 from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session
 from flask_login import login_required, current_user
-from rsvp_manager.models import EVENT_TYPES
+from rsvp_manager.models import EVENT_TYPES, DEFAULT_EVENT_ATTRIBUTES
 from rsvp_manager.services import event_service, attribute_service
 from rsvp_manager.services.cohost_service import require_event_access, get_event_roles_for_user, get_shared_event_ids
 
@@ -25,7 +25,9 @@ def home():
     me_exists = event_service.check_me_exists(current_user.id)
     locations = event_service.get_user_locations(current_user.id)
     return render_template(
-        "home.html", events=pagination.items, event_types=EVENT_TYPES,
+        "home.html",
+        attribute_defaults={k: [{"name": n, "options": o} for n, o in v]
+                            for k, v in DEFAULT_EVENT_ATTRIBUTES.items()}, events=pagination.items, event_types=EVENT_TYPES,
         today_date=date.today(), me_exists=me_exists, pagination=pagination,
         locations=locations, event_roles=event_roles, shared_ids=shared_ids
     )

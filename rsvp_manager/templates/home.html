@@ -107,12 +107,20 @@
                 <div class="form-row">
                     <div class="form-field">
                         <label for="ne-type">Type</label>
-                        <select id="ne-type" name="event_type" required>
+                        <select id="ne-type" name="event_type" required data-defaults='{{ attribute_defaults|tojson }}'>
                             <option value="" disabled>Select type</option>
                             {% for t in event_types %}
                             <option value="{{ t }}" {{ 'selected' if t == 'Dinner' }}>{{ t }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Attributes <span class="form-hint-inline">optional</span></label>
+                        <p class="form-hint">Extra information about each guest, just for this event &mdash; for example <em>Participating to</em> with the answers <em>Lunch</em>, <em>Dinner</em> and <em>Both</em>. You can change these later.</p>
+                        <div id="ne-attributes"></div>
+                        <button type="button" class="btn btn-small btn-secondary" id="ne-add-attribute">+ Add attribute</button>
                     </div>
                 </div>
                 {% if me_exists %}

@@ -320,3 +320,141 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(function () { /* a stale summary is not worth a visible error */ });
     };
 });
+
+
+// ── Cells for rows added after page load ────────────────────────────────────
+// A guest added without a reload must get the same attribute columns as the
+// server-rendered rows, or the row is short and the guest has nowhere to be set.
+(function () {
+    function definitions() {
+        var el = document.getElementById("event-attributes-data");
+        if (!el) return [];
+        try { return JSON.parse(el.textContent) || []; } catch (e) { return []; }
+    }
+
+    window.getEventAttributes = definitions;
+
+    window.buildAttributeCells = function (invitationId) {
+        var attrs = definitions();
+        if (!attrs.length) return "";
+        var several = attrs.length > 1;
+        return attrs.map(function (attr) {
+            var opts = ['<option value="">\u2014</option>'].concat(
+                attr.options.map(function (o) {
+                    return '<option value="' + o.id + '">' + window.escapeHtml(o.label) + "</option>";
+                })
+            ).join("");
+            return '<td class="col-attr' + (several ? " col-expand" : "") + '" data-attr-cell="' + attr.id + '">' +
+                '<select class="inline-select attr-select" data-inv-id="' + invitationId +
+                '" data-attr-id="' + attr.id + '">' + opts + "</select></td>";
+        }).join("");
+    };
+
+    // New rows start unset, and the filter machinery reads the row, not the select.
+    window.markRowAttributesUnset = function (tr) {
+        definitions().forEach(function (attr) {
+            tr.setAttribute("data-attr-" + attr.id, "none");
+        });
+    };
+})();
+
+// ── Attributes on the new-event form ────────────────────────────────────────
+// Pre-filled from the chosen event type (Hunt starts with Hunting), editable
+// before the event exists, and submitted with the form.
+document.addEventListener("DOMContentLoaded", function () {
+    var container = document.getElementById("ne-attributes");
+    var typeSelect = document.getElementById("ne-type");
+    if (!container || !typeSelect) return;
+
+    var defaults = {};
+    try { defaults = JSON.parse(typeSelect.getAttribute("data-defaults") || "{}"); } catch (e) { defaults = {}; }
+
+    var seq = 0;
+    var touched = false;   // once edited by hand, changing the type leaves it alone
+
+    function block(name, options) {
+        seq += 1;
+        var i = seq;
+        var wrap = document.createElement("div");
+        wrap.className = "ne-attr-block";
+
+        var head = document.createElement("div");
+        head.className = "ne-attr-head";
+        var label = document.createElement("label");
+        label.setAttribute("for", "ne-attr-name-" + i);
+        label.textContent = "Attribute " + (container.children.length + 1);
+        head.appendChild(label);
+        var remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "btn btn-small btn-danger ne-attr-remove";
+        remove.textContent = "Remove";
+        head.appendChild(remove);
+        wrap.appendChild(head);
+
+        var nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.id = "ne-attr-name-" + i;
+        nameInput.name = "attribute_name";
+        nameInput.maxLength = 60;
+        nameInput.placeholder = "e.g. Participating to";
+        nameInput.value = name || "";
+        wrap.appendChild(nameInput);
+
+        var optLabel = document.createElement("label");
+        optLabel.setAttribute("for", "ne-attr-options-" + i);
+        optLabel.className = "ne-attr-sublabel";
+        optLabel.textContent = "Answers, one per line";
+        wrap.appendChild(optLabel);
+
+        var optInput = document.createElement("textarea");
+        optInput.id = "ne-attr-options-" + i;
+        optInput.name = "attribute_options";
+        optInput.rows = 3;
+        optInput.placeholder = "Lunch\nDinner\nBoth";
+        optInput.value = (options || []).join("\n");
+        wrap.appendChild(optInput);
+
+        return wrap;
+    }
+
+    function renumber() {
+        [].slice.call(container.querySelectorAll(".ne-attr-block")).forEach(function (b, idx) {
+            var l = b.querySelector("label");
+            if (l) l.textContent = "Attribute " + (idx + 1);
+        });
+    }
+
+    function fillFromType() {
+        if (touched) return;
+        container.innerHTML = "";
+        (defaults[typeSelect.value] || []).forEach(function (d) {
+            container.appendChild(block(d.name, d.options));
+        });
+        renumber();
+    }
+
+    typeSelect.addEventListener("change", fillFromType);
+    container.addEventListener("input", function () { touched = true; });
+
+    container.addEventListener("click", function (e) {
+        var btn = e.target.closest(".ne-attr-remove");
+        if (!btn) return;
+        touched = true;
+        var b = btn.closest(".ne-attr-block");
+        if (b) b.remove();
+        renumber();
+    });
+
+    var addBtn = document.getElementById("ne-add-attribute");
+    if (addBtn) {
+        addBtn.addEventListener("click", function () {
+            touched = true;
+            container.appendChild(block("", []));
+            renumber();
+            var last = container.querySelector(".ne-attr-block:last-child input");
+            if (last) last.focus();
+        });
+    }
+
+    fillFromType();
+});

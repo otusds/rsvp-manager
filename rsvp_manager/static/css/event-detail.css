@@ -956,3 +956,11 @@ tr[data-is-me="true"] td {
     background: rgba(16,185,129,0.12);
     font-weight: 600;
 }
+
+/* Keep the gender summary and every attribute summary on identical column
+   widths, so Attending sits directly above Attending when they stack. */
+.summary-table { table-layout: fixed; width: 100%; }
+.summary-table th:first-child,
+.summary-table td:first-child { width: 34%; }
+.summary-table th:not(:first-child),
+.summary-table td:not(:first-child) { width: 16.5%; text-align: center; }
