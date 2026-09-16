@@ -735,6 +735,8 @@ tr[data-is-me="true"] td {
 }
 .guest-detail-inv-item:last-child { border-bottom: none; }
 .guest-detail-inv-event { font-size: 0.85rem; color: var(--color-text); }
+.guest-detail-inv-link { text-decoration: none; color: var(--color-text); }
+.guest-detail-inv-link:hover { text-decoration: underline; }
 .status-tag {
     font-size: 0.7rem;
     font-weight: 600;
@@ -831,7 +833,6 @@ tr[data-is-me="true"] td {
 }
 .share-section-title:first-child { margin-top: 0; }
 .share-members-list { margin-bottom: 0.5rem; }
-.share-empty { font-size: 0.85rem; color: var(--color-text-muted); font-style: italic; }
 .share-member {
     display: flex;
     align-items: center;

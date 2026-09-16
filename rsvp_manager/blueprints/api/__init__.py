@@ -75,8 +75,9 @@ def serialize_friend(guest, viewer_user_id=None):
             declined += 1
         if inv.status != "Not Sent":
             invitations.append({
+                "event_id": inv.event_id,
                 "event_name": inv.event.name,
-                "event_date": inv.event.date.strftime("%d/%m/%Y") if inv.event.date else "",
+                "event_date": format_date(inv.event.date),
                 "status": inv.status,
             })
     invited = attending + pending + declined
@@ -128,10 +129,10 @@ def serialize_invitation(inv):
         "guest_id": inv.guest_id,
         "status": inv.status,
         "notes": inv.notes or "",
-        "date_invited": inv.date_invited.strftime("%d %b %Y") if inv.date_invited else "",
+        "date_invited": format_date(inv.date_invited),
         "date_invited_iso": inv.date_invited.isoformat() if inv.date_invited else "",
         "sent_by_name": inv.sent_by_user.full_name if inv.sent_by_user else "",
-        "date_responded": inv.date_responded.strftime("%d %b %Y") if inv.date_responded else "",
+        "date_responded": format_date(inv.date_responded),
         "date_responded_iso": inv.date_responded.isoformat() if inv.date_responded else "",
         "status_changed_by_name": inv.status_changed_by_user.full_name if inv.status_changed_by_user else "",
         "guest": {
@@ -160,10 +161,10 @@ def serialize_invitation_brief(inv):
         "notes": inv.notes or "",
         "guest_notes": inv.guest.notes or "",
         "guest_tags": [{"id": t.id, "name": t.name, "color": t.color} for t in inv.guest.tags if not t.deleted_at],
-        "date_invited": inv.date_invited.strftime("%d %b %Y") if inv.date_invited else "",
+        "date_invited": format_date(inv.date_invited),
         "date_invited_iso": inv.date_invited.isoformat() if inv.date_invited else "",
         "sent_by_name": inv.sent_by_user.full_name if inv.sent_by_user else "",
-        "date_responded": inv.date_responded.strftime("%d %b %Y") if inv.date_responded else "",
+        "date_responded": format_date(inv.date_responded),
         "date_responded_iso": inv.date_responded.isoformat() if inv.date_responded else "",
         "status_changed_by_name": inv.status_changed_by_user.full_name if inv.status_changed_by_user else "",
     }
@@ -194,3 +195,4 @@ def handle_422(e):
 # -- Register sub-modules -----------------------------------------------------
 
 from rsvp_manager.blueprints.api import events_api, friends_api, invitations_api, exports_api, tags_api, trash_api, cohost_api, seating_api  # noqa: E402, F401
+from rsvp_manager.utils import format_date

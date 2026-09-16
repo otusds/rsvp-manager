@@ -3,7 +3,7 @@ from rsvp_manager.extensions import db, login_manager
 from rsvp_manager.utils import get_last_name_sort_key
 
 
-EVENT_TYPES = ["Dinner", "Party", "Weekend", "Hunt", "Corporate", "Other"]
+EVENT_TYPES = ["Dinner", "Party", "Weekend", "Hunt", "Corporate", "Holiday", "Other"]
 
 
 class User(UserMixin, db.Model):
@@ -18,6 +18,9 @@ class User(UserMixin, db.Model):
     email_verification_sent_at = db.Column(db.DateTime, nullable=True)
     password_reset_token = db.Column(db.String(64), nullable=True)
     password_reset_sent_at = db.Column(db.DateTime, nullable=True)
+    pending_email = db.Column(db.String(200), nullable=True)
+    pending_email_token = db.Column(db.String(64), nullable=True)
+    pending_email_sent_at = db.Column(db.DateTime, nullable=True)
     events = db.relationship("Event", backref="user", cascade="all, delete-orphan")
     guests = db.relationship("Guest", backref="user", cascade="all, delete-orphan")
     tags = db.relationship("Tag", backref="user", cascade="all, delete-orphan")
@@ -187,7 +190,12 @@ class SeatingTable(db.Model):
     rotation = db.Column(db.Integer, nullable=False, default=0, server_default=db.text("0"))
     seat_assignments = db.relationship("SeatAssignment", backref="table", cascade="all, delete-orphan")
 
-    event = db.relationship("Event", backref="seating_tables")
+    # Same reason as SeatAssignment.invitation below: seating_table.event_id is
+    # NOT NULL, so deleting an event that had any seating tables failed.
+    event = db.relationship(
+        "Event",
+        backref=db.backref("seating_tables", cascade="all, delete-orphan"),
+    )
 
     def __repr__(self):
         return f"<SeatingTable {self.id} event={self.event_id} #{self.table_number}>"
@@ -200,7 +208,13 @@ class SeatAssignment(db.Model):
     seat_position = db.Column(db.Integer, nullable=False)
     is_locked = db.Column(db.Boolean, default=False, server_default=db.text("false"), nullable=False)
 
-    invitation = db.relationship("Invitation", backref="seat_assignment")
+    # Deleting an invitation must take its seat with it. Without the cascade
+    # SQLAlchemy tries to null out invitation_id, which is NOT NULL, so removing
+    # a seated guest from an event failed outright.
+    invitation = db.relationship(
+        "Invitation",
+        backref=db.backref("seat_assignment", cascade="all, delete-orphan"),
+    )
 
     __table_args__ = (
         db.UniqueConstraint('invitation_id', name='uq_seat_invitation'),

@@ -105,15 +105,15 @@ def get_last_name_sort_key(last_name):
 def format_date(d, fmt="display"):
     """Format a date consistently across the app.
 
+    Every user-facing date goes through here so the app cannot drift back into
+    showing the same date three different ways.
+
     Formats:
-        display: "26 Mar 2026" (default, for UI display)
-        iso: "2026-03-26" (for data attributes and exports)
-        slash: "26/03/2026" (for compact display)
+        display: "26 Mar 2026" - everything a person reads (screens and email)
+        iso: "2026-03-26" - spreadsheets and data attributes, where it has to sort
     """
     if not d:
         return ""
     if fmt == "iso":
         return d.isoformat()
-    elif fmt == "slash":
-        return d.strftime("%d/%m/%Y")
     return d.strftime("%d %b %Y")

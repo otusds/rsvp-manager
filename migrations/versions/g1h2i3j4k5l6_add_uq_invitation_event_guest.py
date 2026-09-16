@@ -14,8 +14,10 @@ depends_on = None
 
 
 def upgrade():
-    op.create_unique_constraint('uq_invitation_event_guest', 'invitation', ['event_id', 'guest_id'])
+    with op.batch_alter_table('invitation') as batch_op:
+        batch_op.create_unique_constraint('uq_invitation_event_guest', ['event_id', 'guest_id'])
 
 
 def downgrade():
-    op.drop_constraint('uq_invitation_event_guest', 'invitation', type_='unique')
+    with op.batch_alter_table('invitation') as batch_op:
+        batch_op.drop_constraint('uq_invitation_event_guest', type_='unique')

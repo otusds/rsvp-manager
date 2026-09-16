@@ -82,6 +82,38 @@ document.addEventListener("DOMContentLoaded", function () {
         window.trackEvent(bodyTrackEvent);
     }
 
+    // ── Delegated handlers replacing inline on* attributes ────────────────────
+    // The CSP (script-src 'self') blocks inline event handlers, so anything that
+    // used to be an on* attribute in a template is bound here instead.
+
+    // Dismiss a flash message.
+    document.addEventListener("click", function (e) {
+        var dismiss = e.target.closest(".flash-dismiss");
+        if (dismiss && dismiss.parentElement) dismiss.parentElement.remove();
+    });
+
+    // Proxy a click to another element: data-click-proxy="target-element-id".
+    document.addEventListener("click", function (e) {
+        var proxy = e.target.closest("[data-click-proxy]");
+        if (!proxy) return;
+        var target = document.getElementById(proxy.getAttribute("data-click-proxy"));
+        if (target) target.click();
+    });
+
+    // Analytics on links/buttons: data-track-event, with optional data-track-format.
+    // Scoped to a/button because <body> also carries data-track-event (above).
+    document.addEventListener("click", function (e) {
+        var el = e.target.closest("a[data-track-event], button[data-track-event]");
+        if (!el) return;
+        var fmt = el.getAttribute("data-track-format");
+        window.trackEvent(el.getAttribute("data-track-event"), fmt ? { format: fmt } : {});
+    });
+
+    // Forms that must never submit natively: <form data-no-submit>.
+    document.addEventListener("submit", function (e) {
+        if (e.target.closest("form[data-no-submit]")) e.preventDefault();
+    });
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     window.handleFetchError = function (err) {
@@ -177,11 +209,51 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // ── Collapsible sections ────────────────────────────────────────────────
+    // ── Collapsible sections (with persistent state) ──────────────────────
+    var eventId = (document.getElementById("invitations-table") || {}).getAttribute
+        ? (document.getElementById("invitations-table") || {}).getAttribute("data-event-id")
+        : null;
+
+    function getCollapsibleKey() {
+        if (eventId) return "collapsible-state-event-" + eventId;
+        return null;
+    }
+
+    function saveCollapsibleState() {
+        var key = getCollapsibleKey();
+        if (!key) return;
+        var state = {};
+        document.querySelectorAll(".collapsible").forEach(function (section, idx) {
+            var heading = section.querySelector(".collapsible-header h2");
+            var id = heading ? heading.textContent.replace(/\s*\(.*\)/, "").trim() : ("section-" + idx);
+            state[id] = section.classList.contains("collapsed");
+        });
+        try { localStorage.setItem(key, JSON.stringify(state)); } catch (e) { /* ignore */ }
+    }
+
+    function restoreCollapsibleState() {
+        var key = getCollapsibleKey();
+        if (!key) return;
+        var saved;
+        try { saved = JSON.parse(localStorage.getItem(key)); } catch (e) { return; }
+        if (!saved) return;
+        document.querySelectorAll(".collapsible").forEach(function (section, idx) {
+            var heading = section.querySelector(".collapsible-header h2");
+            var id = heading ? heading.textContent.replace(/\s*\(.*\)/, "").trim() : ("section-" + idx);
+            if (id in saved) {
+                if (saved[id]) section.classList.add("collapsed");
+                else section.classList.remove("collapsed");
+            }
+        });
+    }
+
+    restoreCollapsibleState();
+
     document.querySelectorAll(".collapsible-header").forEach(function (header) {
         header.addEventListener("click", function (e) {
             if (e.target.closest(".kebab-wrapper")) return;
             header.parentElement.classList.toggle("collapsed");
+            saveCollapsibleState();
         });
     });
 

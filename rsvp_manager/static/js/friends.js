@@ -107,7 +107,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 var rowTags = (row.getAttribute("data-tags") || "").split(",").filter(Boolean).map(Number);
                 matchTags = selectedTagIds.some(function (id) { return rowTags.indexOf(id) !== -1; });
             }
-            var show = matchSearch && matchGender && matchTags;
+            var matchArchived = showArchived !== "0" || row.getAttribute("data-is-archived") !== "true";
+            var show = matchSearch && matchGender && matchTags && matchArchived;
             row.style.display = show ? "" : "none";
             if (show) visibleCount++;
         });
@@ -124,6 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 guestCountEl.textContent = "(" + displayTotal + ")";
             }
         }
+        if (typeof updateGuestBatchCount === "function") updateGuestBatchCount();
     }
 
     // ── Server-side search ─────────────────────────────────────────────────
@@ -351,6 +353,14 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
+        // Click on row to open detail panel (skip if clicking interactive elements)
+        row.addEventListener("click", function (e) {
+            if (e.target.closest(".kebab-wrapper, .row-select, .inline-edit, .ge-gender, .ge-notes, a, button, form")) return;
+            var guestId = row.getAttribute("data-guest-id");
+            if (guestId) openGuestDetail(guestId, row);
+        });
+        row.style.cursor = "pointer";
+
         // Archive/Unarchive button
         var archiveBtn = row.querySelector(".ge-archive-btn");
         if (archiveBtn) {
@@ -373,13 +383,13 @@ document.addEventListener("DOMContentLoaded", function () {
                         } else {
                             row.setAttribute("data-is-archived", "true");
                             row.classList.add("archived-row");
-                            archiveBtn.textContent = "Unarchive";
+                            archiveBtn.textContent = "Unarchive Friend";
                         }
                     } else {
                         // Unarchiving
                         row.setAttribute("data-is-archived", "false");
                         row.classList.remove("archived-row");
-                        archiveBtn.textContent = "Archive";
+                        archiveBtn.textContent = "Archive Friend";
                     }
                 })
                 .catch(window.handleFetchError);
@@ -433,6 +443,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (multiVisible) cb.closest("td").style.display = "table-cell";
                     }
                 });
+                applyGuestTableControls();
                 scrollLoader.style.display = "none";
                 isLoading = false;
             })
@@ -467,10 +478,15 @@ document.addEventListener("DOMContentLoaded", function () {
     var guestBatchClear = document.getElementById("guest-batch-clear");
     var batchSelectedTagName = "";
 
+    function isRowVisible(row) {
+        return row && row.style.display !== "none";
+    }
+
     function getSelectedGuestRows() {
         var rows = [];
         guestsTable.querySelectorAll("tbody tr .row-select:checked").forEach(function (cb) {
-            rows.push(cb.closest("tr"));
+            var row = cb.closest("tr");
+            if (isRowVisible(row)) rows.push(row);
         });
         return rows;
     }
@@ -481,8 +497,11 @@ document.addEventListener("DOMContentLoaded", function () {
         guestBatchCount.textContent = count;
         guestBatchBar.style.display = count > 0 ? "flex" : "none";
         if (guestSelectAll) {
-            var total = guestsTable.querySelectorAll("tbody tr .row-select").length;
-            guestSelectAll.checked = count > 0 && count === total;
+            var visibleTotal = 0;
+            guestsTable.querySelectorAll("tbody tr .row-select").forEach(function (cb) {
+                if (isRowVisible(cb.closest("tr"))) visibleTotal++;
+            });
+            guestSelectAll.checked = count > 0 && count === visibleTotal;
         }
     }
 
@@ -497,7 +516,7 @@ document.addEventListener("DOMContentLoaded", function () {
         guestSelectAll.addEventListener("change", function () {
             var checked = guestSelectAll.checked;
             guestsTable.querySelectorAll("tbody tr .row-select").forEach(function (cb) {
-                cb.checked = checked;
+                if (isRowVisible(cb.closest("tr"))) cb.checked = checked;
             });
             updateGuestBatchCount();
         });
@@ -649,6 +668,94 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // ── Bulk action helpers (also used by undo) ─────────────────────────
+    function applyTagsToRows(rowsList, updatedItems) {
+        var updatedMap = {};
+        updatedItems.forEach(function (g) { updatedMap[g.id] = g.tags; });
+        rowsList.forEach(function (row) {
+            var gid = parseInt(row.getAttribute("data-guest-id"));
+            var tags = updatedMap[gid];
+            if (!tags) return;
+            var tagIds = tags.map(function (t) { return t.id; });
+            row.setAttribute("data-tags", tagIds.join(","));
+            var tagsCell = row.querySelector(".ge-tags-cell");
+            if (tagsCell) {
+                tagsCell.innerHTML = "";
+                tags.forEach(function (t) {
+                    var badge = document.createElement("span");
+                    badge.className = "tag-badge";
+                    badge.style.background = t.color;
+                    badge.textContent = t.name;
+                    tagsCell.appendChild(badge);
+                    tagsCell.appendChild(document.createTextNode(" "));
+                });
+            }
+            var cb = row.querySelector(".row-select");
+            if (cb) cb.checked = false;
+        });
+    }
+
+    function applyArchiveToRows(rowsList, archive) {
+        rowsList.forEach(function (row) {
+            row.setAttribute("data-is-archived", archive ? "true" : "false");
+            if (archive) {
+                row.classList.add("archived-row");
+                if (!showArchived || showArchived === "0") row.style.display = "none";
+            } else {
+                row.classList.remove("archived-row");
+                row.style.display = "";
+            }
+            var archBtn = row.querySelector(".ge-archive-btn");
+            if (archBtn) archBtn.textContent = archive ? "Unarchive Friend" : "Archive Friend";
+            var cb = row.querySelector(".row-select");
+            if (cb) cb.checked = false;
+        });
+    }
+
+    function undoBulkTag(direction, changedIds, tagName) {
+        var url = direction === "add" ? "/api/v1/friends/bulk-untag" : "/api/v1/friends/bulk-tag";
+        window.fetchWithCsrf(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ guest_ids: changedIds, tag_name: tagName })
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (resp) {
+            var idSet = {};
+            changedIds.forEach(function (id) { idSet[id] = true; });
+            var affectedRows = [];
+            guestsTable.querySelectorAll("tbody tr").forEach(function (row) {
+                if (idSet[parseInt(row.getAttribute("data-guest-id"))]) affectedRows.push(row);
+            });
+            applyTagsToRows(affectedRows, resp.data || []);
+            updateGuestBatchCount();
+            window.showToast("Undone");
+            if (direction === "add") {
+                // Tag was just added then undone (removed); refresh tag list in case the tag is now empty
+                window.fetchWithCsrf("/api/v1/tags")
+                    .then(function (res) { return res.json(); })
+                    .then(function (resp) { allUserTags = resp.data || []; buildTagFilterDropdown(); })
+                    .catch(function () {});
+            }
+        })
+        .catch(window.handleFetchError);
+    }
+
+    function undoBulkArchive(archivedIds, archivedRows) {
+        window.fetchWithCsrf("/api/v1/friends/bulk-unarchive", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ guest_ids: archivedIds })
+        })
+        .then(function (res) { return res.json(); })
+        .then(function () {
+            applyArchiveToRows(archivedRows, false);
+            updateGuestBatchCount();
+            window.showToast("Undone");
+        })
+        .catch(window.handleFetchError);
+    }
+
     // Apply batch action
     if (guestBatchApply) {
         guestBatchApply.addEventListener("click", function () {
@@ -685,33 +792,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .then(function (res) { return res.json(); })
                 .then(function (resp) {
-                    var updatedMap = {};
-                    (resp.data || []).forEach(function (g) { updatedMap[g.id] = g.tags; });
-                    rows.forEach(function (row) {
-                        var gid = parseInt(row.getAttribute("data-guest-id"));
-                        var tags = updatedMap[gid];
-                        if (!tags) return;
-                        var tagIds = tags.map(function (t) { return t.id; });
-                        row.setAttribute("data-tags", tagIds.join(","));
-                        var tagsCell = row.querySelector(".ge-tags-cell");
-                        if (tagsCell) {
-                            tagsCell.innerHTML = "";
-                            tags.forEach(function (t) {
-                                var badge = document.createElement("span");
-                                badge.className = "tag-badge";
-                                badge.style.background = t.color;
-                                badge.textContent = t.name;
-                                tagsCell.appendChild(badge);
-                                tagsCell.appendChild(document.createTextNode(" "));
-                            });
-                        }
-                        var cb = row.querySelector(".row-select");
-                        if (cb) cb.checked = false;
-                    });
+                    applyTagsToRows(rows, resp.data || []);
+                    var changedIds = (resp.data || []).filter(function (g) { return g.changed; }).map(function (g) { return g.id; });
                     updateGuestBatchCount();
                     if (guestBatchAction) guestBatchAction.value = "";
                     window.trackEvent("batch-action-used", { action: "add-tag", count: ids.length, page: "friends" });
-                    window.showToast("Tag added to " + ids.length + " guest" + (ids.length > 1 ? "s" : ""));
+                    var undoFn = changedIds.length ? function () { undoBulkTag("add", changedIds, tagName); } : null;
+                    window.showToast("Tag added to " + ids.length + " guest" + (ids.length > 1 ? "s" : ""), undoFn);
                     batchSelectedTagName = "";
                     if (guestBatchTagInput) guestBatchTagInput.value = "";
                     if (guestBatchTagWrapper) guestBatchTagWrapper.style.display = "none";
@@ -736,33 +823,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .then(function (res) { return res.json(); })
                 .then(function (resp) {
-                    var updatedMap = {};
-                    (resp.data || []).forEach(function (g) { updatedMap[g.id] = g.tags; });
-                    rows.forEach(function (row) {
-                        var gid = parseInt(row.getAttribute("data-guest-id"));
-                        var tags = updatedMap[gid];
-                        if (!tags) return;
-                        var tagIds = tags.map(function (t) { return t.id; });
-                        row.setAttribute("data-tags", tagIds.join(","));
-                        var tagsCell = row.querySelector(".ge-tags-cell");
-                        if (tagsCell) {
-                            tagsCell.innerHTML = "";
-                            tags.forEach(function (t) {
-                                var badge = document.createElement("span");
-                                badge.className = "tag-badge";
-                                badge.style.background = t.color;
-                                badge.textContent = t.name;
-                                tagsCell.appendChild(badge);
-                                tagsCell.appendChild(document.createTextNode(" "));
-                            });
-                        }
-                        var cb = row.querySelector(".row-select");
-                        if (cb) cb.checked = false;
-                    });
+                    applyTagsToRows(rows, resp.data || []);
+                    var changedIds = (resp.data || []).filter(function (g) { return g.changed; }).map(function (g) { return g.id; });
                     updateGuestBatchCount();
                     if (guestBatchAction) guestBatchAction.value = "";
                     window.trackEvent("batch-action-used", { action: "remove-tag", count: ids.length, page: "friends" });
-                    window.showToast("Tag removed from " + ids.length + " guest" + (ids.length > 1 ? "s" : ""));
+                    var undoFn = changedIds.length ? function () { undoBulkTag("remove", changedIds, tagName); } : null;
+                    window.showToast("Tag removed from " + ids.length + " guest" + (ids.length > 1 ? "s" : ""), undoFn);
                     batchSelectedTagName = "";
                     if (guestBatchTagInput) guestBatchTagInput.value = "";
                     if (guestBatchTagWrapper) guestBatchTagWrapper.style.display = "none";
@@ -777,23 +844,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     body: JSON.stringify({ guest_ids: ids })
                 })
                 .then(function (res) { return res.json(); })
-                .then(function () {
-                    if (!showArchived) {
-                        rows.forEach(function (row) { row.remove(); });
-                    } else {
-                        rows.forEach(function (row) {
-                            row.setAttribute("data-is-archived", "true");
-                            row.classList.add("archived-row");
-                            var archBtn = row.querySelector(".ge-archive-btn");
-                            if (archBtn) archBtn.textContent = "Unarchive";
-                            var cb = row.querySelector(".row-select");
-                            if (cb) cb.checked = false;
-                        });
-                    }
+                .then(function (resp) {
+                    var archivedIds = (resp.data && resp.data.archived_ids) || [];
+                    var archivedSet = {};
+                    archivedIds.forEach(function (id) { archivedSet[id] = true; });
+                    var archivedRows = rows.filter(function (r) { return archivedSet[parseInt(r.getAttribute("data-guest-id"))]; });
+                    applyArchiveToRows(archivedRows, true);
                     updateGuestBatchCount();
                     if (guestBatchAction) guestBatchAction.value = "";
                     window.trackEvent("batch-action-used", { action: "archive", count: ids.length, page: "friends" });
-                    window.showToast(ids.length + " guest" + (ids.length > 1 ? "s" : "") + " archived");
+                    var undoFn = archivedIds.length ? function () { undoBulkArchive(archivedIds, archivedRows); } : null;
+                    window.showToast(ids.length + " guest" + (ids.length > 1 ? "s" : "") + " archived", undoFn);
                 })
                 .catch(window.handleFetchError);
             }
@@ -989,8 +1050,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     g.invitations.forEach(function (inv) {
                         var eventLabel = window.escapeHtml(inv.event_name);
                         if (inv.event_date) eventLabel += ' (' + window.escapeHtml(inv.event_date) + ')';
+                        var eventLink = inv.event_id ? '/event/' + inv.event_id : '';
                         html += '<div class="guest-detail-inv-item">' +
-                            '<span class="guest-detail-inv-event">' + eventLabel + '</span>' +
+                            (eventLink ? '<a href="' + eventLink + '" class="guest-detail-inv-event guest-detail-inv-link">' + eventLabel + '</a>' :
+                            '<span class="guest-detail-inv-event">' + eventLabel + '</span>') +
                             '<span class="status-tag ' + statusClass(inv.status) + '">' + window.escapeHtml(inv.status) + '</span>' +
                             '</div>';
                     });
@@ -1044,7 +1107,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     var notesInput = gdActiveRow.querySelector(".ge-notes");
                     if (firstInput) firstInput.value = firstName;
                     if (lastInput) lastInput.value = lastName;
-                    if (genderSelect) { genderSelect.value = gender; abbreviateGender(genderSelect); updateGenderTagColor(genderSelect); }
+                    if (genderSelect) {
+                        genderSelect.value = gender;
+                        if (guestsTable.classList.contains("table-collapsed")) abbreviateGender(genderSelect);
+                        else expandGender(genderSelect);
+                        updateGenderTagColor(genderSelect);
+                    }
                     if (notesInput) notesInput.value = notes;
                     gdActiveRow.setAttribute("data-first", firstName.toLowerCase());
                     gdActiveRow.setAttribute("data-last", lastName.toLowerCase());

@@ -44,12 +44,6 @@
 .seating-dropdown button:first-child { border-radius: 8px 8px 0 0; }
 .seating-dropdown button:last-child { border-radius: 0 0 8px 8px; }
 
-.seating-dropdown-divider {
-    height: 1px;
-    background: var(--color-border);
-    margin: 0.2rem 0;
-}
-
 .seating-dropdown-danger { color: var(--color-danger) !important; }
 .seating-dropdown-danger:hover { background: rgba(255, 59, 48, 0.08) !important; }
 

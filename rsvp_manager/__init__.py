@@ -36,6 +36,13 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Without this, request.remote_addr is the proxy's address for every request,
+    # so the rate limiter keys every user into a single shared bucket: per-client
+    # throttling stops working and one busy client can exhaust everyone's quota.
+    if app.config.get("TRUST_PROXY_HEADERS"):
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+
     configure_logging(app)
 
     db.init_app(app)

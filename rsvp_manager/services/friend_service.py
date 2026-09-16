@@ -5,7 +5,7 @@ from sqlalchemy.orm import joinedload
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Guest, Invitation
 from rsvp_manager.services.history_service import log_action
-from rsvp_manager.utils import VALID_GENDERS, get_last_name_sort_key
+from rsvp_manager.utils import VALID_GENDERS, get_last_name_sort_key, format_date
 
 
 GUESTS_PER_PAGE = 50
@@ -194,15 +194,28 @@ def _get_owned_guests_by_ids(user_id, guest_ids):
 
 def bulk_archive_guests(user_id, guest_ids):
     guests = _get_owned_guests_by_ids(user_id, guest_ids)
-    archived = 0
+    changed_ids = []
     for guest in guests:
         if not guest.is_archived:
             guest.is_archived = True
             guest.date_edited = datetime.now(timezone.utc)
             log_action(user_id, "archived_guest", "guest", guest.id, f"You archived {guest.full_name}")
-            archived += 1
+            changed_ids.append(guest.id)
     db.session.commit()
-    return archived
+    return changed_ids
+
+
+def bulk_unarchive_guests(user_id, guest_ids):
+    guests = _get_owned_guests_by_ids(user_id, guest_ids)
+    changed_ids = []
+    for guest in guests:
+        if guest.is_archived:
+            guest.is_archived = False
+            guest.date_edited = datetime.now(timezone.utc)
+            log_action(user_id, "unarchived_guest", "guest", guest.id, f"You unarchived {guest.full_name}")
+            changed_ids.append(guest.id)
+    db.session.commit()
+    return changed_ids
 
 
 def bulk_delete_guests(user_id, guest_ids):
@@ -221,11 +234,13 @@ def bulk_add_tag(user_id, guest_ids, tag_name):
     guests = _get_owned_guests_by_ids(user_id, guest_ids)
     updated = []
     for guest in guests:
-        if tag not in guest.tags:
+        changed = tag not in guest.tags
+        if changed:
             guest.tags.append(tag)
             log_action(user_id, "tagged_guest", "guest", guest.id, f"You tagged {guest.full_name} as {tag_name}")
         updated.append({
             "id": guest.id,
+            "changed": changed,
             "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags if not t.deleted_at],
         })
     db.session.commit()
@@ -245,11 +260,13 @@ def bulk_remove_tag(user_id, guest_ids, tag_name):
     guests = _get_owned_guests_by_ids(user_id, guest_ids)
     updated = []
     for guest in guests:
-        if tag in guest.tags:
+        changed = tag in guest.tags
+        if changed:
             guest.tags.remove(tag)
             log_action(user_id, "untagged_guest", "guest", guest.id, f"You removed tag {tag_name} from {guest.full_name}")
         updated.append({
             "id": guest.id,
+            "changed": changed,
             "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in guest.tags if not t.deleted_at],
         })
     db.session.commit()
@@ -328,8 +345,9 @@ def get_shared_invitations(guest, user_id):
         g = inv.guest
         if _normalize_name(g.first_name) == norm_first and _normalize_name(g.last_name) == norm_last:
             results.append({
+                "event_id": inv.event_id,
                 "event_name": inv.event.name,
-                "event_date": inv.event.date.strftime("%d/%m/%Y") if inv.event.date else "",
+                "event_date": format_date(inv.event.date),
                 "status": inv.status,
                 "shared": True,
             })
