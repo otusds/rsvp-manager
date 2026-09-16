@@ -12,6 +12,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!eventId) return;
 
     var list = document.getElementById("attributes-list");
+    // Adding, removing or renaming an attribute changes the guest-list column,
+    // the filters, the bulk-action menu and the summary - all rendered server
+    // side. Rebuilding every one of those in JS would be a lot of fragile code
+    // for a rare, structural action, so the page is reloaded on close instead.
+    var definitionsChanged = false;
     var nameInput = document.getElementById("attr-new-name");
     var optionsInput = document.getElementById("attr-new-options");
 
@@ -109,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: newName })
-            }).then(function () { window.showToast("Attribute renamed"); })
+            }).then(function () { definitionsChanged = true; window.showToast("Attribute renamed"); })
               .catch(function (err) { window.showToast(err.message); load(); });
             return;
         }
@@ -124,7 +129,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ options: existing })
-            }).then(function () { load(); window.showToast("Answer added"); })
+            }).then(function () { definitionsChanged = true; load(); window.showToast("Answer added"); })
               .catch(function (err) { window.showToast(err.message); load(); });
             return;
         }
@@ -137,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ label: newLabel })
-            }).then(function () { window.showToast("Answer renamed"); })
+            }).then(function () { definitionsChanged = true; window.showToast("Answer renamed"); })
               .catch(function (err) { window.showToast(err.message); load(); });
         }
     });
@@ -150,7 +155,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var name = card.querySelector(".attr-name-input").value;
         if (!confirm("Remove \"" + name + "\"? Every guest's answer for it will be lost.")) return;
         api("/attributes/" + attrId, { method: "DELETE" })
-            .then(function () { load(); window.showToast("Attribute removed"); })
+            .then(function () { definitionsChanged = true; load(); window.showToast("Attribute removed"); })
             .catch(function (err) { window.showToast(err.message); });
     });
 
@@ -169,7 +174,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 nameInput.value = "";
                 optionsInput.value = "";
                 load();
-                window.showToast("Attribute added");
+                definitionsChanged = true; window.showToast("Attribute added");
             }).catch(function (err) { window.showToast(err.message); });
         });
     }
@@ -186,8 +191,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function close() {
         overlay.style.display = "none";
-        // The guest list shows a column per attribute, so pick up any changes.
-        if (window.reloadAttributeColumns) window.reloadAttributeColumns();
+        if (definitionsChanged) {
+            // Reload so the new column, filter and summary actually appear,
+            // rather than leaving the user to work out they must refresh.
+            window.showToast("Updating the guest list\u2026");
+            location.reload();
+        }
     }
 
     var closeBtn = document.getElementById("attributes-close");
