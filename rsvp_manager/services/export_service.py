@@ -50,7 +50,10 @@ def export_guests_xlsx(guests):
     for g in guests:
         tags = ", ".join(t.name for t in g.tags if not t.deleted_at)
         invitations = [inv for inv in g.invitations if not inv.event.deleted_at] if g.invitations else []
-        total_invited = len(invitations)
+        # "Invited" excludes "Not Sent" everywhere in the UI (see event_detail.html),
+        # and counting it here also made the row fail to add up against its own
+        # Attending/Pending/Declined columns.
+        total_invited = sum(1 for inv in invitations if inv.status != "Not Sent")
         total_attending = sum(1 for inv in invitations if inv.status == "Attending")
         total_pending = sum(1 for inv in invitations if inv.status == "Pending")
         total_declined = sum(1 for inv in invitations if inv.status == "Declined")

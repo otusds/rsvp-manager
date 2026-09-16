@@ -150,15 +150,20 @@ def dashboard():
     return render_template("admin/dashboard.html", stats=stats)
 
 
-# ── Public stats API (Option 3) ─────────────────────────────────────────────
+# ── Stats API (admin only) ──────────────────────────────────────────────────
 
 _stats_cache = {"data": None, "expires": None}
 
 
 @bp.route("/api/stats")
+@admin_required
 def public_stats():
-    """Unauthenticated endpoint returning aggregate counts for marketing use.
-    Cached for 1 hour to avoid repeated DB queries."""
+    """Aggregate counts for the admin dashboard.
+
+    Admin-only: these are whole-business numbers (including total user count),
+    not something to hand to anonymous callers. Cached for 1 hour to avoid
+    repeated DB queries.
+    """
     now = datetime.now(timezone.utc)
     if _stats_cache["data"] and _stats_cache["expires"] and _stats_cache["expires"] > now:
         return jsonify(_stats_cache["data"])
@@ -167,11 +172,14 @@ def public_stats():
         "total_users": User.query.count(),
         "total_events": Event.query.filter(Event.deleted_at.is_(None)).count(),
         "total_friends": Guest.query.filter(Guest.deleted_at.is_(None)).count(),
-        "total_invitations": Invitation.query.count(),
+        "total_invitations": Invitation.query.join(
+            Event, Invitation.event_id == Event.id
+        ).filter(Event.deleted_at.is_(None)).count(),
     }
     _stats_cache["data"] = data
     _stats_cache["expires"] = now + timedelta(hours=1)
 
     response = jsonify(data)
-    response.headers["Cache-Control"] = "public, max-age=3600"
+    # Authenticated response: must not be stored by shared caches.
+    response.headers["Cache-Control"] = "private, no-store"
     return response

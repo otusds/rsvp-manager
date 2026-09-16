@@ -1,6 +1,6 @@
 import random
 from rsvp_manager.extensions import db
-from rsvp_manager.models import SeatingTable, SeatAssignment, Invitation, TABLE_SHAPES
+from rsvp_manager.models import SeatingTable, SeatAssignment, Invitation, Guest, TABLE_SHAPES
 from rsvp_manager.services.history_service import log_action
 
 
@@ -192,14 +192,19 @@ def clear_all_seating(event, include_locked=False, acting_user_id=None):
 
 
 def get_unseated_attending(event):
-    """Get attending invitations that don't have a seat assignment."""
+    """Get attending invitations that don't have a seat assignment.
+
+    Guests in the trash are excluded: they are hidden everywhere else, so they
+    must not show up in the unseated list or be handed a chair by auto-assign.
+    """
     seated_inv_ids = db.session.query(SeatAssignment.invitation_id).join(
         SeatingTable
     ).filter(SeatingTable.event_id == event.id)
 
-    return Invitation.query.filter(
+    return Invitation.query.join(Guest, Invitation.guest_id == Guest.id).filter(
         Invitation.event_id == event.id,
         Invitation.status == "Attending",
+        Guest.deleted_at.is_(None),
         ~Invitation.id.in_(seated_inv_ids.subquery().select())
     ).all()
 
@@ -521,6 +526,10 @@ def _serialize_table(table):
     seats = {}
     for sa in table.seat_assignments:
         guest = sa.invitation.guest
+        # A guest moved to the trash keeps their assignment (so restoring puts
+        # them back in the same chair) but must not appear on the chart.
+        if guest.deleted_at:
+            continue
         seats[str(sa.seat_position)] = {
             "assignment_id": sa.id,
             "invitation_id": sa.invitation_id,
