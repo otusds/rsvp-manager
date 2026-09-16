@@ -90,10 +90,11 @@ def create_event(user_id, form_data):
     log_action(user_id, "created_event", "event", event.id, f"You created event {event.name}")
     db.session.commit()
 
-    # Seed the attributes this event type starts with (Hunt gets Hunting:
-    # Hunter / Follower). Editable and removable afterwards like any other.
+    # Attributes come from the form when it offered them (the create-event form
+    # pre-fills the type's defaults and lets the user edit before submitting).
+    # Fall back to the type defaults for callers that send no attribute fields.
     from rsvp_manager.services import attribute_service
-    attribute_service.apply_defaults_for_type(event, user_id)
+    attribute_service.create_from_form(event, form_data, user_id)
 
     if form_data.get("include_me"):
         me = Guest.query.filter_by(user_id=user_id, is_me=True).filter(Guest.deleted_at.is_(None)).first()

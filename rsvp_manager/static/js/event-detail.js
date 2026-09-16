@@ -35,6 +35,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     window.refreshSummary = function () {
+        // The attribute summaries count by RSVP status too, so anything that moves
+        // a guest between Attending / Pending / Declined has to refresh them as
+        // well - otherwise they stay stale until the page is reloaded.
+        if (window.refreshAttributeSummary) window.refreshAttributeSummary();
+
         // Show thead when the table has guest rows (it starts hidden on empty events)
         var invTable = document.getElementById("invitations-table");
         if (invTable) {
@@ -164,6 +169,7 @@ document.addEventListener("DOMContentLoaded", function () {
             '<td class="guest-name-cell">' + (genderLabel ? '<span class="gender-tag ' + genderClass + '">' + genderLabel + '</span> ' : '') + window.escapeHtml(displayName) + '</td>' +
             '<td class="center"><input type="checkbox" class="sent-checkbox" data-inv-id="' + data.invitation_id + '"' + (isSent ? ' checked' : '') + '></td>' +
             '<td>' + window.buildStatusHtml(data.invitation_id, data.status) + '</td>' +
+            (window.buildAttributeCells ? window.buildAttributeCells(data.invitation_id) : '') +
             '<td class="col-expand-mobile"><input type="text" class="inv-notes-input" data-inv-id="' + data.invitation_id + '" value="' + window.escapeHtml(data.notes || "") + '" placeholder="Invite note..." autocomplete="off"></td>' +
             '<td class="col-expand">' + window.escapeHtml(data.guest_notes || "") + '</td>' +
             '<td class="col-expand">' + window.buildTagBadges(data.guest_tags || []) + '</td>' +
@@ -173,6 +179,8 @@ document.addEventListener("DOMContentLoaded", function () {
             '<button type="button" class="inv-guest-detail-btn" data-guest-id="' + data.guest_id + '">Guest Details</button>' +
             '<button type="button" class="kebab-danger remove-btn" data-inv-id="' + data.invitation_id + '">Remove Guest</button>' +
             '</div></div></td>';
+
+        if (window.markRowAttributesUnset) window.markRowAttributesUnset(tr);
 
         attachCheckboxListener(tr.querySelector(".sent-checkbox"));
         var statusSel = tr.querySelector(".status-select");

@@ -243,7 +243,8 @@
         </div>
 
         <div class="table-scroll">
-        <table id="invitations-table" class="sortable" data-event-id="{{ event.id }}" data-role="{{ role }}">
+        <table id="invitations-table" class="sortable" data-event-id="{{ event.id }}" data-role="{{ role }}"
+               data-attributes='{{ attributes|map(attribute="id")|list|tojson }}'>
             <thead{% if not event.invitations|rejectattr('guest.deleted_at')|list %} style="display:none"{% endif %}>
                 <tr>
                     <th class="center col-check col-multiselect" style="display:none"><input type="checkbox" id="select-all"></th>
@@ -725,6 +726,8 @@
     </div>
 </div>
 
+<script type="application/json" id="event-attributes-data">{{ attributes|map("attribute_json")|list|tojson }}</script>
+
 <!-- Event attributes overlay -->
 <div class="detail-overlay" id="attributes-overlay" style="display:none">
     <div class="detail-card">
@@ -733,16 +736,16 @@
             <button type="button" class="detail-close" id="attributes-close">&times;</button>
         </div>
         <div class="detail-card-body">
-            <p class="settings-desc">Extra information about each guest, just for this event &mdash; for example <em>Hunting</em> with the answers <em>Hunter</em> and <em>Follower</em>.</p>
+            <p class="settings-desc">Extra information about each guest, just for this event &mdash; for example <em>Participating to</em> with the answers <em>Lunch</em>, <em>Dinner</em> and <em>Both</em>.</p>
             <div id="attributes-list"></div>
             <div class="attr-add" id="attr-add-form">
                 <div class="form-field">
                     <label for="attr-new-name">Attribute name</label>
-                    <input type="text" id="attr-new-name" maxlength="60" placeholder="e.g. Hunting" autocapitalize="sentences">
+                    <input type="text" id="attr-new-name" maxlength="60" placeholder="e.g. Participating to" autocapitalize="sentences">
                 </div>
                 <div class="form-field">
                     <label for="attr-new-options">Answers, one per line</label>
-                    <textarea id="attr-new-options" rows="3" placeholder="Hunter&#10;Follower"></textarea>
+                    <textarea id="attr-new-options" rows="3" placeholder="Lunch&#10;Dinner&#10;Both"></textarea>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-small" id="attr-add-btn">Add attribute</button>
