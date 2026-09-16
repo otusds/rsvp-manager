@@ -346,14 +346,13 @@ document.addEventListener("DOMContentLoaded", function () {
     window.buildAttributeCells = function (invitationId) {
         var attrs = definitions();
         if (!attrs.length) return "";
-        var several = attrs.length > 1;
         return attrs.map(function (attr) {
             var opts = ['<option value="">\u2014</option>'].concat(
                 attr.options.map(function (o) {
                     return '<option value="' + o.id + '">' + window.escapeHtml(o.label) + "</option>";
                 })
             ).join("");
-            return '<td class="col-attr' + (several ? " col-expand" : "") + '" data-attr-cell="' + attr.id + '">' +
+            return '<td class="col-attr col-expand" data-attr-cell="' + attr.id + '">' +
                 '<select class="inline-select attr-select" data-inv-id="' + invitationId +
                 '" data-attr-id="' + attr.id + '">' + opts + "</select></td>";
         }).join("");
@@ -466,4 +465,43 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     fillFromType();
+});
+
+// ── Attributes in the guest detail panel ────────────────────────────────────
+// The panel edits the same answer as the guest-list dropdown, so a change here
+// writes straight through and updates the row, its filter data and the summary.
+document.addEventListener("DOMContentLoaded", function () {
+    var overlay = document.getElementById("guest-detail-overlay");
+    var table = document.getElementById("invitations-table");
+    if (!overlay || !table) return;
+
+    overlay.addEventListener("change", function (e) {
+        var sel = e.target.closest(".gd-attr-select");
+        if (!sel || sel.disabled) return;
+
+        var invIdField = document.getElementById("gd-inv-id");
+        var invId = invIdField ? invIdField.value : "";
+        if (!invId) return;   // guest opened outside an event context
+
+        var attrId = sel.getAttribute("data-attr-id");
+        var optionId = sel.value ? parseInt(sel.value, 10) : null;
+
+        window.fetchWithCsrf("/api/v1/invitations/" + invId + "/attributes/" + attrId, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ option_id: optionId })
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (resp) {
+            if (resp.status !== "success") throw new Error(resp.message || "Could not save");
+            var row = table.querySelector('tr[data-inv-id="' + invId + '"]');
+            if (row) {
+                var rowSelect = row.querySelector('.attr-select[data-attr-id="' + attrId + '"]');
+                if (rowSelect) rowSelect.value = optionId ? String(optionId) : "";
+                row.setAttribute("data-attr-" + attrId, optionId ? String(optionId) : "none");
+            }
+            if (window.refreshAttributeSummary) window.refreshAttributeSummary();
+        })
+        .catch(window.handleFetchError);
+    });
 });
