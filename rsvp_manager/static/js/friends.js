@@ -107,7 +107,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 var rowTags = (row.getAttribute("data-tags") || "").split(",").filter(Boolean).map(Number);
                 matchTags = selectedTagIds.some(function (id) { return rowTags.indexOf(id) !== -1; });
             }
-            var show = matchSearch && matchGender && matchTags;
+            var matchArchived = showArchived !== "0" || row.getAttribute("data-is-archived") !== "true";
+            var show = matchSearch && matchGender && matchTags && matchArchived;
             row.style.display = show ? "" : "none";
             if (show) visibleCount++;
         });
@@ -842,6 +843,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ guest_ids: ids })
                 })
+                .then(function (res) { return res.json(); })
                 .then(function (resp) {
                     var archivedIds = (resp.data && resp.data.archived_ids) || [];
                     var archivedSet = {};

@@ -298,3 +298,107 @@ class TestEmailService:
                 payload = mock_send.call_args[0][0]
                 assert "Reset" in payload["subject"] or "reset" in payload["subject"]
                 assert u.email in payload["to"]
+
+
+# ── Email Change Tests ──────────────────────────────────────────────────────
+
+
+class TestEmailChange:
+    def test_change_requires_current_password(self, logged_in_client, test_app, user):
+        with patch("rsvp_manager.blueprints.settings.send_email_change_verification") as mock_send:
+            resp = logged_in_client.post("/settings/email", data={
+                "email": "new@test.com", "current_password": "wrongpassword"
+            }, follow_redirects=True)
+            assert resp.status_code == 200
+            mock_send.assert_not_called()
+        with test_app.app_context():
+            assert db.session.get(User, user).pending_email is None
+
+    def test_change_with_correct_password_sends_verification(self, logged_in_client, test_app, user):
+        with patch("rsvp_manager.blueprints.settings.send_email_change_verification") as mock_send, \
+             patch("rsvp_manager.blueprints.settings.send_email_change_notice") as mock_notice:
+            resp = logged_in_client.post("/settings/email", data={
+                "email": "new@test.com", "current_password": "password123"
+            }, follow_redirects=True)
+            assert resp.status_code == 200
+            mock_send.assert_called_once()
+            # the old address is warned so a hijacked session cannot change it silently
+            mock_notice.assert_called_once()
+            assert mock_notice.call_args[0][1] == "new@test.com"
+
+    def test_notice_failure_does_not_break_change(self, logged_in_client):
+        with patch("rsvp_manager.blueprints.settings.send_email_change_verification"), \
+             patch("rsvp_manager.blueprints.settings.send_email_change_notice",
+                   side_effect=Exception("send failed")):
+            resp = logged_in_client.post("/settings/email", data={
+                "email": "new@test.com", "current_password": "password123"
+            }, follow_redirects=True)
+            assert resp.status_code == 200
+
+    def test_send_failure_leaves_no_pending_state(self, test_app, user):
+        from rsvp_manager.services.email_service import send_email_change_verification
+        with test_app.test_request_context():
+            u = db.session.get(User, user)
+            with patch("rsvp_manager.services.email_service._send_email",
+                       side_effect=Exception("Resend down")):
+                with pytest.raises(Exception):
+                    send_email_change_verification(u, "new@test.com")
+        with test_app.app_context():
+            u = db.session.get(User, user)
+            assert u.pending_email is None
+            assert u.pending_email_token is None
+
+    def test_token_from_another_user_is_rejected(self, logged_in_client, test_app, user, user2):
+        """A valid token belonging to user2 must not be applied while user is logged in."""
+        token = secrets.token_urlsafe(32)
+        u2 = db.session.get(User, user2)
+        u2.pending_email = "hijack@test.com"
+        u2.pending_email_token = token
+        u2.pending_email_sent_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        db.session.commit()
+        resp = logged_in_client.get(f"/settings/verify-email-change/{token}", follow_redirects=True)
+        assert resp.status_code == 200
+        assert b"invalid" in resp.data.lower() or b"expired" in resp.data.lower()
+        db.session.expire_all()
+        u2 = db.session.get(User, user2)
+        assert u2.email == "other@test.com"
+        assert u2.pending_email == "hijack@test.com"
+        assert u2.pending_email_token == token
+
+    def test_own_token_is_applied(self, logged_in_client, test_app, user):
+        token = secrets.token_urlsafe(32)
+        u = db.session.get(User, user)
+        u.pending_email = "mynew@test.com"
+        u.pending_email_token = token
+        u.pending_email_sent_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        db.session.commit()
+        resp = logged_in_client.get(f"/settings/verify-email-change/{token}", follow_redirects=True)
+        assert resp.status_code == 200
+        db.session.expire_all()
+        u = db.session.get(User, user)
+        assert u.email == "mynew@test.com"
+        assert u.pending_email is None
+        assert u.pending_email_token is None
+
+
+class TestPasswordChangeInvalidatesResetToken:
+    def test_settings_password_change_consumes_reset_token(self, logged_in_client, test_app, user):
+        token = secrets.token_urlsafe(32)
+        u = db.session.get(User, user)
+        u.password_reset_token = token
+        u.password_reset_sent_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        db.session.commit()
+        resp = logged_in_client.post("/settings/password", data={
+            "current_password": "password123",
+            "new_password": "brandnewpass456",
+            "confirm_password": "brandnewpass456",
+        }, follow_redirects=True)
+        assert resp.status_code == 200
+        db.session.expire_all()
+        u = db.session.get(User, user)
+        assert check_password_hash(u.password_hash, "brandnewpass456")
+        # the emailed reset link must no longer work
+        assert u.password_reset_token is None
+        assert u.password_reset_sent_at is None
+        resp = logged_in_client.get(f"/reset-password/{token}", follow_redirects=True)
+        assert b"invalid" in resp.data.lower() or b"expired" in resp.data.lower()

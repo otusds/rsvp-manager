@@ -89,23 +89,41 @@ def consume_reset_token(user):
 
 
 def send_email_change_verification(user, new_email):
-    """Send a verification email to the new address to confirm an email change."""
-    user.pending_email = new_email
-    user.pending_email_token = secrets.token_urlsafe(32)
-    user.pending_email_sent_at = _utcnow()
-    db.session.commit()
-    verify_url = url_for("settings.verify_email_change", token=user.pending_email_token, _external=True)
+    """Send a verification email to the new address to confirm an email change.
+
+    The pending state is only persisted once the email has actually gone out, so a
+    send failure does not leave the user with a pending change they never asked for.
+    """
+    token = secrets.token_urlsafe(32)
+    verify_url = url_for("settings.verify_email_change", token=token, _external=True)
     html = render_template("emails/verify_email_change.html", user=user, new_email=new_email, verify_url=verify_url)
     _send_email(new_email, "Confirm your new email — GuestCheck", html)
+    user.pending_email = new_email
+    user.pending_email_token = token
+    user.pending_email_sent_at = _utcnow()
+    db.session.commit()
     logger.info("Email change verification sent to %s for user %s", new_email, user.email)
 
 
-def verify_email_change_token(token):
-    """Verify the email change token and swap the email."""
+def send_email_change_notice(user, new_email):
+    """Warn the current address that a change to new_email was requested."""
+    html = render_template("emails/email_change_notice.html", user=user, new_email=new_email)
+    _send_email(user.email, "Email change requested — GuestCheck", html)
+    logger.info("Email change notice sent to %s", user.email)
+
+
+def verify_email_change_token(token, expected_user_id=None):
+    """Verify the email change token and swap the email.
+
+    When expected_user_id is given the token must belong to that user; the swap is
+    rejected before any change is made, rather than after.
+    """
     if not token:
         return None
     user = User.query.filter_by(pending_email_token=token).first()
     if not user:
+        return None
+    if expected_user_id is not None and user.id != expected_user_id:
         return None
     if user.pending_email_sent_at is None:
         return None
