@@ -5,6 +5,7 @@ import resend
 from flask import url_for, render_template, current_app
 from rsvp_manager.extensions import db
 from rsvp_manager.models import User
+from rsvp_manager.utils import format_date
 
 logger = logging.getLogger(__name__)
 TOKEN_EXPIRY_HOURS = 24
@@ -155,7 +156,7 @@ def send_cohost_notification(event, joining_user, role):
     html = render_template("emails/cohost_joined.html",
                            joining_name=joining_user.full_name,
                            event_name=event.name,
-                           event_date=event.date.strftime("%d %B %Y"),
+                           event_date=format_date(event.date),
                            event_location=event.location or "",
                            event_url=event_url,
                            role_label=role_label)

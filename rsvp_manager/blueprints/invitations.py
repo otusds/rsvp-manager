@@ -1,6 +1,7 @@
 from flask import Blueprint, request, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from rsvp_manager.services import invitation_service, event_service
+from rsvp_manager.utils import format_date
 
 bp = Blueprint("invitations", __name__)
 
@@ -13,7 +14,7 @@ def toggle_send_invitation(invitation_id):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify(
             status=invitation.status,
-            date_invited=invitation.date_invited.strftime("%d %b %Y") if invitation.date_invited else "",
+            date_invited=format_date(invitation.date_invited),
             date_invited_iso=invitation.date_invited.isoformat() if invitation.date_invited else "",
         )
     return redirect(url_for("events.event_detail", event_id=invitation.event_id))
@@ -30,7 +31,7 @@ def update_invitation(invitation_id):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify(
             status=invitation.status,
-            date_responded=invitation.date_responded.strftime("%d %b %Y") if invitation.date_responded else "",
+            date_responded=format_date(invitation.date_responded),
             date_responded_iso=invitation.date_responded.isoformat() if invitation.date_responded else "",
         )
     return redirect(url_for("events.event_detail", event_id=invitation.event_id))
