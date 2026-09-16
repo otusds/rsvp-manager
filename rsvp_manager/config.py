@@ -25,6 +25,16 @@ class Config:
 
     APP_ENV = os.environ.get("APP_ENV", "production")
 
+    # Behind a reverse proxy the real client IP arrives in X-Forwarded-For. Only
+    # trust it when there actually is a proxy in front, otherwise any client
+    # could spoof its address. Defaults on in production (DATABASE_URL set).
+    _trust_proxy = os.environ.get("TRUST_PROXY_HEADERS")
+    TRUST_PROXY_HEADERS = (
+        _trust_proxy.lower() in ("1", "true", "yes")
+        if _trust_proxy is not None
+        else bool(os.environ.get("DATABASE_URL"))
+    )
+
     RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
     EMAIL_DEFAULT_SENDER = os.environ.get("EMAIL_DEFAULT_SENDER", "onboarding@resend.dev")
 

@@ -25,6 +25,19 @@
     }
     .nav-tab-label { font-size: 0.65rem; }
 
+    /* The staging TEST badge is an extra nav item that only exists when
+       APP_ENV=staging, and at 390px it pushed the hamburger button past the
+       viewport edge, giving every page ~20px of horizontal scroll. Tighten the
+       nav gutter and the badge so staging matches production's fit. */
+    nav { padding: 0 0.75rem; }
+    .nav-tabs { margin-right: 0.25rem; }
+    .env-badge {
+        margin-left: 0.25rem;
+        padding: 0.1rem 0.35rem;
+        font-size: 0.6rem;
+        letter-spacing: 0.02em;
+    }
+
     main { padding: 0.75rem 0.75rem 2rem; }
 
     .event-row-name {
