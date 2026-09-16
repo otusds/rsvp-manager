@@ -252,7 +252,7 @@
                     <th data-sort="check" class="center col-sent">Sent</th>
                     <th data-sort="status" class="col-status"><span class="col-status-full">RSVP Status</span><span class="col-status-short">RSVP</span></th>
                     {% for attr in attributes %}
-                    <th data-sort="text" class="col-attr{{ ' col-expand' if attributes|length > 1 }}" data-attr-id="{{ attr.id }}">{{ attr.name }}</th>
+                    <th data-sort="text" class="col-attr col-expand" data-attr-id="{{ attr.id }}">{{ attr.name }}</th>
                     {% endfor %}
                     <th class="col-expand-mobile">Invite Notes</th>
                     <th class="col-expand">Guest Notes</th>
@@ -307,7 +307,7 @@
                     </td>
                     {% for attr in attributes %}
                     {% set chosen = inv.value_for(attr.id) %}
-                    <td class="col-attr{{ ' col-expand' if attributes|length > 1 }}" data-attr-cell="{{ attr.id }}">
+                    <td class="col-attr col-expand" data-attr-cell="{{ attr.id }}">
                         <select class="inline-select attr-select" data-inv-id="{{ inv.id }}"
                                 data-attr-id="{{ attr.id }}"{{ ' disabled' if role == 'viewer' }}>
                             <option value="">&mdash;</option>
@@ -843,6 +843,19 @@
                             <span class="inv-detail-datetime" id="gd-date-responded"></span>
                         </div>
                     </div>
+                    {% for attr in attributes %}
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="gd-attr-{{ attr.id }}">{{ attr.name }}</label>
+                            <select id="gd-attr-{{ attr.id }}" class="gd-attr-select" data-attr-id="{{ attr.id }}">
+                                <option value="">&mdash; Not set</option>
+                                {% for opt in attr.options %}
+                                <option value="{{ opt.id }}">{{ opt.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    {% endfor %}
                     <div class="form-row">
                         <div class="form-field">
                             <label for="gd-inv-notes">Invitation Notes</label>
