@@ -4,6 +4,7 @@ from sqlalchemy.orm import joinedload
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Event, EventCohost, Guest, Invitation, EVENT_TYPES
 from rsvp_manager.services.history_service import log_action
+from rsvp_manager.utils import format_date
 
 
 EVENTS_PER_PAGE = 20
@@ -140,7 +141,7 @@ def get_user_events_for_selector(user_id, exclude_event_id):
     return [{
         "id": e.id,
         "name": e.name,
-        "date": e.date.strftime("%d %b %Y"),
+        "date": format_date(e.date),
         "date_iso": e.date.isoformat(),
     } for e in events]
 

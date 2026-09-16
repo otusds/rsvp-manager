@@ -5,7 +5,7 @@ from sqlalchemy.orm import joinedload
 from rsvp_manager.extensions import db
 from rsvp_manager.models import Guest, Invitation
 from rsvp_manager.services.history_service import log_action
-from rsvp_manager.utils import VALID_GENDERS, get_last_name_sort_key
+from rsvp_manager.utils import VALID_GENDERS, get_last_name_sort_key, format_date
 
 
 GUESTS_PER_PAGE = 50
@@ -347,7 +347,7 @@ def get_shared_invitations(guest, user_id):
             results.append({
                 "event_id": inv.event_id,
                 "event_name": inv.event.name,
-                "event_date": inv.event.date.strftime("%d/%m/%Y") if inv.event.date else "",
+                "event_date": format_date(inv.event.date),
                 "status": inv.status,
                 "shared": True,
             })

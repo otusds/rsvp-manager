@@ -5,7 +5,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from sqlalchemy.orm import joinedload, selectinload
 from rsvp_manager.models import Guest, Invitation, SeatAssignment
-from rsvp_manager.utils import get_last_name_sort_key
+from rsvp_manager.utils import get_last_name_sort_key, format_date
 
 HEADER_FONT = Font(bold=True, color="FFFFFF")
 HEADER_FILL = PatternFill(start_color="2C3E50", end_color="2C3E50", fill_type="solid")
@@ -37,7 +37,7 @@ def export_events_xlsx(events):
     ws = _styled_sheet(wb, "Events", ["Name", "Type", "Date", "Location", "Invited", "Attending", "Notes"])
     for e in events:
         attending = sum(1 for inv in e.invitations if inv.status == "Attending")
-        ws.append([e.name, e.event_type, e.date.strftime("%Y-%m-%d"), e.location or "",
+        ws.append([e.name, e.event_type, format_date(e.date, "iso"), e.location or "",
                    len(e.invitations), attending, e.notes or ""])
     for col in ws.columns:
         ws.column_dimensions[col[0].column_letter].width = 20
@@ -59,7 +59,7 @@ def export_guests_xlsx(guests):
         total_attending = sum(1 for inv in invitations if inv.status == "Attending")
         total_pending = sum(1 for inv in invitations if inv.status == "Pending")
         total_declined = sum(1 for inv in invitations if inv.status == "Declined")
-        date_created = g.date_created.strftime("%Y-%m-%d") if g.date_created else ""
+        date_created = format_date(g.date_created, "iso")
         ws.append([g.last_name or "", g.first_name, g.gender, tags,
                    total_invited, total_attending, total_pending, total_declined,
                    date_created, g.notes or ""])
@@ -104,15 +104,15 @@ def export_event_guests_xlsx(event):
         tags = ", ".join(t.name for t in g.tags if not t.deleted_at)
         table_name, seat_num = _get_seating_info(inv)
         ws.append([g.last_name or "", g.first_name, g.gender, tags, sent,
-                   inv.date_invited.strftime("%Y-%m-%d") if inv.date_invited else "",
+                   format_date(inv.date_invited, "iso"),
                    inv.status,
-                   inv.date_responded.strftime("%Y-%m-%d") if inv.date_responded else "",
+                   format_date(inv.date_responded, "iso"),
                    table_name, seat_num,
                    inv.notes or "", g.notes or ""])
     for col in ws.columns:
         ws.column_dimensions[col[0].column_letter].width = 18
     safe_name = re.sub(r"[^\w\-]", "_", event.name).strip("_").lower()
-    date_str = event.date.strftime("%Y-%m-%d") if event.date else ""
+    date_str = format_date(event.date, "iso")
     return _to_download(wb, f"GuestCheck_{safe_name}_{date_str}_guests.xlsx")
 
 
