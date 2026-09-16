@@ -7,7 +7,10 @@ from rsvp_manager.extensions import db, limiter
 from rsvp_manager.models import User, Event, Guest, Invitation, Tag, ActivityLog, guest_tags
 from rsvp_manager.utils import VALID_GENDERS
 from rsvp_manager.services.seed_service import seed
-from rsvp_manager.services.email_service import send_email_change_verification, verify_email_change_token
+from rsvp_manager.services.email_service import (
+    send_email_change_verification, verify_email_change_token,
+    send_email_change_notice, consume_reset_token,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +66,12 @@ def update_profile():
 @login_required
 @limiter.limit("5 per minute")
 def update_email():
+    # Changing the email is an account-takeover path (new address can then reset the
+    # password), so it is gated on the current password like update_password is.
+    current_password = request.form.get("current_password", "")
+    if not check_password_hash(current_user.password_hash, current_password):
+        flash("Current password is incorrect.")
+        return redirect(url_for("settings.settings"))
     new_email = request.form.get("email", "").strip().lower()
     if not new_email or "@" not in new_email:
         flash("Please enter a valid email address.")
@@ -80,14 +89,21 @@ def update_email():
     except Exception:
         logger.exception("Failed to send email change verification to %s", new_email)
         flash("Could not send verification email. Please try again later.")
+        return redirect(url_for("settings.settings"))
+    # Best effort: warn the old address so a hijacked session cannot change the
+    # email silently. Never fails the request the user actually asked for.
+    try:
+        send_email_change_notice(current_user, new_email)
+    except Exception:
+        logger.exception("Failed to send email change notice to %s", current_user.email)
     return redirect(url_for("settings.settings"))
 
 
 @bp.route("/settings/verify-email-change/<token>")
 @login_required
 def verify_email_change(token):
-    user = verify_email_change_token(token)
-    if user and user.id == current_user.id:
+    user = verify_email_change_token(token, current_user.id)
+    if user:
         flash("Your email has been updated to " + user.email + ".")
     else:
         flash("Invalid or expired verification link.")
@@ -111,7 +127,8 @@ def update_password():
         flash("New passwords do not match.")
         return redirect(url_for("settings.settings"))
     current_user.password_hash = generate_password_hash(new_password)
-    db.session.commit()
+    # Any reset link already in the user's inbox stays valid for 24h otherwise.
+    consume_reset_token(current_user)
     logger.info("Password changed for user %s", current_user.email)
     flash("Password updated successfully.")
     return redirect(url_for("settings.settings"))
