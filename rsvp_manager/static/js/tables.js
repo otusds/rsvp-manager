@@ -149,6 +149,12 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             row.style.display = (matchesSearch && matchesFilters) ? "" : "none";
         });
+
+        // A row that just got filtered away must not stay selected, or the next
+        // bulk action would quietly include guests the user can no longer see.
+        if (tableId === "invitations-table" && window.deselectHiddenInvitationRows) {
+            window.deselectHiddenInvitationRows();
+        }
     };
 
     // ── Helper: get sortable text from a cell, stripping gender tags and icons ──

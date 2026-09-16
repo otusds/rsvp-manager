@@ -663,6 +663,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     var notesInput = row.querySelector(".inv-notes-input");
                     document.getElementById("gd-inv-notes").value = notesInput ? notesInput.value : "";
                     document.getElementById("gd-inv-notes").readOnly = isViewer;
+
+                    // Mirror the guest's attribute answers from their row, so the
+                    // panel and the list always agree.
+                    document.querySelectorAll(".gd-attr-select").forEach(function (sel) {
+                        var attrId = sel.getAttribute("data-attr-id");
+                        var rowSelect = row.querySelector('.attr-select[data-attr-id="' + attrId + '"]');
+                        sel.value = rowSelect ? rowSelect.value : "";
+                        sel.disabled = isViewer;
+                    });
                 } else {
                     var invSection = document.getElementById("gd-inv-section");
                     if (invSection) invSection.style.display = "none";
@@ -881,13 +890,32 @@ document.addEventListener("DOMContentLoaded", function () {
     var batchBar = document.getElementById("batch-bar");
     var batchCountEl = document.getElementById("batch-count");
 
+    function isRowVisible(row) {
+        return row && row.style.display !== "none";
+    }
+
+    // Only ever act on rows the user can actually see. A filtered-away row that
+    // is still ticked must not be swept into a bulk action - that silently hit
+    // the whole guest list, "Remove from Event" included.
     function getSelectedRows() {
         var rows = [];
         document.querySelectorAll("#invitations-table tbody tr:not(.add-guest-row) .row-select:checked").forEach(function (cb) {
-            rows.push(cb.closest("tr"));
+            var row = cb.closest("tr");
+            if (isRowVisible(row)) rows.push(row);
         });
         return rows;
     }
+
+    // Filtering hides rows; any hidden row must also lose its tick so the count
+    // beside "selected" keeps matching what a bulk action would touch.
+    window.deselectHiddenInvitationRows = function () {
+        var changed = false;
+        document.querySelectorAll("#invitations-table tbody tr:not(.add-guest-row) .row-select:checked").forEach(function (cb) {
+            if (!isRowVisible(cb.closest("tr"))) { cb.checked = false; changed = true; }
+        });
+        if (selectAllCheckbox && changed) selectAllCheckbox.checked = false;
+        if (changed) updateBatchCount();
+    };
 
     function updateBatchCount() {
         if (!batchBar) return;
@@ -908,7 +936,9 @@ document.addEventListener("DOMContentLoaded", function () {
         selectAllCheckbox.addEventListener("change", function () {
             var checked = selectAllCheckbox.checked;
             document.querySelectorAll("#invitations-table tbody tr:not(.add-guest-row) .row-select").forEach(function (cb) {
-                cb.checked = checked;
+                // Select all means all of what is on screen, not everything behind
+                // the current filter.
+                if (isRowVisible(cb.closest("tr"))) cb.checked = checked;
             });
             updateBatchCount();
         });
@@ -1122,10 +1152,16 @@ document.addEventListener("DOMContentLoaded", function () {
         var invTable = document.getElementById("invitations-table");
         var glExpandIcon = '<svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
         var glCollapseIcon = '<svg class="kebab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
-        if (invTable) {
+        // Desktop has the room, so it opens expanded and shows the attribute
+        // columns straight away; a phone starts collapsed and reveals them on
+        // demand. Same rule the friends page already uses.
+        var glIsMobile = window.matchMedia("(max-width: 600px)").matches;
+        if (invTable && glIsMobile) {
             invTable.classList.add("table-collapsed");
         }
-        toggleGlExpandBtn.innerHTML = glExpandIcon + "Expand Columns";
+        toggleGlExpandBtn.innerHTML = glIsMobile
+            ? glExpandIcon + "Expand Columns"
+            : glCollapseIcon + "Collapse Columns";
         toggleGlExpandBtn.addEventListener("click", function () {
             if (!invTable) return;
             var isCollapsed = invTable.classList.toggle("table-collapsed");

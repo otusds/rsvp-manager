@@ -94,7 +94,7 @@ def create_app(config_class=Config):
     flask_admin.add_view(EventCohostView(EventCohost, db.session, name="Co-hosts", endpoint="admin_cohosts"))
     flask_admin.add_view(ActivityLogView(ActivityLog, db.session, name="Activity Log", endpoint="admin_activity"))
 
-    ASSET_VERSION = "75"
+    ASSET_VERSION = "77"
 
     @app.template_filter("attribute_json")
     def attribute_json(attribute):
