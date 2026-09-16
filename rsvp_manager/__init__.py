@@ -94,7 +94,16 @@ def create_app(config_class=Config):
     flask_admin.add_view(EventCohostView(EventCohost, db.session, name="Co-hosts", endpoint="admin_cohosts"))
     flask_admin.add_view(ActivityLogView(ActivityLog, db.session, name="Activity Log", endpoint="admin_activity"))
 
-    ASSET_VERSION = "74"
+    ASSET_VERSION = "75"
+
+    @app.template_filter("attribute_json")
+    def attribute_json(attribute):
+        """Serialise an event attribute for the page's JSON island."""
+        return {
+            "id": attribute.id,
+            "name": attribute.name,
+            "options": [{"id": o.id, "label": o.label} for o in attribute.options],
+        }
 
     @app.context_processor
     def inject_globals():

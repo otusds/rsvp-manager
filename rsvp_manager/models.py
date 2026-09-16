@@ -5,6 +5,12 @@ from rsvp_manager.utils import get_last_name_sort_key
 
 EVENT_TYPES = ["Dinner", "Party", "Weekend", "Hunt", "Corporate", "Holiday", "Other"]
 
+# Attributes pre-filled when an event of this type is created. The user can edit
+# or remove them; every other type starts with none.
+DEFAULT_EVENT_ATTRIBUTES = {
+    "Hunt": [("Hunting", ["Hunter", "Follower"])],
+}
+
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -53,6 +59,10 @@ class Event(db.Model):
     invitations = db.relationship("Invitation", backref="event", cascade="all, delete-orphan")
     cohosts = db.relationship("EventCohost", backref="event", cascade="all, delete-orphan")
     share_links = db.relationship("EventShareLink", backref="event", cascade="all, delete-orphan")
+    attributes = db.relationship(
+        "EventAttribute", backref="event", cascade="all, delete-orphan",
+        order_by="EventAttribute.position",
+    )
 
     def __repr__(self):
         return f"<Event {self.id} {self.name!r}>"
@@ -171,10 +181,83 @@ class Invitation(db.Model):
     sent_by_user = db.relationship("User", foreign_keys=[sent_by], lazy="select")
     status_changed_by_user = db.relationship("User", foreign_keys=[status_changed_by], lazy="select")
 
+    attribute_values = db.relationship(
+        "InvitationAttributeValue", backref="invitation", cascade="all, delete-orphan",
+    )
+
     __table_args__ = (db.UniqueConstraint('event_id', 'guest_id', name='uq_invitation_event_guest'),)
+
+    def value_for(self, attribute_id):
+        """The option this guest is set to for one attribute, or None."""
+        for v in self.attribute_values:
+            if v.attribute_id == attribute_id:
+                return v.option
+        return None
 
     def __repr__(self):
         return f"<Invitation {self.id} event={self.event_id} guest={self.guest_id} {self.status}>"
+
+
+class EventAttribute(db.Model):
+    """A question asked about each guest of one event, e.g. "Hunting".
+
+    Belongs to the event, never to the friends database: the same person can be a
+    Hunter at one event and a Follower at the next.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False, index=True)
+    name = db.Column(db.String(60), nullable=False)
+    position = db.Column(db.Integer, nullable=False, default=0)
+
+    options = db.relationship(
+        "EventAttributeOption", backref="attribute", cascade="all, delete-orphan",
+        order_by="EventAttributeOption.position",
+    )
+    values = db.relationship(
+        "InvitationAttributeValue", backref="attribute", cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint("event_id", "name", name="uq_event_attribute_name"),
+    )
+
+    def __repr__(self):
+        return f"<EventAttribute {self.id} event={self.event_id} {self.name!r}>"
+
+
+class EventAttributeOption(db.Model):
+    """One of the answers an attribute allows, e.g. "Hunter"."""
+    id = db.Column(db.Integer, primary_key=True)
+    attribute_id = db.Column(db.Integer, db.ForeignKey("event_attribute.id"), nullable=False, index=True)
+    label = db.Column(db.String(60), nullable=False)
+    position = db.Column(db.Integer, nullable=False, default=0)
+
+    values = db.relationship(
+        "InvitationAttributeValue", backref="option", cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint("attribute_id", "label", name="uq_event_attribute_option_label"),
+    )
+
+    def __repr__(self):
+        return f"<EventAttributeOption {self.id} {self.label!r}>"
+
+
+class InvitationAttributeValue(db.Model):
+    """One guest's answer to one attribute. Absent row means "not set"."""
+    id = db.Column(db.Integer, primary_key=True)
+    invitation_id = db.Column(db.Integer, db.ForeignKey("invitation.id"), nullable=False, index=True)
+    attribute_id = db.Column(db.Integer, db.ForeignKey("event_attribute.id"), nullable=False, index=True)
+    option_id = db.Column(db.Integer, db.ForeignKey("event_attribute_option.id"), nullable=False, index=True)
+
+    __table_args__ = (
+        # One answer per guest per attribute.
+        db.UniqueConstraint("invitation_id", "attribute_id", name="uq_invitation_attribute"),
+    )
+
+    def __repr__(self):
+        return f"<InvitationAttributeValue inv={self.invitation_id} attr={self.attribute_id}>"
 
 
 TABLE_SHAPES = ["rectangular", "round", "long", "large_rect"]
