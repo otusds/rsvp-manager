@@ -49,11 +49,33 @@ def update_invitation(invitation_id):
 @api_bp.route("/invitations/<int:invitation_id>", methods=["DELETE"])
 @api_auth_required
 def delete_invitation(invitation_id):
+    """Remove a guest from an event, returning what is needed to undo it.
+
+    This is a hard delete and the trash does not cover invitations, so the
+    snapshot is the only way back. The client holds it for the undo toast.
+    """
     invitation = invitation_service.get_owned_invitation_or_404(
         invitation_id, get_api_user().id
     )
+    snapshot = invitation_service.snapshot_invitation(invitation)
+    event_id = invitation.event_id
     invitation_service.remove_invitation(invitation)
-    return "", 204
+    return api_success({"event_id": event_id, "snapshot": snapshot})
+
+
+@api_bp.route("/events/<int:event_id>/invitations/restore", methods=["POST"])
+@api_auth_required
+def restore_invitations(event_id):
+    """Undo a removal, from the snapshots the delete handed back."""
+    user = get_api_user()
+    event = event_service.get_owned_event_or_404(event_id, user.id)
+    data = request.get_json() or {}
+    restored = invitation_service.restore_invitations(
+        event, data.get("snapshots", []), user.id)
+    return api_success({
+        "restored": len(restored),
+        "invitations": [serialize_invitation_brief(inv) for inv in restored],
+    })
 
 
 @api_bp.route("/events/<int:event_id>/invitations/bulk", methods=["POST"])

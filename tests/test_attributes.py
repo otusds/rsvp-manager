@@ -510,3 +510,127 @@ class TestAttributesFromTheCreateEventForm:
             "name": "Plain", "event_type": "Hunt", "date": "2026-12-26",
         })
         assert [a.name for a in attribute_service.get_attributes(event)] == ["Hunting"]
+
+
+# ── Undo for "Remove from Event" ────────────────────────────────────────────
+
+class TestUndoRemoveFromEvent:
+    """Removing a guest is a hard delete the trash does not cover, so the
+    snapshot the delete returns is the only way back."""
+
+    def _setup(self, user, with_attribute=True, with_seat=False):
+        from rsvp_manager.models import SeatAssignment, SeatingTable
+
+        event = Event(user_id=user, name="Undo Hunt", event_type="Hunt",
+                      date=date(2026, 12, 26), date_created=date.today())
+        db.session.add(event)
+        db.session.commit()
+        attr = attribute_service.create_attribute(event, "Hunting", ["Hunter", "Follower"]) \
+            if with_attribute else None
+        guest = _guest(user, "Ann")
+        inv = Invitation(event_id=event.id, guest_id=guest.id, status="Attending",
+                         notes="bring boots", date_invited=date(2026, 11, 1))
+        db.session.add(inv)
+        db.session.commit()
+        if attr:
+            attribute_service.set_value(inv, attr, attr.options[0].id)
+        if with_seat:
+            table = SeatingTable(event_id=event.id, table_number=1, capacity=8, shape="round")
+            db.session.add(table)
+            db.session.commit()
+            db.session.add(SeatAssignment(table_id=table.id, invitation_id=inv.id, seat_position=2))
+            db.session.commit()
+        return event, guest, inv, attr
+
+    def test_snapshot_then_restore_brings_everything_back(self, test_app, user):
+        from rsvp_manager.services import invitation_service
+
+        event, guest, inv, attr = self._setup(user)
+        snap = invitation_service.snapshot_invitation(inv)
+        invitation_service.remove_invitation(inv)
+        assert Invitation.query.filter_by(event_id=event.id).count() == 0
+
+        restored = invitation_service.restore_invitations(event, [snap], user)
+
+        assert len(restored) == 1
+        back = restored[0]
+        assert back.guest_id == guest.id
+        assert back.status == "Attending"
+        assert back.notes == "bring boots"
+        assert back.date_invited == date(2026, 11, 1)
+        assert back.value_for(attr.id).label == "Hunter", "their attribute answer comes back too"
+
+    def test_seat_is_restored_when_the_chair_is_still_free(self, test_app, user):
+        from rsvp_manager.models import SeatAssignment
+        from rsvp_manager.services import invitation_service
+
+        event, guest, inv, _ = self._setup(user, with_seat=True)
+        snap = invitation_service.snapshot_invitation(inv)
+        invitation_service.remove_invitation(inv)
+        assert SeatAssignment.query.count() == 0
+
+        restored = invitation_service.restore_invitations(event, [snap], user)
+        seat = SeatAssignment.query.filter_by(invitation_id=restored[0].id).first()
+        assert seat is not None and seat.seat_position == 2
+
+    def test_undoing_twice_does_not_duplicate_the_guest(self, test_app, user):
+        from rsvp_manager.services import invitation_service
+
+        event, guest, inv, _ = self._setup(user)
+        snap = invitation_service.snapshot_invitation(inv)
+        invitation_service.remove_invitation(inv)
+
+        invitation_service.restore_invitations(event, [snap], user)
+        second = invitation_service.restore_invitations(event, [snap], user)
+
+        assert second == [], "a guest already back on the event is skipped"
+        assert Invitation.query.filter_by(event_id=event.id, guest_id=guest.id).count() == 1
+
+    def test_answers_for_a_deleted_attribute_are_dropped_not_fatal(self, test_app, user):
+        from rsvp_manager.services import invitation_service
+
+        event, guest, inv, attr = self._setup(user)
+        snap = invitation_service.snapshot_invitation(inv)
+        invitation_service.remove_invitation(inv)
+        attribute_service.delete_attribute(attr)
+
+        restored = invitation_service.restore_invitations(event, [snap], user)
+        assert len(restored) == 1, "undo still works after the attribute was removed"
+
+    def test_another_users_guest_is_not_restored(self, test_app, user, user2):
+        from rsvp_manager.services import invitation_service
+
+        event, guest, inv, _ = self._setup(user)
+        snap = invitation_service.snapshot_invitation(inv)
+        invitation_service.remove_invitation(inv)
+        snap["guest_id"] = _guest(user2, "Theirs").id
+
+        assert invitation_service.restore_invitations(event, [snap], user) == []
+
+    def test_delete_endpoint_returns_a_snapshot(self, logged_in_client, test_app, user):
+        event, guest, inv, attr = self._setup(user)
+        csrf = _csrf(logged_in_client)
+
+        resp = logged_in_client.delete(f"/api/v1/invitations/{inv.id}",
+                                       headers={"X-CSRFToken": csrf})
+        assert resp.status_code == 200
+        snap = resp.get_json()["data"]["snapshot"]
+        assert snap["guest_id"] == guest.id
+        assert snap["status"] == "Attending"
+        assert snap["attributes"][0]["option_id"] == attr.options[0].id
+
+        resp = logged_in_client.post(f"/api/v1/events/{event.id}/invitations/restore",
+                                     json={"snapshots": [snap]},
+                                     headers={"X-CSRFToken": csrf})
+        assert resp.status_code == 200
+        assert resp.get_json()["data"]["restored"] == 1
+
+    def test_restore_on_another_users_event_is_refused(self, logged_in_client, test_app, user, user2):
+        theirs = Event(user_id=user2, name="Theirs", event_type="Hunt",
+                       date=date(2026, 12, 26), date_created=date.today())
+        db.session.add(theirs)
+        db.session.commit()
+        resp = logged_in_client.post(f"/api/v1/events/{theirs.id}/invitations/restore",
+                                     json={"snapshots": []},
+                                     headers={"X-CSRFToken": _csrf(logged_in_client)})
+        assert resp.status_code in (403, 404)
