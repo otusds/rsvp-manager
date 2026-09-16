@@ -62,6 +62,35 @@ def update_status(invitation, new_status, acting_user_id=None):
     return invitation
 
 
+def snapshot_invitation(invitation):
+    """Everything needed to put a removed guest back exactly as they were.
+
+    Removing a guest from an event is a hard delete and the trash does not cover
+    invitations, so without this the action is unrecoverable. Captured before the
+    delete: the invitation fields, the guest's attribute answers, and their seat
+    if they had one.
+    """
+    seat = None
+    assignments = invitation.seat_assignment
+    if assignments:
+        sa = assignments[0] if isinstance(assignments, list) else assignments
+        seat = {"table_id": sa.table_id, "seat_position": sa.seat_position,
+                "is_locked": sa.is_locked}
+    return {
+        "guest_id": invitation.guest_id,
+        "status": invitation.status,
+        "notes": invitation.notes or "",
+        "added_by": invitation.added_by,
+        "sent_by": invitation.sent_by,
+        "status_changed_by": invitation.status_changed_by,
+        "date_invited": invitation.date_invited.isoformat() if invitation.date_invited else None,
+        "date_responded": invitation.date_responded.isoformat() if invitation.date_responded else None,
+        "attributes": [{"attribute_id": v.attribute_id, "option_id": v.option_id}
+                       for v in invitation.attribute_values],
+        "seat": seat,
+    }
+
+
 def remove_invitation(invitation):
     event_id = invitation.event_id
     log_action(invitation.event.user_id, "removed_from_event", "invitation", invitation.id,
@@ -70,6 +99,86 @@ def remove_invitation(invitation):
     db.session.delete(invitation)
     db.session.commit()
     return event_id
+
+
+def restore_invitations(event, snapshots, user_id):
+    """Put guests removed from an event back, from snapshot_invitation() data.
+
+    Only the user's own guests are restored, and a guest already back on the
+    event is skipped, so a double undo cannot duplicate anyone.
+    """
+    from rsvp_manager.models import (
+        EventAttribute, EventAttributeOption, InvitationAttributeValue,
+        SeatAssignment, SeatingTable,
+    )
+
+    restored = []
+    for snap in snapshots or []:
+        guest = Guest.query.filter_by(
+            id=snap.get("guest_id"), user_id=event.user_id
+        ).filter(Guest.deleted_at.is_(None)).first()
+        if not guest:
+            continue
+        if Invitation.query.filter_by(event_id=event.id, guest_id=guest.id).first():
+            continue
+
+        inv = Invitation(
+            event_id=event.id,
+            guest_id=guest.id,
+            status=snap.get("status") or "Not Sent",
+            notes=snap.get("notes") or "",
+            added_by=snap.get("added_by") or user_id,
+            sent_by=snap.get("sent_by"),
+            status_changed_by=snap.get("status_changed_by"),
+            date_invited=_parse_date(snap.get("date_invited")),
+            date_responded=_parse_date(snap.get("date_responded")),
+        )
+        db.session.add(inv)
+        db.session.flush()
+
+        # Attribute answers, but only ones still defined on this event.
+        for value in snap.get("attributes") or []:
+            attribute = EventAttribute.query.filter_by(
+                id=value.get("attribute_id"), event_id=event.id).first()
+            if not attribute:
+                continue
+            option = EventAttributeOption.query.filter_by(
+                id=value.get("option_id"), attribute_id=attribute.id).first()
+            if not option:
+                continue
+            db.session.add(InvitationAttributeValue(
+                invitation_id=inv.id, attribute_id=attribute.id, option_id=option.id))
+
+        # Their seat, if the table is still there and the chair is still free.
+        seat = snap.get("seat")
+        if seat:
+            table = SeatingTable.query.filter_by(
+                id=seat.get("table_id"), event_id=event.id).first()
+            taken = table and SeatAssignment.query.filter_by(
+                table_id=table.id, seat_position=seat.get("seat_position")).first()
+            if table and not taken:
+                db.session.add(SeatAssignment(
+                    table_id=table.id, invitation_id=inv.id,
+                    seat_position=seat.get("seat_position"),
+                    is_locked=bool(seat.get("is_locked"))))
+
+        restored.append(inv)
+
+    if restored:
+        event.date_edited = datetime.now(timezone.utc)
+        log_action(user_id, "restored_to_event", "event", event.id,
+                   f"You put {len(restored)} guest(s) back on {event.name}")
+    db.session.commit()
+    return restored
+
+
+def _parse_date(value):
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def update_field(invitation, field, value):

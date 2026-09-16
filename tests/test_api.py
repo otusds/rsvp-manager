@@ -252,8 +252,15 @@ class TestInvitationsAPI:
         assert resp.get_json()["data"]["notes"] == "Bringing a plus one"
 
     def test_delete_invitation(self, logged_in_client, sample_invitation):
+        """Returns 200 with an undo snapshot rather than a bare 204.
+
+        Removing a guest from an event is a hard delete that the trash does not
+        cover, so the response carries what is needed to put them back.
+        """
         resp = api_delete(logged_in_client, f"/api/v1/invitations/{sample_invitation}")
-        assert resp.status_code == 204
+        assert resp.status_code == 200
+        snapshot = resp.get_json()["data"]["snapshot"]
+        assert "guest_id" in snapshot and "status" in snapshot
 
     def test_available_guests(self, logged_in_client, sample_event, sample_guest):
         resp = logged_in_client.get(f"/api/v1/events/{sample_event}/available-guests")
