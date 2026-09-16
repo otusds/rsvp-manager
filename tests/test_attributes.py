@@ -374,3 +374,23 @@ def _csrf(client):
     import re
     html = client.get("/settings").data.decode()
     return re.search(r'name="csrf_token"[^>]*value="([^"]+)"', html).group(1)
+
+
+class TestHuntEventsStartWithTheHuntingAttribute:
+    def test_created_hunt_is_prefilled(self, test_app, user):
+        from rsvp_manager.services import event_service
+
+        event = event_service.create_event(user, {
+            "name": "Boxing Day", "event_type": "Hunt", "date": "2026-12-26",
+        })
+        attrs = attribute_service.get_attributes(event)
+        assert [a.name for a in attrs] == ["Hunting"]
+        assert [o.label for o in attrs[0].options] == ["Hunter", "Follower"]
+
+    def test_created_party_is_not(self, test_app, user):
+        from rsvp_manager.services import event_service
+
+        event = event_service.create_event(user, {
+            "name": "Summer Party", "event_type": "Party", "date": "2026-06-01",
+        })
+        assert attribute_service.get_attributes(event) == []
