@@ -269,3 +269,108 @@ class TestSummary:
 
     def test_no_attributes_means_no_summary(self, test_app, user, hunt):
         assert attribute_service.summarize(hunt) == []
+
+
+# ── API ─────────────────────────────────────────────────────────────────────
+
+class TestAttributeApi:
+    def _hunt_for(self, client, user):
+        e = Event(user_id=user, name="API Hunt", event_type="Hunt",
+                  date=date(2026, 12, 26), date_created=date.today())
+        db.session.add(e)
+        db.session.commit()
+        return e
+
+    def test_create_list_update_delete(self, logged_in_client, test_app, user):
+        event = self._hunt_for(logged_in_client, user)
+        csrf = _csrf(logged_in_client)
+
+        r = logged_in_client.post(f"/api/v1/events/{event.id}/attributes",
+                                  json={"name": "Hunting", "options": ["Hunter", "Follower"]},
+                                  headers={"X-CSRFToken": csrf})
+        assert r.status_code == 201, r.data
+        attr = r.get_json()["data"]
+        assert [o["label"] for o in attr["options"]] == ["Hunter", "Follower"]
+
+        r = logged_in_client.get(f"/api/v1/events/{event.id}/attributes")
+        assert len(r.get_json()["data"]) == 1
+
+        r = logged_in_client.put(f"/api/v1/events/{event.id}/attributes/{attr['id']}",
+                                 json={"name": "Role"}, headers={"X-CSRFToken": csrf})
+        assert r.get_json()["data"]["name"] == "Role"
+
+        r = logged_in_client.delete(f"/api/v1/events/{event.id}/attributes/{attr['id']}",
+                                    headers={"X-CSRFToken": csrf})
+        assert r.status_code == 204
+        assert logged_in_client.get(f"/api/v1/events/{event.id}/attributes").get_json()["data"] == []
+
+    def test_set_and_clear_a_guest_answer(self, logged_in_client, test_app, user):
+        event = self._hunt_for(logged_in_client, user)
+        csrf = _csrf(logged_in_client)
+        attr = attribute_service.create_attribute(event, "Hunting", ["Hunter", "Follower"])
+        inv = _invite(event, _guest(user, "Ann"))
+
+        r = logged_in_client.put(
+            f"/api/v1/invitations/{inv.id}/attributes/{attr.id}",
+            json={"option_id": attr.options[0].id}, headers={"X-CSRFToken": csrf})
+        assert r.status_code == 200
+        assert r.get_json()["data"]["label"] == "Hunter"
+
+        r = logged_in_client.put(
+            f"/api/v1/invitations/{inv.id}/attributes/{attr.id}",
+            json={"option_id": None}, headers={"X-CSRFToken": csrf})
+        assert r.get_json()["data"]["option_id"] is None
+
+    def test_bulk_set(self, logged_in_client, test_app, user):
+        event = self._hunt_for(logged_in_client, user)
+        csrf = _csrf(logged_in_client)
+        attr = attribute_service.create_attribute(event, "Hunting", ["Hunter"])
+        invs = [_invite(event, _guest(user, f"G{i}")) for i in range(3)]
+
+        r = logged_in_client.post(
+            f"/api/v1/events/{event.id}/attributes/{attr.id}/bulk",
+            json={"invitation_ids": [i.id for i in invs], "option_id": attr.options[0].id},
+            headers={"X-CSRFToken": csrf})
+        assert r.get_json()["data"]["changed"] == 3
+
+    def test_summary_endpoint(self, logged_in_client, test_app, user):
+        event = self._hunt_for(logged_in_client, user)
+        attr = attribute_service.create_attribute(event, "Hunting", ["Hunter"])
+        inv = _invite(event, _guest(user, "Ann"))
+        attribute_service.set_value(inv, attr, attr.options[0].id)
+
+        data = logged_in_client.get(f"/api/v1/events/{event.id}/attributes/summary").get_json()["data"]
+        assert data[0]["attribute"]["name"] == "Hunting"
+        assert data[0]["rows"][0]["attending"] == 1
+
+    def test_another_users_event_is_refused(self, logged_in_client, test_app, user, user2):
+        """Same cross-tenant checks the audit applied to every other endpoint."""
+        theirs = Event(user_id=user2, name="Theirs", event_type="Hunt",
+                       date=date(2026, 12, 26), date_created=date.today())
+        db.session.add(theirs)
+        db.session.commit()
+        attr = attribute_service.create_attribute(theirs, "Hunting", ["Hunter"])
+        csrf = _csrf(logged_in_client)
+        h = {"X-CSRFToken": csrf}
+
+        assert logged_in_client.get(f"/api/v1/events/{theirs.id}/attributes").status_code in (403, 404)
+        assert logged_in_client.post(f"/api/v1/events/{theirs.id}/attributes",
+                                     json={"name": "X", "options": ["a"]}, headers=h
+                                     ).status_code in (403, 404)
+        assert logged_in_client.delete(f"/api/v1/events/{theirs.id}/attributes/{attr.id}",
+                                       headers=h).status_code in (403, 404)
+        assert logged_in_client.get(
+            f"/api/v1/events/{theirs.id}/attributes/summary").status_code in (403, 404)
+
+    def test_anonymous_is_refused(self, client, test_app, user):
+        event = Event(user_id=user, name="E", event_type="Hunt",
+                      date=date(2026, 12, 26), date_created=date.today())
+        db.session.add(event)
+        db.session.commit()
+        assert client.get(f"/api/v1/events/{event.id}/attributes").status_code == 401
+
+
+def _csrf(client):
+    import re
+    html = client.get("/settings").data.decode()
+    return re.search(r'name="csrf_token"[^>]*value="([^"]+)"', html).group(1)
