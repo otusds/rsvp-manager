@@ -12,11 +12,16 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
 
     _database_url = os.environ.get("DATABASE_URL") or "sqlite:///rsvp.db"
-    if _database_url.startswith("postgres://"):
-        _database_url = _database_url.replace("postgres://", "postgresql://", 1)
+    # Pin every Postgres URL to psycopg2, the driver in requirements.txt.
+    # Hosts hand out postgres://, and SQLAlchemy 2.1 made plain postgresql://
+    # default to psycopg 3, which is not installed.
+    for _prefix in ("postgres://", "postgresql://", "postgresql+psycopg://"):
+        if _database_url.startswith(_prefix):
+            _database_url = "postgresql+psycopg2://" + _database_url[len(_prefix):]
+            break
     SQLALCHEMY_DATABASE_URI = _database_url
 
-    if _database_url.startswith("postgresql://"):
+    if _database_url.startswith("postgresql+psycopg2://"):
         SQLALCHEMY_ENGINE_OPTIONS = {
             "pool_size": 5,
             "max_overflow": 10,
