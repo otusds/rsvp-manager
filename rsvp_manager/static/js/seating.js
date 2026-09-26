@@ -756,7 +756,7 @@ document.addEventListener("DOMContentLoaded", function () {
         state.tables.forEach(function (t) { attending += Object.keys(t.seats).length; });
         if (attending <= 0) return 12;
         var cap = attending % 2 === 0 ? attending : attending + 1;
-        var options = [4,6,8,10,12,14,16,18,20,24,30];
+        var options = [4,6,8,10,12,14,16,18,20,22,24,26,28,30];
         for (var i = 0; i < options.length; i++) { if (options[i] >= cap) return options[i]; }
         return 30;
     }

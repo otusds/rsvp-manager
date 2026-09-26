@@ -14,7 +14,7 @@ def get_seating_plan(event):
 
 def _smart_capacity(guest_count):
     """Return the smallest standard capacity that fits the guest count."""
-    options = [4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30]
+    options = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
     # Round up to next even
     cap = guest_count if guest_count % 2 == 0 else guest_count + 1
     for opt in options:
